@@ -22,12 +22,10 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('dev'));
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
+const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
+app.use('/api/', apiLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/v1/auth/login', authLimiter);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -59,7 +57,13 @@ const calendarRoutes = require('./routes/calendar');
 const equipmentRoutes = require('./routes/equipment');
 const analyticsRoutes = require('./routes/analytics');
 const supplierRoutes = require('./routes/suppliers');
+const healthRoutes = require('./routes/health');
+const v1Routes = require('./routes/v1');
 
+// API v1 routes (versioned)
+app.use('/api/v1', v1Routes);
+
+// Legacy routes (for backwards compatibility)
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -84,10 +88,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/suppliers', supplierRoutes);
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'MkulimaLink API is running' });
-});
+app.use('/api/health', healthRoutes);
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/build')));

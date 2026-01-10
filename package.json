@@ -22,7 +22,8 @@
     "format:check": "prettier --check \"backend/**/*.js\"",
     "seed": "node backend/utils/seedData.js",
     "docker:dev": "docker-compose -f docker-compose.dev.yml up -d",
-    "docker:down": "docker-compose down"
+    "docker:down": "docker-compose down",
+    "prepare": "husky"
   },
   "keywords": ["agriculture", "marketplace", "tanzania", "ai", "fintech", "agritech", "east-africa"],
   "author": "MkulimaLink Team",
@@ -70,6 +71,8 @@
     "jest": "^29.7.0",
     "supertest": "^7.0.0",
     "eslint": "^9.9.0",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "husky": "^9.1.5",
+    "lint-staged": "^15.2.9"
   }
 }
