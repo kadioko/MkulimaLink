@@ -1,13 +1,57 @@
-# MkulimaLink Deployment Guide
+# 🚀 MkulimaLink v2.0 Deployment Guide
 
-This guide covers deploying MkulimaLink to AWS Free Tier and other cloud platforms.
+Complete guide for deploying MkulimaLink to production environments.
 
-## AWS Free Tier Deployment
+## 📋 Table of Contents
 
-### Prerequisites
-- AWS Account
-- Domain name (optional but recommended)
-- SSH client
+- [Prerequisites](#prerequisites)
+- [Quick Deploy](#quick-deploy)
+- [AWS Deployment](#aws-deployment)
+- [Docker Deployment](#docker-deployment)
+- [Database Setup](#database-setup)
+- [SSL Configuration](#ssl-configuration)
+- [Monitoring](#monitoring)
+- [Troubleshooting](#troubleshooting)
+
+## Prerequisites
+
+- **Node.js** 20+ 
+- **MongoDB** 7+ (local or Atlas)
+- **Redis** 7+ (optional, for caching)
+- **Domain name** (recommended)
+- **SSL Certificate** (required for production)
+
+## Quick Deploy
+
+### Option 1: PM2 (Recommended)
+
+```bash
+# Clone and setup
+git clone https://github.com/kadioko/MkulimaLink.git
+cd MkulimaLink
+npm run install-all
+
+# Configure environment
+cp .env.example .env
+nano .env  # Edit with production values
+
+# Build frontend
+cd frontend && npm run build && cd ..
+
+# Start with PM2
+npm install -g pm2
+pm2 start backend/server.js --name mkulimalink
+pm2 save
+pm2 startup
+```
+
+### Option 2: Docker (Coming Soon)
+
+```bash
+docker-compose up -d
+```
+
+## AWS Deployment
 
 ### Step 1: Launch EC2 Instance
 
