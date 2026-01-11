@@ -4,6 +4,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const { cspMiddleware, securityHeaders } = require('./middleware/csp');
+const { cache, cacheConfig } = require('./middleware/cache');
+const { initSentry, sentryRequestHandler, sentryTracingHandler, sentryErrorHandler } = require('./utils/sentry');
 const path = require('path');
 const http = require('http');
 const morgan = require('morgan');
@@ -12,10 +15,15 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
+// Initialize Sentry
+initSentry(app);
+
 const { initializeSocket } = require('./utils/socket');
 initializeSocket(server);
 
-app.use(helmet({ contentSecurityPolicy: false }));
+// Security headers
+app.use(securityHeaders);
+app.use(cspMiddleware);
 app.use(compression());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true }));
 app.use(express.json({ limit: '10mb' }));
@@ -59,11 +67,18 @@ const analyticsRoutes = require('./routes/analytics');
 const supplierRoutes = require('./routes/suppliers');
 const healthRoutes = require('./routes/health');
 const docsRoutes = require('./routes/docs');
+const sitemapRoutes = require('./routes/sitemap');
+const searchRoutes = require('./routes/search');
 const v1Routes = require('./routes/v1');
 
 // API Documentation
 app.use('/api/docs', docsRoutes);
 app.use('/api/v1/docs', docsRoutes);
+
+// SEO and Search
+app.use('/api/search', searchRoutes);
+app.use('/sitemap.xml', sitemapRoutes);
+app.use('/robots.txt', sitemapRoutes);
 
 // API v1 routes (versioned)
 app.use('/api/v1', v1Routes);
@@ -95,6 +110,14 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/health', healthRoutes);
 
+// Apply caching to API routes
+app.use('/api/products', cacheConfig.products);
+app.use('/api/market', cacheConfig.marketPrices);
+app.use('/api/weather', cacheConfig.weather);
+
+// Sentry error handler (must be last)
+app.use(sentryErrorHandler);
+
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/build')));
   app.get('*', (req, res) => {
@@ -106,6 +129,12 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Socket.io enabled for real-time features`);
+});
+
+// Initialize database indexes
+const { createAllIndexes } = require('./utils/indexes');
+mongoose.connection.once('open', () => {
+  createAllIndexes();
 });
 
 const cronJobs = require('./utils/cronJobs');
