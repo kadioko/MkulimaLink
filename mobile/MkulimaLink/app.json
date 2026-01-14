@@ -1,0 +1,19 @@
+{
+  "name": "MkulimaLink",
+  "displayName": "MkulimaLink",
+  "version": "1.0.0",
+  "description": "Agriculture Super-App for East Africa",
+  "main": "index.js",
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16"
+  }
+}

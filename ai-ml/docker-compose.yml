@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # ML API Service
+  ml-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MODEL_CACHE_DIR=/app/cache
+    volumes:
+      - ./models:/app/models
+      - ./cache:/app/cache
+    depends_on:
+      - mlflow
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # MLflow Tracking Server
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/mlflow
+      - MLFLOW_ARTIFACT_STORE_URI=file:/mlflow/artifacts
+    volumes:
+      - mlflow_artifacts:/mlflow/artifacts
+    depends_on:
+      - postgres
+    command: mlflow server --host 0.0.0.0 --port 5000
+    restart: unless-stopped
+
+  # PostgreSQL for MLflow
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=mlflow
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # Jupyter Notebook for experimentation
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - ./notebooks:/app/notebooks
+    environment:
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-mkulimalink}
+    restart: unless-stopped
+
+  # Model Training Worker
+  training-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m training_worker
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    depends_on:
+      - mlflow
+      - redis
+      - postgres
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  redis_data:
+  mlflow_artifacts:
+
+networks:
+  default:
+    name: mkulimalink_ml_network
