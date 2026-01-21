@@ -12,7 +12,7 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon backend/server.js",
     "client": "npm start --prefix frontend",
-    "build": "npm run build --prefix frontend",
+    "build": "cd frontend && npm install --legacy-peer-deps && npm run build",
     "install-all": "npm install && cd frontend && npm install",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
