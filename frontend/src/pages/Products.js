@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { Search, Filter, MapPin, Heart } from 'lucide-react';
 import api from '../api/axios';
@@ -131,37 +130,25 @@ function Products() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data?.products?.map((product) => (
-              <Link
-                key={product._id}
-                to={`/products/${product._id}`}
+            {data?.products?.map((product, index) => (
+              <div
+                key={index}
                 className="card hover:shadow-xl transition-shadow group"
               >
                 <div className="relative mb-4">
-                  {product.images && product.images.length > 0 ? (
-                    <img
-                      src={product.images[0].url}
-                      alt={product.name}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400">No image</span>
-                    </div>
-                  )}
+                  <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span className="text-gray-400">Product Image</span>
+                  </div>
                   <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100">
                     <Heart size={20} className="text-gray-600" />
                   </button>
-                  {product.organic && (
-                    <span className="absolute top-2 left-2 badge-success">Organic</span>
-                  )}
                 </div>
 
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600">
                   {product.name}
                 </h3>
                 
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                <p className="text-gray-600 text-sm mb-3">High quality {product.category} from {product.region}</p>
 
                 <div className="flex items-center justify-between mb-3">
                   <div>
@@ -172,31 +159,17 @@ function Products() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">{product.quantity} {product.unit}</p>
-                    <span className={`badge ${
-                      product.quality === 'premium' ? 'badge-warning' :
-                      product.quality === 'standard' ? 'badge-info' : 'badge-success'
-                    }`}>
-                      {product.quality}
+                    <span className="badge badge-info">
+                      {product.category}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center text-sm text-gray-600">
                   <MapPin size={16} className="mr-1" />
-                  <span>{product.location?.region || 'Tanzania'}</span>
+                  <span>{product.region || 'Tanzania'}</span>
                 </div>
-
-                {product.seller && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-sm text-gray-600">
-                      Seller: <span className="font-medium">{product.seller.name}</span>
-                      {product.seller.rating > 0 && (
-                        <span className="ml-2 text-yellow-500">★ {product.seller.rating.toFixed(1)}</span>
-                      )}
-                    </p>
-                  </div>
-                )}
-              </Link>
+              </div>
             ))}
           </div>
 
