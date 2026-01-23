@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
-import { User, MapPin, Phone, Mail, Briefcase } from 'lucide-react';
+import { User, MapPin, Phone, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
