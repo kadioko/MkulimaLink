@@ -18,7 +18,7 @@ REACT_APP_MAPBOX_TOKEN = pk.eyJ1Ijoia2FkaW9rbyIsImEiOiJja3JweXRkdngyaHd4MnZydjNs
 
 ### Frontend Variables (Required)
 ```
-REACT_APP_API_URL = https://mkulimalink-api.herokuapp.com
+REACT_APP_API_URL = https://mkulimalink-api-aa384e99a888.herokuapp.com
 REACT_APP_MAPBOX_TOKEN = pk.eyJ1Ijoia2FkaW9rbyIsImEiOiJja3JweXRkdngyaHd4MnZydjNsc3RpNmdyIn0.gdAy5iD7-rwddWTyqUBSNQ
 REACT_APP_FIREBASE_CONFIG = {"apiKey":"AIzaSyC_4XJgrfKC0ALBcwW2jh-62ENyIb4OJpg","authDomain":"mkulimalink.firebaseapp.com","projectId":"mkulimalink","storageBucket":"mkulimalink.firebasestorage.app","messagingSenderId":"711411966579","appId":"1:711411966579:web:24a259f79bae1a06cb0006","measurementId":"G-1293K0F2VS"}
 ```
@@ -49,9 +49,9 @@ MAPBOX_TOKEN = pk.eyJ1Ijoia2FkaW9rbyIsImEiOiJja3JweXRkdngyaHd4MnZydjNsc3RpNmdyIn
 
 ### Step 2: Add Frontend Variables
 
-**Variable 1: REACT_APP_API_URL**
+**Variable 1: REACT_APP_API_URL** (CRITICAL - This fixes the Products/Market/Weather pages)
 - Key: `REACT_APP_API_URL`
-- Value: `https://mkulimalink-api.herokuapp.com`
+- Value: `https://mkulimalink-api-aa384e99a888.herokuapp.com`
 - Click **Add**
 
 **Variable 2: REACT_APP_MAPBOX_TOKEN**
