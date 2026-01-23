@@ -47,14 +47,19 @@ app.get('/api/weather', (req, res) => {
   });
 });
 
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.join(__dirname, '../frontend/build');
-  app.use(express.static(frontendPath));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'MkulimaLink API Server',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      products: '/api/products',
+      market: '/api/market',
+      weather: '/api/weather'
+    }
   });
-}
+});
 
 // 404 handler
 app.use('*', (req, res) => {
