@@ -127,80 +127,65 @@ function Products() {
             </div>
           ))}
         </div>
-      ) : (
+      ) : data && data.products && Array.isArray(data.products) ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data?.products?.map((product, index) => (
-              <div
-                key={index}
-                className="card hover:shadow-xl transition-shadow group"
-              >
-                <div className="relative mb-4">
-                  <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-400">Product Image</span>
+            {data.products.map((product, index) => {
+              if (!product || !product.name) return null;
+              return (
+                <div
+                  key={index}
+                  className="card hover:shadow-xl transition-shadow group"
+                >
+                  <div className="relative mb-4">
+                    <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <span className="text-gray-400">Product Image</span>
+                    </div>
+                    <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100">
+                      <Heart size={20} className="text-gray-600" />
+                    </button>
                   </div>
-                  <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100">
-                    <Heart size={20} className="text-gray-600" />
-                  </button>
-                </div>
 
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600">
-                  {product.name}
-                </h3>
-                
-                <p className="text-gray-600 text-sm mb-3">High quality {product.category} from {product.region}</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600">
+                    {product.name || 'Product'}
+                  </h3>
+                  
+                  <p className="text-gray-600 text-sm mb-3">High quality {product.category || 'product'} from {product.region || 'Tanzania'}</p>
 
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-2xl font-bold text-primary-600">
-                      TZS {product.price.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-500">per {product.unit}</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-2xl font-bold text-primary-600">
+                        TZS {typeof product.price === 'number' ? product.price.toLocaleString() : product.price}
+                      </p>
+                      <p className="text-sm text-gray-500">per {product.unit || 'unit'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">{product.quantity || 0} {product.unit || 'unit'}</p>
+                      <span className="badge badge-info">
+                        {product.category || 'Other'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600">{product.quantity} {product.unit}</p>
-                    <span className="badge badge-info">
-                      {product.category}
-                    </span>
+
+                  <div className="flex items-center text-sm text-gray-600">
+                    <MapPin size={16} className="mr-1" />
+                    <span>{product.region || 'Tanzania'}</span>
                   </div>
                 </div>
-
-                <div className="flex items-center text-sm text-gray-600">
-                  <MapPin size={16} className="mr-1" />
-                  <span>{product.region || 'Tanzania'}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {data?.products?.length === 0 && (
+          {data.products.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">No products found</p>
             </div>
           )}
-
-          {data && data.totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="btn-secondary disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="px-4 py-2 text-gray-700">
-                Page {page} of {data.totalPages}
-              </span>
-              <button
-                onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
-                disabled={page === data.totalPages}
-                className="btn-secondary disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          )}
         </>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Unable to load products. Please try again.</p>
+        </div>
       )}
     </div>
   );

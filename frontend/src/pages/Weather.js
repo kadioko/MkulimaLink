@@ -115,7 +115,7 @@ function Weather() {
           <div className="skeleton h-32 mb-4"></div>
           <div className="skeleton h-6 w-1/2"></div>
         </div>
-      ) : weatherData && Object.keys(weatherData).length > 0 ? (
+      ) : weatherData && weatherData.location && typeof weatherData.temperature === 'number' ? (
         <>
           <div className="card mb-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
@@ -125,16 +125,16 @@ function Weather() {
               <div className="flex-1 text-center md:text-left">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{weatherData.location || selectedRegion}</h2>
                 <p className="text-5xl font-bold text-gray-900 mb-2">
-                  {Math.round(weatherData.temperature)}°C
+                  {Math.round(weatherData.temperature || 0)}°C
                 </p>
-                <p className="text-xl text-gray-600">{weatherData.condition}</p>
+                <p className="text-xl text-gray-600">{weatherData.condition || 'No data'}</p>
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div className="text-center">
                   <Droplets className="text-blue-500 mx-auto mb-2" size={32} />
                   <p className="text-sm text-gray-600">Humidity</p>
                   <p className="text-xl font-semibold text-gray-900">
-                    {Math.round(weatherData.humidity)}%
+                    {typeof weatherData.humidity === 'number' ? Math.round(weatherData.humidity) : 'N/A'}%
                   </p>
                 </div>
               </div>
@@ -143,7 +143,7 @@ function Weather() {
         </>
       ) : (
         <div className="text-center py-12">
-          <p className="text-gray-500">No weather data available</p>
+          <p className="text-gray-500">Unable to load weather data. Please try again.</p>
         </div>
       )}
 

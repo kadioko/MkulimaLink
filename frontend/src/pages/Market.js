@@ -108,41 +108,42 @@ function Market() {
             </div>
           ))}
         </div>
-      ) : (
+      ) : latestPrices && latestPrices.prices && Array.isArray(latestPrices.prices) && latestPrices.prices.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {latestPrices?.prices?.map((price, index) => (
-            <div key={index} className="card hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{price.product}</h3>
-                  <p className="text-sm text-gray-600">{price.region}</p>
+          {latestPrices.prices.map((price, index) => {
+            if (!price || !price.product) return null;
+            return (
+              <div key={index} className="card hover:shadow-lg transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{price.product || 'Product'}</h3>
+                    <p className="text-sm text-gray-600">{price.region || 'Region'}</p>
+                  </div>
+                  {getTrendIcon(price.trend)}
                 </div>
-                {getTrendIcon(price.trend)}
-              </div>
 
-              <div className="mb-3">
-                <p className="text-3xl font-bold text-primary-600">
-                  TZS {price.price?.toLocaleString() || price.price}
-                </p>
-                <p className="text-sm text-gray-600">Current Price</p>
-              </div>
+                <div className="mb-3">
+                  <p className="text-3xl font-bold text-primary-600">
+                    TZS {typeof price.price === 'number' ? price.price.toLocaleString() : price.price}
+                  </p>
+                  <p className="text-sm text-gray-600">Current Price</p>
+                </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                <span className={`badge ${
-                  price.trend === 'up' ? 'badge-success' :
-                  price.trend === 'down' ? 'badge-danger' : 'badge-info'
-                }`}>
-                  {price.trend}
-                </span>
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                  <span className={`badge ${
+                    price.trend === 'up' ? 'badge-success' :
+                    price.trend === 'down' ? 'badge-danger' : 'badge-info'
+                  }`}>
+                    {price.trend || 'stable'}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-
-          {(!latestPrices?.prices || latestPrices.prices.length === 0) && (
-            <div className="col-span-full text-center py-12">
-              <p className="text-gray-500 text-lg">No market data available</p>
-            </div>
-          )}
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Unable to load market data. Please try again.</p>
         </div>
       )}
 
