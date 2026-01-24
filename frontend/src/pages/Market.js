@@ -16,7 +16,7 @@ function Market() {
         if (selectedCategory) params.append('category', selectedCategory);
         if (selectedRegion) params.append('region', selectedRegion);
         
-        const response = await api.get(`/market?${params}`);
+        const response = await api.get(`/api/market?${params}`);
         return response.data;
       } catch (error) {
         console.error('Error fetching market prices:', error);
@@ -27,7 +27,7 @@ function Market() {
 
   const { data: regions } = useQuery('regions', async () => {
     try {
-      const response = await api.get('/products');
+      const response = await api.get('/api/products');
       const uniqueRegions = [...new Set(response.data.products?.map(p => p.region).filter(Boolean))];
       return { regions: uniqueRegions };
     } catch (error) {
@@ -38,7 +38,7 @@ function Market() {
 
   const { data: categories } = useQuery('categories', async () => {
     try {
-      const response = await api.get('/products');
+      const response = await api.get('/api/products');
       const uniqueCategories = [...new Set(response.data.products?.map(p => p.category).filter(Boolean))];
       return { categories: uniqueCategories };
     } catch (error) {

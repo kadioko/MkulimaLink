@@ -10,7 +10,7 @@ function Weather() {
     ['weather', selectedRegion],
     async () => {
       try {
-        const response = await api.get(`/weather`);
+        const response = await api.get(`/api/weather`);
         const weather = response.data.weather?.find(w => w.location === selectedRegion) || response.data.weather?.[0];
         return weather || {};
       } catch (error) {
@@ -25,7 +25,7 @@ function Weather() {
     ['weather-alerts', selectedRegion],
     async () => {
       try {
-        await api.get(`/weather`);
+        await api.get(`/api/weather`);
         return { alerts: [] };
       } catch (error) {
         console.error('Error fetching weather alerts:', error);
@@ -37,7 +37,7 @@ function Weather() {
 
   const { data: regions } = useQuery('weather-regions', async () => {
     try {
-      const response = await api.get('/weather');
+      const response = await api.get('/api/weather');
       const weatherRegions = response.data.weather?.map(w => w.location) || [];
       return { regions: weatherRegions };
     } catch (error) {
