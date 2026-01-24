@@ -14,17 +14,14 @@ function Products() {
     quality: '',
     organic: ''
   });
-  const [page, setPage] = useState(1);
-
   const { data, isLoading } = useQuery(
-    ['products', filters, page],
+    ['products', filters],
     async () => {
       try {
         const params = new URLSearchParams();
         Object.entries(filters).forEach(([key, value]) => {
           if (value) params.append(key, value);
         });
-        params.append('page', page);
         params.append('limit', '12');
         
         const response = await api.get(`/api/products?${params}`);
