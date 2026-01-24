@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 
 const express = require('express');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 
 // Middleware
+app.use(cors({
+  origin: ['https://mkulimalink.vercel.app', 'http://localhost:3000', 'http://localhost:5000'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
