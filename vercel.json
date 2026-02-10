@@ -1,7 +1,7 @@
 {
   "framework": "create-react-app",
   "rootDirectory": "frontend",
-  "installCommand": "npm ci",
+  "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
   "outputDirectory": "build",
   "rewrites": [

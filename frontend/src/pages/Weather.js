@@ -72,7 +72,7 @@ function Weather() {
           onChange={(e) => setSelectedRegion(e.target.value)}
           className="input-field max-w-md"
         >
-          {regions?.map(region => (
+          {regions?.regions?.map(region => (
             <option key={region} value={region}>{region}</option>
           ))}
         </select>

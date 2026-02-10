@@ -74,7 +74,7 @@ function Market() {
               className="input-field"
             >
               <option value="">All Regions</option>
-              {regions?.map(region => (
+              {regions?.regions?.map(region => (
                 <option key={region} value={region}>{region}</option>
               ))}
             </select>
@@ -88,7 +88,7 @@ function Market() {
               className="input-field"
             >
               <option value="">All Categories</option>
-              {categories?.map(category => (
+              {categories?.categories?.map(category => (
                 <option key={category} value={category}>
                   {category.charAt(0).toUpperCase() + category.slice(1)}
                 </option>
