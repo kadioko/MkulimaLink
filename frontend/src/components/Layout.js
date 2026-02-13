@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Home, ShoppingBag, TrendingUp, Cloud, Sparkles, User, LogOut, Bell } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { useCountryStore, COUNTRIES } from '../store/countryStore';
 
 function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout } = useAuthStore();
+  const { country, setCountry } = useCountryStore();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -51,6 +53,20 @@ function Layout() {
                   {item.name}
                 </Link>
               ))}
+            </div>
+
+            <div className="flex items-center">
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="bg-gray-100 border border-gray-300 text-gray-700 text-sm rounded-lg px-2 py-1.5 focus:ring-primary-500 focus:border-primary-500 cursor-pointer"
+              >
+                {Object.values(COUNTRIES).map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.flag} {c.name} ({c.currency})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -163,7 +179,7 @@ function Layout() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">MkulimaLink</h3>
               <p className="text-gray-600 text-sm">
-                Connecting Tanzanian farmers and buyers with AI-powered marketplace solutions.
+                Connecting East African farmers and buyers with AI-powered marketplace solutions.
               </p>
             </div>
             <div>
@@ -178,9 +194,9 @@ function Layout() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact</h3>
               <p className="text-gray-600 text-sm">
-                Email: support@mkulimalink.co.tz<br />
-                Phone: +255 XXX XXX XXX<br />
-                Dar es Salaam, Tanzania
+                Email: support@mkulimalink.com<br />
+                Serving Tanzania & Kenya<br />
+                Dar es Salaam | Nairobi
               </p>
             </div>
           </div>

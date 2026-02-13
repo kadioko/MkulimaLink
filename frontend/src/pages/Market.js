@@ -3,18 +3,22 @@ import { useQuery } from 'react-query';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../api/axios';
+import { useCountryStore } from '../store/countryStore';
 
 function Market() {
+  const { country, getCurrency } = useCountryStore();
+  const currency = getCurrency();
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
   const { data: latestPrices, isLoading } = useQuery(
-    ['market-prices', selectedCategory, selectedRegion],
+    ['market-prices', selectedCategory, selectedRegion, country],
     async () => {
       try {
         const params = new URLSearchParams();
         if (selectedCategory) params.append('category', selectedCategory);
         if (selectedRegion) params.append('region', selectedRegion);
+        params.append('country', country);
         
         const response = await api.get(`/api/market?${params}`);
         return response.data;
@@ -25,9 +29,9 @@ function Market() {
     }
   );
 
-  const { data: regions } = useQuery('regions', async () => {
+  const { data: regions } = useQuery(['regions', country], async () => {
     try {
-      const response = await api.get('/api/products');
+      const response = await api.get(`/api/products?country=${country}`);
       const uniqueRegions = [...new Set(response.data.products?.map(p => p.region).filter(Boolean))];
       return { regions: uniqueRegions };
     } catch (error) {
@@ -36,9 +40,9 @@ function Market() {
     }
   });
 
-  const { data: categories } = useQuery('categories', async () => {
+  const { data: categories } = useQuery(['categories', country], async () => {
     try {
-      const response = await api.get('/api/products');
+      const response = await api.get(`/api/products?country=${country}`);
       const uniqueCategories = [...new Set(response.data.products?.map(p => p.category).filter(Boolean))];
       return { categories: uniqueCategories };
     } catch (error) {
@@ -62,7 +66,7 @@ function Market() {
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Market Prices</h1>
-      <p className="text-gray-600 mb-8">Real-time agricultural commodity prices across Tanzania</p>
+      <p className="text-gray-600 mb-8">Real-time agricultural commodity prices across East Africa</p>
 
       <div className="card mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -124,7 +128,7 @@ function Market() {
 
                 <div className="mb-3">
                   <p className="text-3xl font-bold text-primary-600">
-                    TZS {typeof price.price === 'number' ? price.price.toLocaleString() : price.price}
+                    {price.currency || currency} {typeof price.price === 'number' ? price.price.toLocaleString() : price.price}
                   </p>
                   <p className="text-sm text-gray-600">Current Price</p>
                 </div>

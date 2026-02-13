@@ -14,7 +14,7 @@ const SEOHead = ({
 }) => {
   // Default values
   const defaultTitle = 'MkulimaLink - Agriculture Super-App for East Africa';
-  const defaultDescription = 'Connect farmers, buyers, and suppliers in Tanzania. Buy fresh produce, get micro-loans, insurance, and farming insights. AI-powered marketplace for agriculture.';
+  const defaultDescription = 'Connect farmers, buyers, and suppliers across East Africa. Buy fresh produce, get micro-loans, insurance, and farming insights. AI-powered marketplace for agriculture in Tanzania and Kenya.';
   const defaultImage = 'https://mkulimalink.co.tz/images/og-image.jpg';
   const defaultUrl = 'https://mkulimalink.co.tz';
 
@@ -26,9 +26,9 @@ const SEOHead = ({
 
   // Generate keywords
   const defaultKeywords = [
-    'agriculture', 'tanzania', 'farmers', 'marketplace', 'fresh produce',
+    'agriculture', 'tanzania', 'kenya', 'farmers', 'marketplace', 'fresh produce',
     'micro-loans', 'insurance', 'farming', 'crops', 'livestock',
-    'mkulima', 'agritech', 'fintech', 'east africa', 'dar es salaam'
+    'mkulima', 'agritech', 'fintech', 'east africa', 'dar es salaam', 'nairobi'
   ];
   const finalKeywords = keywords 
     ? [...defaultKeywords, ...keywords].join(', ')
@@ -117,7 +117,7 @@ const SEOHead = ({
 export const ProductSEO = ({ product }) => (
   <SEOHead
     title={product.name}
-    description={`${product.description} - ${product.category} from ${product.location.region}. Price: ${product.price} TZS/${product.unit}. Available on MkulimaLink.`}
+    description={`${product.description} - ${product.category} from ${product.location?.region || 'East Africa'}. Price: ${product.price} ${product.currency || 'TZS'}/${product.unit}. Available on MkulimaLink.`}
     keywords={[product.category, product.location.region, 'fresh produce', 'farmers']}
     image={product.images?.[0]}
     url={`https://mkulimalink.co.tz/products/${product._id}`}
@@ -128,7 +128,7 @@ export const ProductSEO = ({ product }) => (
 export const CategorySEO = ({ category, region }) => (
   <SEOHead
     title={`${category} in ${region}`}
-    description={`Buy fresh ${category} directly from farmers in ${region}, Tanzania. Quality produce at fair prices on MkulimaLink.`}
+    description={`Buy fresh ${category} directly from farmers in ${region}. Quality produce at fair prices on MkulimaLink.`}
     keywords={[category, region, 'farmers', 'fresh produce', 'direct buying']}
     url={`https://mkulimalink.co.tz/products?category=${category}&region=${region}`}
   />
@@ -137,8 +137,8 @@ export const CategorySEO = ({ category, region }) => (
 export const RegionSEO = ({ region }) => (
   <SEOHead
     title={`Agricultural Products in ${region}`}
-    description={`Connect with farmers and buy fresh agricultural products directly from ${region}, Tanzania. Quality produce, fair prices.`}
-    keywords={[region, 'agriculture', 'farmers', 'fresh produce', 'tanzania']}
+    description={`Connect with farmers and buy fresh agricultural products directly from ${region}. Quality produce, fair prices.`}
+    keywords={[region, 'agriculture', 'farmers', 'fresh produce', 'east africa']}
     url={`https://mkulimalink.co.tz/products?region=${region}`}
   />
 );

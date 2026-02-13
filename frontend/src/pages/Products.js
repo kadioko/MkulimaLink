@@ -3,8 +3,13 @@ import { useQuery } from 'react-query';
 import { Search, Filter, MapPin, Heart } from 'lucide-react';
 import api from '../api/axios';
 import { demoProducts } from '../utils/demoData';
+import { useCountryStore, COUNTRIES } from '../store/countryStore';
 
 function Products() {
+  const { country, getCurrency } = useCountryStore();
+  const currency = getCurrency();
+  const currentCountry = COUNTRIES[country];
+
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -15,7 +20,7 @@ function Products() {
     organic: ''
   });
   const { data, isLoading } = useQuery(
-    ['products', filters],
+    ['products', filters, country],
     async () => {
       try {
         const params = new URLSearchParams();
@@ -23,12 +28,12 @@ function Products() {
           if (value) params.append(key, value);
         });
         params.append('limit', '12');
+        params.append('country', country);
         
         const response = await api.get(`/api/products?${params}`);
         return response.data;
       } catch (error) {
         console.error('Error fetching products:', error);
-        // Use demo data if API fails
         return { products: demoProducts, totalPages: 1 };
       }
     }
@@ -39,10 +44,7 @@ function Products() {
     'dairy', 'poultry', 'seeds', 'fertilizers', 'equipment'
   ];
 
-  const regions = [
-    'Dar es Salaam', 'Arusha', 'Dodoma', 'Mwanza', 'Mbeya',
-    'Morogoro', 'Tanga', 'Moshi', 'Iringa', 'Kilimanjaro'
-  ];
+  const regions = currentCountry.regions;
 
   return (
     <div>
@@ -147,12 +149,12 @@ function Products() {
                     {product.name || 'Product'}
                   </h3>
                   
-                  <p className="text-gray-600 text-sm mb-3">High quality {product.category || 'product'} from {product.region || 'Tanzania'}</p>
+                  <p className="text-gray-600 text-sm mb-3">High quality {product.category || 'product'} from {product.region || currentCountry.name}</p>
 
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <p className="text-2xl font-bold text-primary-600">
-                        TZS {typeof product.price === 'number' ? product.price.toLocaleString() : product.price}
+                        {product.currency || currency} {typeof product.price === 'number' ? product.price.toLocaleString() : product.price}
                       </p>
                       <p className="text-sm text-gray-500">per {product.unit || 'unit'}</p>
                     </div>

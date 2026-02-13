@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { Cloud, CloudRain, Sun, Droplets, AlertTriangle } from 'lucide-react';
 import api from '../api/axios';
+import { useCountryStore } from '../store/countryStore';
 
 function Weather() {
-  const [selectedRegion, setSelectedRegion] = useState('Dar es Salaam');
+  const { country } = useCountryStore();
+  const [selectedRegion, setSelectedRegion] = useState(country === 'KE' ? 'Nairobi' : 'Dar es Salaam');
+
+  useEffect(() => {
+    setSelectedRegion(country === 'KE' ? 'Nairobi' : 'Dar es Salaam');
+  }, [country]);
 
   const { data: weatherData, isLoading } = useQuery(
-    ['weather', selectedRegion],
+    ['weather', selectedRegion, country],
     async () => {
       try {
-        const response = await api.get(`/api/weather`);
+        const response = await api.get(`/api/weather?country=${country}`);
         const weather = response.data.weather?.find(w => w.location === selectedRegion) || response.data.weather?.[0];
         return weather || {};
       } catch (error) {
@@ -22,10 +28,10 @@ function Weather() {
   );
 
   const { data: alerts } = useQuery(
-    ['weather-alerts', selectedRegion],
+    ['weather-alerts', selectedRegion, country],
     async () => {
       try {
-        await api.get(`/api/weather`);
+        await api.get(`/api/weather?country=${country}`);
         return { alerts: [] };
       } catch (error) {
         console.error('Error fetching weather alerts:', error);
@@ -35,14 +41,14 @@ function Weather() {
     { enabled: !!selectedRegion }
   );
 
-  const { data: regions } = useQuery('weather-regions', async () => {
+  const { data: regions } = useQuery(['weather-regions', country], async () => {
     try {
-      const response = await api.get('/api/weather');
+      const response = await api.get(`/api/weather?country=${country}`);
       const weatherRegions = response.data.weather?.map(w => w.location) || [];
       return { regions: weatherRegions };
     } catch (error) {
       console.error('Error fetching weather regions:', error);
-      return { regions: ['Dar es Salaam', 'Morogoro', 'Arusha', 'Iringa', 'Mbeya', 'Mwanza'] };
+      return { regions: [] };
     }
   });
 
