@@ -138,6 +138,21 @@ const users = [];        // { id, name, email, phone, passwordHash, role, countr
 const userProducts = []; // products created by registered users
 const transactions = []; // { id, productId, buyerId, sellerId, quantity, totalAmount, status, createdAt }
 
+// ─── Seed demo accounts on startup ───────────────────────────────────────────
+(async () => {
+  const demoAccounts = [
+    { name: 'Demo Farmer (TZ)', email: 'farmer@demo.com', password: 'demo1234', role: 'farmer', country: 'TZ', phone: '+255700000001', location: { region: 'Arusha', district: 'Arusha' }, isPremium: false },
+    { name: 'Demo Buyer (TZ)',  email: 'buyer@demo.com',  password: 'demo1234', role: 'buyer',  country: 'TZ', phone: '+255700000002', location: { region: 'Dar es Salaam', district: 'Ilala' }, isPremium: false },
+    { name: 'Demo Premium (TZ)', email: 'premium@demo.com', password: 'demo1234', role: 'farmer', country: 'TZ', phone: '+255700000003', location: { region: 'Morogoro', district: 'Morogoro' }, isPremium: true, premiumExpiresAt: new Date(Date.now() + 365*24*60*60*1000).toISOString() },
+    { name: 'Demo Farmer (KE)', email: 'farmer.ke@demo.com', password: 'demo1234', role: 'farmer', country: 'KE', phone: '+254700000001', location: { region: 'Nakuru', district: 'Nakuru' }, isPremium: false },
+  ];
+  for (const acc of demoAccounts) {
+    const passwordHash = await bcrypt.hash(acc.password, 10);
+    users.push({ id: uuidv4(), ...acc, passwordHash, createdAt: new Date().toISOString() });
+  }
+  console.log(`Seeded ${demoAccounts.length} demo accounts`);
+})();
+
 // ─── Auth middleware ───────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {
   const auth = req.headers.authorization;

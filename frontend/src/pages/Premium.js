@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 import { useCountryStore } from '../store/countryStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 function Premium() {
   const { user, updateUser } = useAuthStore();
@@ -49,6 +49,18 @@ function Premium() {
     if (phoneNumber) {
       subscribeMutation.mutate({ plan, phoneNumber });
     }
+  };
+
+  const handleTestPremium = () => {
+    if (!user) {
+      toast.error('Please login first to test premium');
+      navigate('/login');
+      return;
+    }
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    updateUser({ isPremium: true, premiumExpiresAt: expiresAt });
+    toast.success('🎉 Premium activated for testing! Explore all features.');
+    navigate('/ai-insights');
   };
 
   const features = [
@@ -98,6 +110,27 @@ function Premium() {
           Get AI-powered insights, advanced analytics, and priority support to maximize your farming success
         </p>
       </div>
+
+      {/* Test / Demo banner */}
+      {!user ? (
+        <div className="card bg-blue-50 border border-blue-200 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-blue-900">Want to test premium features?</p>
+            <p className="text-sm text-blue-700">Log in with the demo premium account or activate it on your own account.</p>
+          </div>
+          <Link to="/login" className="btn-primary whitespace-nowrap">Demo Login →</Link>
+        </div>
+      ) : !user.isPremium ? (
+        <div className="card bg-blue-50 border border-blue-200 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-blue-900">🧪 Test Mode — No payment needed</p>
+            <p className="text-sm text-blue-700">Activate premium instantly on your account to explore all features.</p>
+          </div>
+          <button onClick={handleTestPremium} className="btn-primary whitespace-nowrap">
+            ✨ Activate Premium (Free Test)
+          </button>
+        </div>
+      ) : null}
 
       {user?.isPremium && (
         <div className="card bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-300 mb-8">

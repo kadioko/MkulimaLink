@@ -5,8 +5,16 @@ import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 
+const DEMO_ACCOUNTS = [
+  { label: '🌾 Farmer (TZ)', email: 'farmer@demo.com',   password: 'demo1234', desc: 'Tanzania farmer account' },
+  { label: '🛒 Buyer (TZ)',   email: 'buyer@demo.com',    password: 'demo1234', desc: 'Tanzania buyer account' },
+  { label: '👑 Premium (TZ)', email: 'premium@demo.com',  password: 'demo1234', desc: 'Premium features unlocked' },
+  { label: '🌾 Farmer (KE)', email: 'farmer.ke@demo.com', password: 'demo1234', desc: 'Kenya farmer account' },
+];
+
 function Login() {
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(null);
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -22,6 +30,23 @@ function Login() {
       toast.error(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (account, idx) => {
+    setDemoLoading(idx);
+    try {
+      const response = await api.post('/api/auth/login', {
+        email: account.email,
+        password: account.password,
+      });
+      setAuth(response.data, response.data.token);
+      toast.success(`Logged in as ${account.label}`);
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error('Demo login failed — backend may be restarting, try again in 10s');
+    } finally {
+      setDemoLoading(null);
     }
   };
 
@@ -75,6 +100,31 @@ function Login() {
               Register here
             </Link>
           </p>
+        </div>
+
+        {/* Demo accounts */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide text-center mb-3">
+            Quick Demo Login
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {DEMO_ACCOUNTS.map((account, idx) => (
+              <button
+                key={account.email}
+                type="button"
+                onClick={() => handleDemoLogin(account, idx)}
+                disabled={demoLoading !== null}
+                title={account.desc}
+                className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-primary-400 hover:bg-primary-50 transition-colors text-left disabled:opacity-50"
+              >
+                <span className="text-sm font-semibold text-gray-800">
+                  {demoLoading === idx ? 'Signing in...' : account.label}
+                </span>
+                <span className="text-xs text-gray-400">{account.desc}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-2">Password: <code className="bg-gray-100 px-1 rounded">demo1234</code></p>
         </div>
       </div>
     </div>
