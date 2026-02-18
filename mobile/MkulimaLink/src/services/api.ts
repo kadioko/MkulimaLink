@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 class ApiService {
   private api: AxiosInstance;
-  private baseURL = 'http://localhost:5000/api'; // Change for production
+  private baseURL = 'https://mkulimalink-api-aa384e99a888.herokuapp.com/api';
 
   constructor() {
     this.api = axios.create({

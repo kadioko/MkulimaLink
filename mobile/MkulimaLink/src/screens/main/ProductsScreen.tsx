@@ -1,64 +1,54 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useQuery } from '@tanstack/react-query';
+import { productApi } from '../../services/api';
 
 interface Product {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
   price: number;
   unit: string;
   category: string;
-  location: {
-    region: string;
-  };
-  seller: {
-    name: string;
-  };
+  currency?: string;
+  region?: string;
+  location?: { region: string };
+  seller?: { name: string };
 }
 
 const ProductsScreen: React.FC = () => {
-  // Mock data - replace with API call
-  const products: Product[] = [
-    {
-      id: '1',
-      name: 'Fresh Tomatoes',
-      price: 2000,
-      unit: 'kg',
-      category: 'vegetables',
-      location: { region: 'Arusha' },
-      seller: { name: 'John Farmer' },
-    },
-    {
-      id: '2',
-      name: 'Organic Maize',
-      price: 1500,
-      unit: 'kg',
-      category: 'grains',
-      location: { region: 'Mwanza' },
-      seller: { name: 'Mary Farmer' },
-    },
-    {
-      id: '3',
-      name: 'Fresh Mangoes',
-      price: 3000,
-      unit: 'kg',
-      category: 'fruits',
-      location: { region: 'Tanga' },
-      seller: { name: 'Peter Farmer' },
-    },
-  ];
+  const navigation = useNavigation();
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['products', selectedCategory],
+    queryFn: () => productApi.getAll(selectedCategory ? { category: selectedCategory } : {}),
+  });
+
+  const products: Product[] = (data as any)?.products || [];
+  const filtered = search
+    ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    : products;
+
+  const CATEGORIES = ['', 'Vegetables', 'Grains', 'Fruits', 'Dairy', 'Seeds', 'Inputs'];
 
   const renderProduct = ({ item }: { item: Product }) => (
-    <TouchableOpacity style={styles.productCard}>
+    <TouchableOpacity
+      style={styles.productCard}
+      onPress={() => (navigation as any).navigate('ProductDetail', { productId: item._id || item.id })}
+    >
       <View style={styles.productHeader}>
-        <Text style={styles.productName}>{item.name}</Text>
+        <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
         <Text style={styles.productPrice}>
-          TZS {item.price.toLocaleString()}/{item.unit}
+          {item.currency || 'TZS'} {item.price.toLocaleString()}/{item.unit}
         </Text>
       </View>
       <View style={styles.productDetails}>
         <Text style={styles.productCategory}>{item.category}</Text>
-        <Text style={styles.productLocation}>📍 {item.location.region}</Text>
-        <Text style={styles.productSeller}>👤 {item.seller.name}</Text>
+        <Text style={styles.productLocation}>📍 {item.region || item.location?.region || '-'}</Text>
+        {item.seller?.name && <Text style={styles.productSeller}>👤 {item.seller.name}</Text>}
       </View>
     </TouchableOpacity>
   );
@@ -67,16 +57,52 @@ const ProductsScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Products</Text>
-        <Text style={styles.subtitle}>Fresh produce from local farmers</Text>
+        <TextInput
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search products..."
+          placeholderTextColor="#9ca3af"
+        />
+        <FlatList
+          horizontal
+          data={CATEGORIES}
+          keyExtractor={(item) => item || 'all'}
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryRow}
+          renderItem={({ item: cat }) => (
+            <TouchableOpacity
+              style={[styles.catChip, selectedCategory === cat && styles.catChipActive]}
+              onPress={() => setSelectedCategory(cat)}
+            >
+              <Text style={[styles.catChipText, selectedCategory === cat && styles.catChipTextActive]}>
+                {cat || 'All'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
       </View>
 
-      <FlatList
-        data={products}
-        renderItem={renderProduct}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#10b981" />
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          renderItem={renderProduct}
+          keyExtractor={(item) => String(item._id || item.id)}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          onRefresh={refetch}
+          refreshing={isLoading}
+          ListEmptyComponent={
+            <View style={styles.centered}>
+              <Text style={styles.emptyText}>No products found</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 };
@@ -154,6 +180,52 @@ const styles = StyleSheet.create({
   productSeller: {
     fontSize: 14,
     color: '#6b7280',
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 15,
+    backgroundColor: '#f9fafb',
+    color: '#111827',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  categoryRow: {
+    marginBottom: 4,
+  },
+  catChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  catChipActive: {
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+  catChipText: {
+    fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  catChipTextActive: {
+    color: '#ffffff',
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 60,
+  },
+  emptyText: {
+    color: '#6b7280',
+    fontSize: 15,
   },
 });
 

@@ -44,7 +44,7 @@ interface RegisterData {
   };
 }
 
-const API_BASE_URL = 'http://localhost:5000/api'; // Change for production
+const API_BASE_URL = 'https://mkulimalink-api-aa384e99a888.herokuapp.com/api';
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -149,7 +149,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { token } = get();
       const response = await axios.put(
-        `${API_BASE_URL}/users/profile`,
+        `${API_BASE_URL}/auth/profile`,
         userData,
         {
           headers: { Authorization: `Bearer ${token}` },

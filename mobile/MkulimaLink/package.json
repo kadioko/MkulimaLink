@@ -8,7 +8,7 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "postinstall": "patch-package"
+    "postinstall": "echo 'postinstall done'"
   },
   "dependencies": {
     "react": "18.2.0",
