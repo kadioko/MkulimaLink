@@ -4,9 +4,12 @@ import { useQuery } from 'react-query';
 import { ShoppingBag, TrendingUp, DollarSign, Package, Plus } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
+import { useCountryStore } from '../store/countryStore';
 
 function Dashboard() {
   const { user } = useAuthStore();
+  const { getCurrency } = useCountryStore();
+  const currency = getCurrency();
   const isFarmer = user?.role === 'farmer';
 
   const { data: stats } = useQuery('dashboard-stats', async () => {
@@ -66,7 +69,7 @@ function Dashboard() {
             <DollarSign className="text-blue-600" size={24} />
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            TZS {(stats?.totalRevenue || 0).toLocaleString()}
+            {currency} {(stats?.totalRevenue || 0).toLocaleString()}
           </p>
         </div>
 
@@ -97,7 +100,7 @@ function Dashboard() {
                   <div>
                     <p className="font-medium text-gray-900">{product.name}</p>
                     <p className="text-sm text-gray-600">
-                      {product.quantity} {product.unit} • TZS {product.price.toLocaleString()}/{product.unit}
+                      {product.quantity} {product.unit} • {product.currency || currency} {product.price.toLocaleString()}/{product.unit}
                     </p>
                   </div>
                   <span className={`badge ${
@@ -128,7 +131,7 @@ function Dashboard() {
                     {transaction.product?.name || 'Product'}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {transaction.quantity} {transaction.product?.unit} • TZS {transaction.totalAmount.toLocaleString()}
+                    {transaction.quantity} {transaction.product?.unit} • {currency} {transaction.totalAmount.toLocaleString()}
                   </p>
                 </div>
                 <span className={`badge ${

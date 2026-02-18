@@ -5,16 +5,19 @@ import { MapPin, Calendar, Package, AlertCircle, ShoppingCart, Heart, Star } fro
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
+import { useCountryStore } from '../store/countryStore';
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { getCurrency } = useCountryStore();
+  const currency = getCurrency();
   const [quantity, setQuantity] = useState(1);
   const [showBuyModal, setShowBuyModal] = useState(false);
 
   const { data: product, isLoading } = useQuery(['product', id], async () => {
-    const response = await api.get(`/products/${id}`);
+    const response = await api.get(`/api/products/${id}`);
     return response.data;
   });
 
@@ -139,7 +142,7 @@ function ProductDetail() {
 
           <div className="mb-6">
             <p className="text-4xl font-bold text-primary-600 mb-1">
-              TZS {product.price.toLocaleString()}
+              {product.currency || currency} {product.price.toLocaleString()}
             </p>
             <p className="text-gray-600">per {product.unit}</p>
           </div>
@@ -186,7 +189,7 @@ function ProductDetail() {
               <h3 className="font-semibold text-gray-900 mb-2">AI Insights (Premium)</h3>
               <div className="space-y-2 text-sm">
                 <p><strong>Market Demand:</strong> {product.aiInsights.marketDemand}</p>
-                <p><strong>Recommended Price:</strong> TZS {product.aiInsights.priceRecommendation?.toLocaleString()}</p>
+                <p><strong>Recommended Price:</strong> {product.currency || currency} {product.aiInsights.priceRecommendation?.toLocaleString()}</p>
                 <p><strong>Analysis:</strong> {product.aiInsights.competitorAnalysis}</p>
               </div>
             </div>
@@ -224,7 +227,7 @@ function ProductDetail() {
               <div className="p-4 bg-primary-50 rounded-lg">
                 <p className="text-sm text-gray-700 mb-1">Total Price</p>
                 <p className="text-2xl font-bold text-primary-600">
-                  TZS {totalPrice.toLocaleString()}
+                  {product.currency || currency} {totalPrice.toLocaleString()}
                 </p>
               </div>
 
@@ -247,7 +250,7 @@ function ProductDetail() {
             <div className="space-y-3 mb-6">
               <p><strong>Product:</strong> {product.name}</p>
               <p><strong>Quantity:</strong> {quantity} {product.unit}</p>
-              <p><strong>Total:</strong> TZS {totalPrice.toLocaleString()}</p>
+              <p><strong>Total:</strong> {product.currency || currency} {totalPrice.toLocaleString()}</p>
               <p className="text-sm text-gray-600">
                 You will receive an M-Pesa payment request on your phone.
               </p>

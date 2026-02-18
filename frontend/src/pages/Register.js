@@ -4,10 +4,13 @@ import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
+import { useCountryStore, COUNTRIES } from '../store/countryStore';
 
 function Register() {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState('farmer');
+  const { country, setCountry } = useCountryStore();
+  const currentCountry = COUNTRIES[country];
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -17,9 +20,10 @@ function Register() {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await api.post('/auth/register', {
+      const response = await api.post('/api/auth/register', {
         ...data,
-        role
+        role,
+        country
       });
       setAuth(response.data, response.data.token);
       toast.success('Registration successful!');
@@ -40,6 +44,23 @@ function Register() {
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Join MkulimaLink</h2>
           <p className="text-gray-600 mt-2">Create your account to get started</p>
+
+        <div className="flex gap-2 mt-4 justify-center">
+          {Object.values(COUNTRIES).map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => setCountry(c.code)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                country === c.code
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {c.flag} {c.name}
+            </button>
+          ))}
+        </div>
         </div>
 
         <div className="flex gap-4 mb-6">
@@ -86,7 +107,7 @@ function Register() {
                 type="tel"
                 {...register('phone', { required: 'Phone is required' })}
                 className="input-field"
-                placeholder="+255 XXX XXX XXX"
+                placeholder={`${currentCountry.phone} XXX XXX XXX`}
               />
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
             </div>
@@ -135,19 +156,12 @@ function Register() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Region ({currentCountry.name})</label>
               <select {...register('location.region')} className="input-field">
                 <option value="">Select Region</option>
-                <option value="Dar es Salaam">Dar es Salaam</option>
-                <option value="Arusha">Arusha</option>
-                <option value="Dodoma">Dodoma</option>
-                <option value="Mwanza">Mwanza</option>
-                <option value="Mbeya">Mbeya</option>
-                <option value="Morogoro">Morogoro</option>
-                <option value="Tanga">Tanga</option>
-                <option value="Moshi">Moshi</option>
-                <option value="Iringa">Iringa</option>
-                <option value="Kilimanjaro">Kilimanjaro</option>
+                {currentCountry.regions.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
               </select>
             </div>
 

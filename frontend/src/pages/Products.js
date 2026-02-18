@@ -40,8 +40,10 @@ function Products() {
   );
 
   const categories = [
-    'grains', 'vegetables', 'fruits', 'livestock', 
-    'dairy', 'poultry', 'seeds', 'fertilizers', 'equipment'
+    'Grains', 'Vegetables', 'Fruits', 'Livestock',
+    'Dairy', 'Poultry', 'Seeds', 'Fertilizers', 'Inputs',
+    ...(country === 'KE' ? ['Cash Crops'] : []),
+    'Equipment'
   ];
 
   const regions = currentCountry.regions;

@@ -2,7 +2,12 @@
 
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'mkulimalink-secret-key-2024';
 
 const app = express();
 
@@ -96,6 +101,210 @@ const realWeatherData = [
   { location: 'Nyeri', temperature: 19, humidity: 68, condition: 'Sunny', country: 'KE' },
 ];
 
+// ─── In-memory stores (persist for server lifetime) ───────────────────────────
+const users = [];        // { id, name, email, phone, passwordHash, role, country, location, isPremium, createdAt }
+const userProducts = []; // products created by registered users
+const transactions = []; // { id, productId, buyerId, sellerId, quantity, totalAmount, status, createdAt }
+
+// ─── Auth middleware ───────────────────────────────────────────────────────────
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorised' });
+  }
+  try {
+    const payload = jwt.verify(auth.slice(7), JWT_SECRET);
+    req.user = users.find(u => u.id === payload.id);
+    if (!req.user) return res.status(401).json({ message: 'User not found' });
+    next();
+  } catch {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+}
+
+function makeToken(user) {
+  return jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
+}
+
+function safeUser(u) {
+  const { passwordHash, ...rest } = u;
+  return rest;
+}
+
+// ─── Auth routes ───────────────────────────────────────────────────────────────
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { name, email, phone, password, role = 'farmer', country = 'TZ', location = {} } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ message: 'Name, email and password are required' });
+    if (users.find(u => u.email === email)) return res.status(400).json({ message: 'Email already registered' });
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = { id: uuidv4(), name, email, phone, passwordHash, role, country, location, isPremium: false, rating: 0, totalRatings: 0, createdAt: new Date().toISOString() };
+    users.push(user);
+    const token = makeToken(user);
+    res.status(201).json({ ...safeUser(user), token });
+  } catch (err) {
+    res.status(500).json({ message: 'Registration failed' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+    const user = users.find(u => u.email === email);
+    if (!user) return res.status(401).json({ message: 'Invalid email or password' });
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) return res.status(401).json({ message: 'Invalid email or password' });
+    const token = makeToken(user);
+    res.json({ ...safeUser(user), token });
+  } catch {
+    res.status(500).json({ message: 'Login failed' });
+  }
+});
+
+app.get('/api/auth/me', requireAuth, (req, res) => {
+  res.json(safeUser(req.user));
+});
+
+app.put('/api/auth/profile', requireAuth, async (req, res) => {
+  try {
+    const { name, phone, location, country } = req.body;
+    const idx = users.findIndex(u => u.id === req.user.id);
+    if (name) users[idx].name = name;
+    if (phone) users[idx].phone = phone;
+    if (location) users[idx].location = { ...users[idx].location, ...location };
+    if (country) users[idx].country = country;
+    res.json(safeUser(users[idx]));
+  } catch {
+    res.status(500).json({ message: 'Profile update failed' });
+  }
+});
+
+// ─── Product routes ────────────────────────────────────────────────────────────
+
+// GET my listings (auth required) — must be before /:id
+app.get('/api/products/my/listings', requireAuth, (req, res) => {
+  const mine = userProducts.filter(p => p.seller?._id === req.user.id);
+  res.json(mine);
+});
+
+// POST create product (auth required)
+app.post('/api/products', requireAuth, (req, res) => {
+  try {
+    const { name, category, description, price, quantity, unit, quality = 'standard', organic = false, harvestDate, location } = req.body;
+    if (!name || !category || !price || !quantity || !unit) {
+      return res.status(400).json({ message: 'Name, category, price, quantity and unit are required' });
+    }
+    const product = {
+      id: uuidv4(),
+      _id: uuidv4(),
+      name, category, description, price: Number(price), quantity: Number(quantity),
+      unit, quality, organic, harvestDate,
+      location: location || req.user.location,
+      region: location?.region || req.user.location?.region || '',
+      country: req.user.country || 'TZ',
+      currency: req.user.country === 'KE' ? 'KES' : 'TZS',
+      seller: { _id: req.user.id, name: req.user.name, location: req.user.location, rating: req.user.rating, totalRatings: req.user.totalRatings },
+      status: 'active',
+      images: [],
+      createdAt: new Date().toISOString()
+    };
+    userProducts.push(product);
+    res.status(201).json(product);
+  } catch {
+    res.status(500).json({ message: 'Failed to create product' });
+  }
+});
+
+// PUT update product (auth required, owner only)
+app.put('/api/products/:id', requireAuth, (req, res) => {
+  const idx = userProducts.findIndex(p => (p._id === req.params.id || p.id === req.params.id) && p.seller?._id === req.user.id);
+  if (idx === -1) return res.status(404).json({ message: 'Product not found or not yours' });
+  userProducts[idx] = { ...userProducts[idx], ...req.body, updatedAt: new Date().toISOString() };
+  res.json(userProducts[idx]);
+});
+
+// DELETE product (auth required, owner only)
+app.delete('/api/products/:id', requireAuth, (req, res) => {
+  const idx = userProducts.findIndex(p => (p._id === req.params.id || p.id === req.params.id) && p.seller?._id === req.user.id);
+  if (idx === -1) return res.status(404).json({ message: 'Product not found or not yours' });
+  userProducts.splice(idx, 1);
+  res.json({ message: 'Product deleted' });
+});
+
+// ─── Transaction routes ────────────────────────────────────────────────────────
+app.post('/api/transactions', requireAuth, (req, res) => {
+  try {
+    const { productId, quantity, deliveryDetails } = req.body;
+    const allProducts = [...realProducts.map((p, i) => ({ ...p, _id: `static-${i}`, id: `static-${i}` })), ...userProducts];
+    const product = allProducts.find(p => p._id === productId || p.id === productId);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (product.seller?._id === req.user.id) return res.status(400).json({ message: 'Cannot buy your own product' });
+    const qty = Number(quantity) || 1;
+    const totalAmount = product.price * qty;
+    const commission = Math.round(totalAmount * 0.05);
+    const tx = {
+      id: uuidv4(),
+      _id: uuidv4(),
+      productId,
+      product: { name: product.name, unit: product.unit },
+      buyerId: req.user.id,
+      sellerId: product.seller?._id || 'static',
+      quantity: qty,
+      totalAmount,
+      commission,
+      sellerAmount: totalAmount - commission,
+      deliveryDetails,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    transactions.push(tx);
+    res.status(201).json(tx);
+  } catch {
+    res.status(500).json({ message: 'Failed to create transaction' });
+  }
+});
+
+app.get('/api/transactions/stats/dashboard', requireAuth, (req, res) => {
+  const myTx = transactions.filter(t => t.buyerId === req.user.id || t.sellerId === req.user.id);
+  const completed = myTx.filter(t => t.status === 'completed');
+  const totalRevenue = completed
+    .filter(t => t.sellerId === req.user.id)
+    .reduce((sum, t) => sum + t.sellerAmount, 0);
+  const totalSpent = completed
+    .filter(t => t.buyerId === req.user.id)
+    .reduce((sum, t) => sum + t.totalAmount, 0);
+  res.json({
+    totalTransactions: myTx.length,
+    completedTransactions: completed.length,
+    totalRevenue,
+    totalSpent
+  });
+});
+
+app.get('/api/transactions/my/sales', requireAuth, (req, res) => {
+  const sales = transactions.filter(t => t.sellerId === req.user.id);
+  res.json(sales);
+});
+
+app.get('/api/transactions/my/purchases', requireAuth, (req, res) => {
+  const purchases = transactions.filter(t => t.buyerId === req.user.id);
+  res.json(purchases);
+});
+
+app.get('/api/transactions', requireAuth, (req, res) => {
+  const myTx = transactions.filter(t => t.buyerId === req.user.id || t.sellerId === req.user.id);
+  res.json(myTx);
+});
+
+app.put('/api/transactions/:id/status', requireAuth, (req, res) => {
+  const idx = transactions.findIndex(t => t._id === req.params.id || t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ message: 'Transaction not found' });
+  transactions[idx].status = req.body.status;
+  res.json(transactions[idx]);
+});
+
+// ─── Root endpoint ─────────────────────────────────────────────────────────────
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
@@ -125,10 +334,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Products (supports ?country=TZ or ?country=KE)
+// Products (supports ?country=TZ or ?country=KE) — merges static + user-created
 app.get('/api/products', (req, res) => {
   const { country } = req.query;
-  const filtered = country ? realProducts.filter(p => p.country === country.toUpperCase()) : realProducts;
+  const staticWithIds = realProducts.map((p, i) => ({ ...p, _id: `static-${i}`, id: `static-${i}` }));
+  const all = [...staticWithIds, ...userProducts];
+  const filtered = country ? all.filter(p => p.country === country.toUpperCase()) : all;
   res.json({ products: filtered });
 });
 

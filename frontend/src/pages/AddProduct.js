@@ -5,15 +5,20 @@ import { useMutation } from 'react-query';
 import { Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
+import { useCountryStore, COUNTRIES } from '../store/countryStore';
 
 function AddProduct() {
   const navigate = useNavigate();
+  const { country, getCurrency } = useCountryStore();
+  const currency = getCurrency();
+  const currentCountry = COUNTRIES[country];
+  const regions = currentCountry.regions;
   const [images, setImages] = useState([]);
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const createProductMutation = useMutation(
     async (formData) => {
-      const response = await api.post('/products', formData, {
+      const response = await api.post('/api/products', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       return response.data;
@@ -82,6 +87,17 @@ function AddProduct() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Region ({currentCountry.name})</label>
+                <select {...register('location.region', { required: 'Region is required' })} className="input-field">
+                  <option value="">Select region</option>
+                  {regions.map(region => (
+                    <option key={region} value={region}>{region}</option>
+                  ))}
+                </select>
+                {errors.location && errors.location.region && <p className="text-red-500 text-sm mt-1">{errors.location.region.message}</p>}
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                 <select {...register('category', { required: 'Category is required' })} className="input-field">
                   <option value="">Select category</option>
@@ -93,19 +109,12 @@ function AddProduct() {
                   <option value="poultry">Poultry</option>
                   <option value="seeds">Seeds</option>
                   <option value="fertilizers">Fertilizers</option>
+                  <option value="inputs">Inputs</option>
+                  {country === 'KE' && <option value="cash_crops">Cash Crops</option>}
                   <option value="equipment">Equipment</option>
                   <option value="other">Other</option>
                 </select>
                 {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quality *</label>
-                <select {...register('quality')} className="input-field">
-                  <option value="standard">Standard</option>
-                  <option value="premium">Premium</option>
-                  <option value="economy">Economy</option>
-                </select>
               </div>
             </div>
 
@@ -122,7 +131,7 @@ function AddProduct() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Price (TZS) *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Price ({currency}) *</label>
                 <input
                   type="number"
                   {...register('price', { required: 'Price is required', min: 0 })}
