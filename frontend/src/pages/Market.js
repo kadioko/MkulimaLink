@@ -53,13 +53,21 @@ function Market() {
 
   const getTrendIcon = (trend) => {
     switch (trend) {
+      case 'up':
       case 'rising':
         return <TrendingUp className="text-green-600" size={20} />;
+      case 'down':
       case 'falling':
         return <TrendingDown className="text-red-600" size={20} />;
       default:
         return <Minus className="text-gray-600" size={20} />;
     }
+  };
+
+  const getTrendLabel = (trend) => {
+    if (trend === 'up' || trend === 'rising') return 'Rising';
+    if (trend === 'down' || trend === 'falling') return 'Falling';
+    return 'Stable';
   };
 
 
@@ -135,11 +143,14 @@ function Market() {
 
                 <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                   <span className={`badge ${
-                    price.trend === 'up' ? 'badge-success' :
-                    price.trend === 'down' ? 'badge-danger' : 'badge-info'
+                    (price.trend === 'up' || price.trend === 'rising') ? 'badge-success' :
+                    (price.trend === 'down' || price.trend === 'falling') ? 'badge-danger' : 'badge-info'
                   }`}>
-                    {price.trend || 'stable'}
+                    {getTrendLabel(price.trend)}
                   </span>
+                  {price.unit && (
+                    <span className="text-xs text-gray-500">per {price.unit}</span>
+                  )}
                 </div>
               </div>
             );
@@ -154,9 +165,9 @@ function Market() {
       <div className="mt-8 card">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">About Market Prices</h2>
         <p className="text-gray-700 mb-4">
-          Our market prices are updated daily from major agricultural markets across Tanzania including
-          Kariakoo (Dar es Salaam), Arusha Central Market, and Mwanza Market. Prices reflect wholesale
-          rates and may vary based on quality, season, and local demand.
+          Our market prices are updated daily from major agricultural markets across Tanzania and Kenya,
+          including Kariakoo (Dar es Salaam), Arusha Central Market, Mwanza Market, Nairobi City Market,
+          and Eldoret Market. Prices reflect wholesale rates and may vary based on quality, season, and local demand.
         </p>
         <p className="text-gray-700">
           Use this data to make informed decisions about when to sell your produce and set competitive prices.

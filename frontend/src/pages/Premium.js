@@ -4,11 +4,22 @@ import { Check, Sparkles, TrendingUp, Target, Zap, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
+import { useCountryStore } from '../store/countryStore';
 import { useNavigate } from 'react-router-dom';
 
 function Premium() {
   const { user, updateUser } = useAuthStore();
+  const { country, getCurrency } = useCountryStore();
+  const currency = getCurrency();
   const navigate = useNavigate();
+
+  const plans = country === 'KE'
+    ? { monthly: { price: 650, label: 'KES/month', yearly: 6500, yearlySaving: 1300 } }
+    : { monthly: { price: 10000, label: 'TZS/month', yearly: 100000, yearlySaving: 20000 } };
+
+  const phonePromptText = country === 'KE'
+    ? 'Enter your M-Pesa phone number (e.g., +254XXXXXXXXX):'
+    : 'Enter your M-Pesa phone number (e.g., +255XXXXXXXXX):';
 
   const subscribeMutation = useMutation(
     async ({ plan, phoneNumber }) => {
@@ -34,7 +45,7 @@ function Premium() {
       return;
     }
 
-    const phoneNumber = prompt('Enter your M-Pesa phone number (e.g., +255XXXXXXXXX):');
+    const phoneNumber = prompt(phonePromptText);
     if (phoneNumber) {
       subscribeMutation.mutate({ plan, phoneNumber });
     }
@@ -119,8 +130,8 @@ function Premium() {
           <div className="text-center mb-6">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Monthly Plan</h3>
             <div className="mb-4">
-              <span className="text-5xl font-bold text-primary-600">10,000</span>
-              <span className="text-gray-600 ml-2">TZS/month</span>
+              <span className="text-5xl font-bold text-primary-600">{plans.monthly.price.toLocaleString()}</span>
+              <span className="text-gray-600 ml-2">{plans.monthly.label}</span>
             </div>
             <p className="text-gray-600">Perfect for trying out premium features</p>
           </div>
@@ -165,10 +176,10 @@ function Premium() {
           <div className="text-center mb-6 mt-4">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Yearly Plan</h3>
             <div className="mb-2">
-              <span className="text-5xl font-bold text-primary-600">100,000</span>
-              <span className="text-gray-600 ml-2">TZS/year</span>
+              <span className="text-5xl font-bold text-primary-600">{plans.monthly.yearly.toLocaleString()}</span>
+              <span className="text-gray-600 ml-2">{currency}/year</span>
             </div>
-            <p className="text-green-600 font-semibold mb-2">Save 16,000 TZS per year!</p>
+            <p className="text-green-600 font-semibold mb-2">Save {plans.monthly.yearlySaving.toLocaleString()} {currency} per year!</p>
             <p className="text-gray-600">Best for serious farmers</p>
           </div>
 

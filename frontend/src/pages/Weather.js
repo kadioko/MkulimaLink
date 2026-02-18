@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { Cloud, CloudRain, Sun, Droplets, AlertTriangle } from 'lucide-react';
+import { Cloud, CloudRain, Sun, Droplets, Wind, Umbrella, Leaf } from 'lucide-react';
 import api from '../api/axios';
 import { useCountryStore } from '../store/countryStore';
 
@@ -12,64 +12,47 @@ function Weather() {
     setSelectedRegion(country === 'KE' ? 'Nairobi' : 'Dar es Salaam');
   }, [country]);
 
-  const { data: weatherData, isLoading } = useQuery(
-    ['weather', selectedRegion, country],
+  const { data: allWeather, isLoading } = useQuery(
+    ['weather', country],
     async () => {
-      try {
-        const response = await api.get(`/api/weather?country=${country}`);
-        const weather = response.data.weather?.find(w => w.location === selectedRegion) || response.data.weather?.[0];
-        return weather || {};
-      } catch (error) {
-        console.error('Error fetching weather:', error);
-        return {};
-      }
-    },
-    { enabled: !!selectedRegion }
-  );
-
-  const { data: alerts } = useQuery(
-    ['weather-alerts', selectedRegion, country],
-    async () => {
-      try {
-        await api.get(`/api/weather?country=${country}`);
-        return { alerts: [] };
-      } catch (error) {
-        console.error('Error fetching weather alerts:', error);
-        return { alerts: [] };
-      }
-    },
-    { enabled: !!selectedRegion }
-  );
-
-  const { data: regions } = useQuery(['weather-regions', country], async () => {
-    try {
       const response = await api.get(`/api/weather?country=${country}`);
-      const weatherRegions = response.data.weather?.map(w => w.location) || [];
-      return { regions: weatherRegions };
-    } catch (error) {
-      console.error('Error fetching weather regions:', error);
-      return { regions: [] };
-    }
-  });
+      return response.data.weather || [];
+    },
+    { retry: 2 }
+  );
 
-  const getWeatherIcon = (condition) => {
+  const weatherData = allWeather?.find(w => w.location === selectedRegion) || allWeather?.[0] || null;
+  const regions = allWeather?.map(w => w.location) || [];
+
+  const getWeatherIcon = (condition, size = 48) => {
     switch (condition?.toLowerCase()) {
       case 'sunny':
-        return <Sun className="text-yellow-500" size={48} />;
+        return <Sun className="text-yellow-500" size={size} />;
       case 'rainy':
-        return <CloudRain className="text-blue-500" size={48} />;
+        return <CloudRain className="text-blue-500" size={size} />;
       case 'cloudy':
+        return <Cloud className="text-gray-500" size={size} />;
       case 'partly cloudy':
-        return <Cloud className="text-gray-500" size={48} />;
+        return <Cloud className="text-blue-300" size={size} />;
       default:
-        return <Cloud className="text-gray-500" size={48} />;
+        return <Cloud className="text-gray-400" size={size} />;
+    }
+  };
+
+  const getConditionBg = (condition) => {
+    switch (condition?.toLowerCase()) {
+      case 'sunny': return 'from-yellow-50 to-orange-50';
+      case 'rainy': return 'from-blue-50 to-indigo-50';
+      case 'cloudy': return 'from-gray-50 to-slate-50';
+      case 'partly cloudy': return 'from-sky-50 to-blue-50';
+      default: return 'from-gray-50 to-gray-100';
     }
   };
 
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Weather Forecast</h1>
-      <p className="text-gray-600 mb-8">Get accurate weather information for your farming region</p>
+      <p className="text-gray-600 mb-6">Agricultural weather conditions for your farming region</p>
 
       <div className="card mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Select Region</label>
@@ -78,86 +61,108 @@ function Weather() {
           onChange={(e) => setSelectedRegion(e.target.value)}
           className="input-field max-w-md"
         >
-          {regions?.regions?.map(region => (
+          {regions.length === 0 && (
+            <option value="">Loading regions...</option>
+          )}
+          {regions.map(region => (
             <option key={region} value={region}>{region}</option>
           ))}
         </select>
       </div>
-
-      {alerts && alerts.alerts && alerts.alerts.length > 0 && (
-        <div className="mb-6 space-y-3">
-          {alerts.alerts.map((alert, index) => (
-            <div
-              key={index}
-              className={`p-4 rounded-lg border-l-4 ${
-                alert.severity === 'high' ? 'bg-red-50 border-red-500' :
-                alert.severity === 'moderate' ? 'bg-yellow-50 border-yellow-500' :
-                'bg-blue-50 border-blue-500'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <AlertTriangle className={
-                  alert.severity === 'high' ? 'text-red-600' :
-                  alert.severity === 'moderate' ? 'text-yellow-600' :
-                  'text-blue-600'
-                } size={24} />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">
-                    {alert.type.charAt(0).toUpperCase() + alert.type.slice(1)} Alert
-                  </h3>
-                  <p className="text-gray-700 mb-2">{alert.message}</p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Recommendation:</strong> {alert.recommendation}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {isLoading ? (
         <div className="card">
           <div className="skeleton h-32 mb-4"></div>
           <div className="skeleton h-6 w-1/2"></div>
         </div>
-      ) : weatherData && weatherData.location && typeof weatherData.temperature === 'number' ? (
+      ) : weatherData ? (
         <>
-          <div className="card mb-6">
+          {/* Main weather card */}
+          <div className={`card mb-6 bg-gradient-to-br ${getConditionBg(weatherData.condition)}`}>
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="flex-shrink-0">
                 {getWeatherIcon(weatherData.condition)}
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{weatherData.location || selectedRegion}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">{weatherData.location}</h2>
                 <p className="text-5xl font-bold text-gray-900 mb-2">
-                  {Math.round(weatherData.temperature || 0)}°C
+                  {Math.round(weatherData.temperature)}°C
                 </p>
-                <p className="text-xl text-gray-600">{weatherData.condition || 'No data'}</p>
+                <p className="text-xl text-gray-600 capitalize">{weatherData.condition}</p>
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="text-center">
-                  <Droplets className="text-blue-500 mx-auto mb-2" size={32} />
-                  <p className="text-sm text-gray-600">Humidity</p>
-                  <p className="text-xl font-semibold text-gray-900">
-                    {typeof weatherData.humidity === 'number' ? Math.round(weatherData.humidity) : 'N/A'}%
-                  </p>
+              <div className="grid grid-cols-3 gap-6 text-center">
+                <div>
+                  <Droplets className="text-blue-500 mx-auto mb-1" size={28} />
+                  <p className="text-xs text-gray-500">Humidity</p>
+                  <p className="text-lg font-bold text-gray-900">{weatherData.humidity}%</p>
+                </div>
+                <div>
+                  <Wind className="text-gray-500 mx-auto mb-1" size={28} />
+                  <p className="text-xs text-gray-500">Wind</p>
+                  <p className="text-lg font-bold text-gray-900">{weatherData.windSpeed ?? '—'} km/h</p>
+                </div>
+                <div>
+                  <Umbrella className="text-indigo-500 mx-auto mb-1" size={28} />
+                  <p className="text-xs text-gray-500">Rainfall</p>
+                  <p className="text-lg font-bold text-gray-900">{weatherData.rainfall ?? 0} mm</p>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Farming tip */}
+          {weatherData.farmingTip && (
+            <div className="card mb-6 border-l-4 border-primary-500 bg-primary-50">
+              <div className="flex items-start gap-3">
+                <Leaf className="text-primary-600 flex-shrink-0 mt-0.5" size={22} />
+                <div>
+                  <h3 className="font-semibold text-primary-900 mb-1">Today's Farming Tip</h3>
+                  <p className="text-primary-800">{weatherData.farmingTip}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* All regions overview */}
+          {allWeather && allWeather.length > 1 && (
+            <div className="card mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">All Regions Overview</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {allWeather.map(w => (
+                  <button
+                    key={w.location}
+                    onClick={() => setSelectedRegion(w.location)}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      selectedRegion === w.location
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      {getWeatherIcon(w.condition, 18)}
+                      <span className="text-sm font-medium text-gray-900 truncate">{w.location}</span>
+                    </div>
+                    <p className="text-xl font-bold text-gray-900">{w.temperature}°C</p>
+                    <p className="text-xs text-gray-500 capitalize">{w.condition}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Unable to load weather data. Please try again.</p>
+        <div className="card text-center py-12">
+          <Cloud className="text-gray-300 mx-auto mb-4" size={48} />
+          <p className="text-gray-500 text-lg">No weather data available</p>
+          <p className="text-gray-400 text-sm mt-1">Try switching country or refreshing the page</p>
         </div>
       )}
 
-      <div className="mt-8 card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Farming Tips Based on Weather</h2>
+      <div className="mt-4 card">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Seasonal Farming Guide</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-2">Rainy Season</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">🌧️ Rainy Season</h3>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Ensure proper drainage in fields</li>
               <li>• Monitor for fungal diseases</li>
@@ -166,7 +171,7 @@ function Weather() {
             </ul>
           </div>
           <div className="p-4 bg-yellow-50 rounded-lg">
-            <h3 className="font-semibold text-yellow-900 mb-2">Dry Season</h3>
+            <h3 className="font-semibold text-yellow-900 mb-2">☀️ Dry Season</h3>
             <ul className="text-sm text-yellow-800 space-y-1">
               <li>• Increase irrigation frequency</li>
               <li>• Apply mulch to retain moisture</li>

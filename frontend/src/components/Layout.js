@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Home, ShoppingBag, TrendingUp, Cloud, Sparkles, User, LogOut, Bell } from 'lucide-react';
+import { Menu, X, Home, ShoppingBag, TrendingUp, Cloud, Sparkles, User, LogOut, Bell, Crown } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useCountryStore, COUNTRIES } from '../store/countryStore';
 
@@ -20,6 +20,7 @@ function Layout() {
     { name: 'Products', path: '/products', icon: ShoppingBag },
     { name: 'Market Prices', path: '/market', icon: TrendingUp },
     { name: 'Weather', path: '/weather', icon: Cloud },
+    { name: 'Premium', path: '/premium', icon: Crown, highlight: true },
   ];
 
   const userNavItems = user ? [
@@ -43,15 +44,26 @@ function Layout() {
               </Link>
             </div>
 
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-1">
               {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  {item.name}
-                </Link>
+                item.highlight ? (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="flex items-center gap-1.5 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 px-3 py-2 rounded-md text-sm font-semibold transition-colors"
+                  >
+                    <Crown size={15} />
+                    {item.name}
+                  </Link>
+                ) : (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    {item.name}
+                  </Link>
+                )
               ))}
             </div>
 
@@ -117,7 +129,11 @@ function Layout() {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center space-x-2 text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-md"
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md ${
+                    item.highlight
+                      ? 'bg-yellow-100 text-yellow-800 font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
                   <item.icon size={20} />
                   <span>{item.name}</span>
