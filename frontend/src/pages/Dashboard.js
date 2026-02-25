@@ -183,6 +183,36 @@ function Dashboard() {
               <p className="text-sm text-gray-600">Get basic localized weather updates for your farm.</p>
             </div>
           </Link>
+
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors cursor-not-allowed opacity-80">
+            <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
+              <span className="text-xl font-bold">🌾</span>
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Crop Yield Calculator <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full ml-1">SOON</span></h3>
+              <p className="text-sm text-gray-600">Estimate your harvest yield based on land size and crop type.</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors cursor-not-allowed opacity-80">
+            <div className="p-2 bg-red-100 rounded-lg text-red-600">
+              <span className="text-xl font-bold">🐛</span>
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Pest & Disease Guide <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full ml-1">SOON</span></h3>
+              <p className="text-sm text-gray-600">Identify common pests and learn basic organic treatments.</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors cursor-not-allowed opacity-80">
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
+              <span className="text-xl font-bold">🌱</span>
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Soil Health Tips <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full ml-1">SOON</span></h3>
+              <p className="text-sm text-gray-600">Basic guides on maintaining soil fertility and compost making.</p>
+            </div>
+          </div>
         </div>
       </div>
 

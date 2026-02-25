@@ -44,39 +44,34 @@ function Layout() {
               </Link>
             </div>
 
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center space-x-2 bg-gray-50/50 p-1 rounded-lg border border-gray-100">
               {navItems.map((item) => (
-                item.highlight ? (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="flex items-center gap-1.5 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 px-3 py-2 rounded-md text-sm font-semibold transition-colors"
-                  >
-                    <Crown size={15} />
-                    {item.name}
-                  </Link>
-                ) : (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    style={{ WebkitTapHighlightColor: 'transparent', transform: 'translateZ(0)' }}
-                  >
-                    {item.name}
-                  </Link>
-                )
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                    item.highlight 
+                      ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 shadow-sm' 
+                      : 'text-gray-600 hover:text-primary-700 hover:bg-white hover:shadow-sm'
+                  }`}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <item.icon size={16} className={item.highlight ? 'text-yellow-600' : 'text-gray-400'} />
+                  {item.name}
+                </Link>
               ))}
               
               {user && userNavItems.filter(i => i.name !== 'Profile').map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="flex items-center gap-1.5 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  style={{ WebkitTapHighlightColor: 'transparent', transform: 'translateZ(0)' }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-primary-700 hover:bg-white hover:shadow-sm transition-all"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
+                  <item.icon size={16} className="text-gray-400" />
                   {item.name}
                   {item.premium && !user.isPremium && (
-                    <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
+                    <span className="text-[9px] bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm">Pro</span>
                   )}
                 </Link>
               ))}
@@ -232,7 +227,7 @@ function Layout() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-200 text-center text-sm text-gray-600">
-            © 2024 MkulimaLink. All rights reserved.
+            © {new Date().getFullYear()} MkulimaLink. All rights reserved.
           </div>
         </div>
       </footer>
