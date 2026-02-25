@@ -3,6 +3,7 @@ import { useQuery } from 'react-query';
 import { Cloud, CloudRain, Sun, Droplets, Wind, Umbrella, Leaf } from 'lucide-react';
 import api from '../api/axios';
 import { useCountryStore } from '../store/countryStore';
+import { demoWeather } from '../utils/demoData';
 
 function Weather() {
   const { country } = useCountryStore();
@@ -15,10 +16,18 @@ function Weather() {
   const { data: allWeather, isLoading } = useQuery(
     ['weather', country],
     async () => {
-      const response = await api.get(`/api/weather?country=${country}`);
-      return response.data.weather || [];
+      try {
+        const response = await api.get(`/api/weather?country=${country}`);
+        if (response.data && response.data.weather && response.data.weather.length > 0) {
+          return response.data.weather;
+        }
+        return demoWeather;
+      } catch (error) {
+        console.error('Error fetching weather:', error);
+        return demoWeather;
+      }
     },
-    { retry: 2 }
+    { retry: 1 }
   );
 
   const weatherData = allWeather?.find(w => w.location === selectedRegion) || allWeather?.[0] || null;

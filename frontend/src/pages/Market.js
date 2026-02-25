@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../api/axios';
 import { useCountryStore } from '../store/countryStore';
+import { demoMarketPrices } from '../utils/demoData';
 
 function Market() {
   const { country, getCurrency } = useCountryStore();
@@ -21,10 +22,14 @@ function Market() {
         params.append('country', country);
         
         const response = await api.get(`/api/market?${params}`);
-        return response.data;
+        if (response.data && response.data.prices && response.data.prices.length > 0) {
+          return response.data;
+        }
+        // Fallback to demo data if API returns empty
+        return { prices: demoMarketPrices };
       } catch (error) {
         console.error('Error fetching market prices:', error);
-        return { prices: [] };
+        return { prices: demoMarketPrices };
       }
     }
   );
