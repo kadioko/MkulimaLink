@@ -6,6 +6,46 @@ const NodeCache = require('node-cache');
 
 const cache = new NodeCache({ stdTTL: 3600 });
 
+router.get('/', async (req, res) => {
+  try {
+    const { country, category, region } = req.query;
+    const cacheKey = `market_root_${country}_${category}_${region}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) return res.json(cachedData);
+
+    const pipeline = [
+      { $sort: { date: -1 } },
+      { $group: { _id: { product: '$product', region: '$region' }, latestPrice: { $first: '$$ROOT' } } },
+      { $replaceRoot: { newRoot: '$latestPrice' } },
+      { $limit: 50 }
+    ];
+
+    const matchStage = {};
+    if (category) matchStage.category = category;
+    if (region) matchStage.region = region;
+    if (Object.keys(matchStage).length > 0) pipeline.unshift({ $match: matchStage });
+
+    const latestPrices = await MarketPrice.aggregate(pipeline);
+
+    const prices = latestPrices.map(p => ({
+      product: p.product,
+      category: p.category,
+      region: p.region,
+      price: p.price?.average || p.price,
+      unit: p.unit,
+      trend: p.trend === 'rising' ? 'up' : p.trend === 'falling' ? 'down' : 'stable',
+      priceChange: p.changePercentage || 0,
+      date: p.date
+    }));
+
+    const result = { prices };
+    cache.set(cacheKey, result);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get('/prices', async (req, res) => {
   try {
     const { product, category, region, days = 30 } = req.query;

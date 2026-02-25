@@ -67,6 +67,7 @@ const analyticsRoutes = require('./routes/analytics');
 const supplierRoutes = require('./routes/suppliers');
 const healthRoutes = require('./routes/health');
 const docsRoutes = require('./routes/docs');
+const seedRoutes = require('./routes/seed');
 const sitemapRoutes = require('./routes/sitemap');
 const searchRoutes = require('./routes/search');
 const v1Routes = require('./routes/v1');
@@ -109,6 +110,7 @@ app.use('/api/equipment', equipmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Apply caching to API routes
 app.use('/api/products', cacheConfig.products);
