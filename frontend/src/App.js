@@ -23,6 +23,11 @@ const AIInsights = lazy(() => import('./pages/AIInsights'));
 const Premium = lazy(() => import('./pages/Premium'));
 const Profile = lazy(() => import('./pages/Profile'));
 
+// Free Tools
+const CropYieldCalculator = lazy(() => import('./pages/CropYieldCalculator'));
+const PestAndDiseaseGuide = lazy(() => import('./pages/PestAndDiseaseGuide'));
+const SoilHealthTips = lazy(() => import('./pages/SoilHealthTips'));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -84,6 +89,23 @@ function App() {
                   </Suspense>
                 } />
                 
+                {/* Free Tools Routes */}
+                <Route path="tools/yield-calculator" element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></div>}>
+                    <CropYieldCalculator />
+                  </Suspense>
+                } />
+                <Route path="tools/pest-guide" element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></div>}>
+                    <PestAndDiseaseGuide />
+                  </Suspense>
+                } />
+                <Route path="tools/soil-health" element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></div>}>
+                    <SoilHealthTips />
+                  </Suspense>
+                } />
+
                 {/* Protected routes */}
                 <Route path="dashboard" element={
                   <PrivateRoute>

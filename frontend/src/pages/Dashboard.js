@@ -184,35 +184,35 @@ function Dashboard() {
             </div>
           </Link>
 
-          <div className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors cursor-not-allowed opacity-80">
+          <Link to="/tools/yield-calculator" className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors">
             <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
               <span className="text-xl font-bold">🌾</span>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Crop Yield Calculator <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full ml-1">SOON</span></h3>
+              <h3 className="font-medium text-gray-900">Crop Yield Calculator</h3>
               <p className="text-sm text-gray-600">Estimate your harvest yield based on land size and crop type.</p>
             </div>
-          </div>
+          </Link>
 
-          <div className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors cursor-not-allowed opacity-80">
+          <Link to="/tools/pest-guide" className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors">
             <div className="p-2 bg-red-100 rounded-lg text-red-600">
               <span className="text-xl font-bold">🐛</span>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Pest & Disease Guide <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full ml-1">SOON</span></h3>
+              <h3 className="font-medium text-gray-900">Pest & Disease Guide</h3>
               <p className="text-sm text-gray-600">Identify common pests and learn basic organic treatments.</p>
             </div>
-          </div>
+          </Link>
 
-          <div className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors cursor-not-allowed opacity-80">
+          <Link to="/tools/soil-health" className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors">
             <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
               <span className="text-xl font-bold">🌱</span>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Soil Health Tips <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full ml-1">SOON</span></h3>
+              <h3 className="font-medium text-gray-900">Soil Health Tips</h3>
               <p className="text-sm text-gray-600">Basic guides on maintaining soil fertility and compost making.</p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
 
