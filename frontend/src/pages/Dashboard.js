@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { ShoppingBag, TrendingUp, DollarSign, Package, Plus } from 'lucide-react';
+import { ShoppingBag, TrendingUp, DollarSign, Package, Plus, Cloud } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 import { useCountryStore } from '../store/countryStore';
@@ -147,6 +147,42 @@ function Dashboard() {
               <p className="text-gray-500 text-center py-4">No transactions yet</p>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Free Tools Section */}
+      <div className="card mt-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Free Farming Tools</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Link to="/products" className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors">
+            <div className="p-2 bg-primary-100 rounded-lg text-primary-600">
+              <ShoppingBag size={24} />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Marketplace</h3>
+              <p className="text-sm text-gray-600">Browse and trade agricultural products directly.</p>
+            </div>
+          </Link>
+          
+          <Link to="/market" className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors">
+            <div className="p-2 bg-green-100 rounded-lg text-green-600">
+              <TrendingUp size={24} />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Live Market Prices</h3>
+              <p className="text-sm text-gray-600">Check current wholesale prices across East Africa.</p>
+            </div>
+          </Link>
+
+          <Link to="/weather" className="flex items-start gap-3 p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors">
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+              <Cloud size={24} />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Weather Forecast</h3>
+              <p className="text-sm text-gray-600">Get basic localized weather updates for your farm.</p>
+            </div>
+          </Link>
         </div>
       </div>
 

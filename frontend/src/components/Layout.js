@@ -66,6 +66,20 @@ function Layout() {
                   </Link>
                 )
               ))}
+              
+              {user && userNavItems.filter(i => i.name !== 'Profile').map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="flex items-center gap-1.5 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  style={{ WebkitTapHighlightColor: 'transparent', transform: 'translateZ(0)' }}
+                >
+                  {item.name}
+                  {item.premium && !user.isPremium && (
+                    <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
+                  )}
+                </Link>
+              ))}
             </div>
 
             <div className="flex items-center">
