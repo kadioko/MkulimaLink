@@ -18,6 +18,37 @@ const TANZANIA_REGIONS = {
   'Kilimanjaro': { lat: -3.0674, lon: 37.3556 }
 };
 
+router.get('/', async (req, res) => {
+  try {
+    const { country } = req.query;
+    const regions = country === 'KE' 
+      ? ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret'] 
+      : Object.keys(TANZANIA_REGIONS);
+    
+    const weather = regions.map(region => {
+      const condition = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy'][Math.floor(Math.random() * 4)];
+      let farmingTip = '';
+      if (condition === 'Rainy') farmingTip = 'Ensure proper drainage in fields. Monitor for fungal diseases.';
+      else if (condition === 'Sunny') farmingTip = 'Increase irrigation frequency. Apply mulch to retain moisture.';
+      else farmingTip = 'Good conditions for field maintenance and crop monitoring.';
+
+      return {
+        location: region,
+        temperature: 20 + Math.random() * 15,
+        humidity: 50 + Math.random() * 40,
+        rainfall: condition === 'Rainy' ? 10 + Math.random() * 40 : Math.random() * 5,
+        windSpeed: 5 + Math.random() * 20,
+        condition,
+        farmingTip
+      };
+    });
+    
+    res.json({ weather });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get('/current/:region', async (req, res) => {
   try {
     const { region } = req.params;

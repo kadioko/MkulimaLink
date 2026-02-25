@@ -150,7 +150,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {!user?.isPremium && (
+      {!user?.isPremium ? (
         <div className="mt-8 bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl p-6 border-2 border-yellow-200">
           <div className="flex items-start gap-4">
             <div className="flex-1">
@@ -163,6 +163,33 @@ function Dashboard() {
               <Link to="/premium" className="btn-primary inline-block">
                 Learn More
               </Link>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-8 bg-gradient-to-r from-primary-50 to-green-100 rounded-xl p-6 border-2 border-primary-200">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="text-2xl">👑</span> Welcome to Premium
+              </h3>
+              <p className="text-gray-700 mb-4">
+                As a premium member, you have access to advanced AI-powered tools to boost your farming and trading success.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <Link to="/ai-insights" className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-primary-700 mb-1">✨ AI Crop Insights</h4>
+                  <p className="text-sm text-gray-600">Get personalized crop management and disease detection.</p>
+                </Link>
+                <Link to="/market" className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-primary-700 mb-1">📈 Advanced Trends</h4>
+                  <p className="text-sm text-gray-600">Access historical price data and future market predictions.</p>
+                </Link>
+                <Link to="/weather" className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-primary-700 mb-1">🌦️ Smart Weather</h4>
+                  <p className="text-sm text-gray-600">Detailed hyperlocal weather forecasting and farming tips.</p>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

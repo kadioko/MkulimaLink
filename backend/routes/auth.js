@@ -49,7 +49,27 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email });
+    
+    // Auto-create demo users if they don't exist
+    if (!user && email.endsWith('@demo.com') && password === 'demo1234') {
+      const demoUsers = {
+        'farmer@demo.com': { name: 'Demo Farmer TZ', role: 'farmer', location: 'Tanzania', phone: '255700000001', isPremium: false },
+        'buyer@demo.com': { name: 'Demo Buyer TZ', role: 'buyer', location: 'Tanzania', phone: '255700000002', isPremium: false },
+        'premium@demo.com': { name: 'Premium Farmer TZ', role: 'farmer', location: 'Tanzania', phone: '255700000003', isPremium: true },
+        'farmer.ke@demo.com': { name: 'Demo Farmer KE', role: 'farmer', location: 'Kenya', phone: '254700000004', isPremium: false },
+      };
+      
+      const demoUser = demoUsers[email];
+      if (demoUser) {
+        user = await User.create({
+          email,
+          password,
+          ...demoUser
+        });
+      }
+    }
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }

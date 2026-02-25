@@ -139,8 +139,17 @@ function Products() {
                   className="card hover:shadow-xl transition-shadow group"
                 >
                   <div className="relative mb-4">
-                    <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400">Product Image</span>
+                    <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
+                      {product.image ? (
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="text-gray-400">Product Image</span>
+                      )}
                     </div>
                     <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100">
                       <Heart size={20} className="text-gray-600" />
