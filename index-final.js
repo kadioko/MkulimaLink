@@ -13,7 +13,19 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['https://mkulimalink.vercel.app', 'http://localhost:3000', 'http://localhost:5000'],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      origin === 'https://mkulimalink.vercel.app' ||
+      origin.endsWith('.vercel.app') ||
+      origin === 'http://localhost:3000' ||
+      origin === 'http://localhost:3001' ||
+      origin === 'http://localhost:5000'
+    ) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: Origin ${origin} not allowed`));
+  },
   credentials: true
 }));
 app.use(express.json());
