@@ -2,8 +2,9 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { useAuthStore } from './store/authStore';
-import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
+import ToastContainer from './components/ToastContainer';
+import { ProductGridSkeleton } from './components/EnhancedSkeleton';
 import './i18n';
 
 import Layout from './components/Layout';
@@ -34,9 +35,69 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       retry: 1,
       staleTime: 5 * 60 * 1000,
+      suspense: false,
     },
   },
 });
+
+const PageSuspense = ({ children }) => (
+  <Suspense fallback={<ProductGridSkeleton count={6} />}>
+    {children}
+  </Suspense>
+);
+
+const ToastContext = React.createContext(null);
+
+export const useToastContext = () => {
+  const context = React.useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToastContext must be used within ToastProvider');
+  }
+  return context;
+};
+
+const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = React.useState([]);
+
+  const addToast = React.useCallback((message, type = 'info', duration = 3000) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, message, type, duration }]);
+    
+    if (duration > 0) {
+      setTimeout(() => {
+        setToasts(prev => prev.filter(toast => toast.id !== id));
+      }, duration);
+    }
+    
+    return id;
+  }, []);
+
+  const removeToast = React.useCallback((id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  }, []);
+
+  const success = React.useCallback((message, duration) => addToast(message, 'success', duration), [addToast]);
+  const error = React.useCallback((message, duration) => addToast(message, 'error', duration), [addToast]);
+  const info = React.useCallback((message, duration) => addToast(message, 'info', duration), [addToast]);
+  const warning = React.useCallback((message, duration) => addToast(message, 'warning', duration), [addToast]);
+
+  const value = React.useMemo(() => ({
+    toasts,
+    addToast,
+    removeToast,
+    success,
+    error,
+    info,
+    warning,
+  }), [toasts, addToast, removeToast, success, error, info, warning]);
+
+  return (
+    <ToastContext.Provider value={value}>
+      {children}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+    </ToastContext.Provider>
+  );
+};
 
 function PrivateRoute({ children }) {
   const { user } = useAuthStore();
@@ -58,110 +119,90 @@ function App() {
                 
                 {/* Lazy loaded routes with Suspense */}
                 <Route path="products" element={
-                  <Suspense fallback={<div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                  </div>}>
+                  <PageSuspense>
                     <Products />
-                  </Suspense>
+                  </PageSuspense>
                 } />
                 
                 <Route path="products/:id" element={
-                  <Suspense fallback={<div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                  </div>}>
+                  <PageSuspense>
                     <ProductDetail />
-                  </Suspense>
+                  </PageSuspense>
                 } />
                 
                 <Route path="market" element={
-                  <Suspense fallback={<div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                  </div>}>
+                  <PageSuspense>
                     <Market />
-                  </Suspense>
+                  </PageSuspense>
                 } />
                 
                 <Route path="weather" element={
-                  <Suspense fallback={<div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                  </div>}>
+                  <PageSuspense>
                     <Weather />
-                  </Suspense>
+                  </PageSuspense>
                 } />
                 
                 {/* Free Tools Routes */}
                 <Route path="tools/yield-calculator" element={
-                  <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></div>}>
+                  <PageSuspense>
                     <CropYieldCalculator />
-                  </Suspense>
+                  </PageSuspense>
                 } />
                 <Route path="tools/pest-guide" element={
-                  <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></div>}>
+                  <PageSuspense>
                     <PestAndDiseaseGuide />
-                  </Suspense>
+                  </PageSuspense>
                 } />
                 <Route path="tools/soil-health" element={
-                  <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div></div>}>
+                  <PageSuspense>
                     <SoilHealthTips />
-                  </Suspense>
+                  </PageSuspense>
                 } />
 
                 {/* Protected routes */}
                 <Route path="dashboard" element={
                   <PrivateRoute>
-                    <Suspense fallback={<div className="flex items-center justify-center h-64">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                    </div>}>
+                    <PageSuspense>
                       <Dashboard />
-                    </Suspense>
+                    </PageSuspense>
                   </PrivateRoute>
                 } />
                 
                 <Route path="add-product" element={
                   <PrivateRoute>
-                    <Suspense fallback={<div className="flex items-center justify-center h-64">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                    </div>}>
+                    <PageSuspense>
                       <AddProduct />
-                    </Suspense>
+                    </PageSuspense>
                   </PrivateRoute>
                 } />
                 
                 <Route path="transactions" element={
                   <PrivateRoute>
-                    <Suspense fallback={<div className="flex items-center justify-center h-64">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                    </div>}>
+                    <PageSuspense>
                       <Transactions />
-                    </Suspense>
+                    </PageSuspense>
                   </PrivateRoute>
                 } />
                 
                 <Route path="ai-insights" element={
                   <PrivateRoute>
-                    <Suspense fallback={<div className="flex items-center justify-center h-64">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                    </div>}>
+                    <PageSuspense>
                       <AIInsights />
-                    </Suspense>
+                    </PageSuspense>
                   </PrivateRoute>
                 } />
                 
                 <Route path="premium" element={
-                  <Suspense fallback={<div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                  </div>}>
+                  <PageSuspense>
                     <Premium />
-                  </Suspense>
+                  </PageSuspense>
                 } />
                 
                 <Route path="profile" element={
                   <PrivateRoute>
-                    <Suspense fallback={<div className="flex items-center justify-center h-64">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                    </div>}>
+                    <PageSuspense>
                       <Profile />
-                    </Suspense>
+                    </PageSuspense>
                   </PrivateRoute>
                 } />
               </Route>

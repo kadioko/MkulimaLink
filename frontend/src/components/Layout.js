@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Home, ShoppingBag, TrendingUp, Cloud, Sparkles, User, LogOut, Bell, Crown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Home, ShoppingBag, TrendingUp, Cloud, Sparkles, User, LogOut, Bell, Crown, Heart } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useCountryStore, COUNTRIES } from '../store/countryStore';
+import { useWishlistStore } from '../store/wishlistStore';
 
 function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const { country, setCountry } = useCountryStore();
+  const { getWishlistCount } = useWishlistStore();
+  const wishlistCount = getWishlistCount();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -110,6 +114,21 @@ function Layout() {
 
               {user ? (
                 <div className="flex items-center space-x-3">
+                  <Link to="/wishlist" className="relative p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors hidden sm:block">
+                    <Heart size={22} />
+                    <AnimatePresence>
+                      {wishlistCount > 0 && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                        >
+                          {wishlistCount > 9 ? '9+' : wishlistCount}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Link>
                   <button className="relative p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-colors hidden sm:block">
                     <Bell size={22} />
                     <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
