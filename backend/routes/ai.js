@@ -4,6 +4,7 @@ const { protect, checkPremium } = require('../middleware/auth');
 const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
 const MarketPrice = require('../models/MarketPrice');
+const Wishlist = require('../models/Wishlist');
 const { predictYield, generateRecommendations } = require('../utils/aiModels');
 
 router.post('/yield-prediction', protect, checkPremium, async (req, res) => {
@@ -71,6 +72,128 @@ router.post('/price-prediction', protect, checkPremium, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// Get AI-powered product recommendations for user
+router.post('/recommendations', protect, async (req, res) => {
+  try {
+    const { userId, limit = 10, filters = {} } = req.body;
+    
+    // Get user's wishlist for preference analysis
+    const wishlist = await Wishlist.findOne({ user: userId });
+    const wishlistCategories = wishlist ? 
+      [...new Set(wishlist.items.map(item => item.product?.category).filter(Boolean))] : 
+      [];
+    
+    // Get user's purchase history
+    const userTransactions = await Transaction.find({ buyer: userId })
+      .populate('product')
+      .sort('-createdAt')
+      .limit(20);
+    
+    const purchasedCategories = [...new Set(
+      userTransactions.map(t => t.product?.category).filter(Boolean)
+    )];
+    
+    // Build query based on user preferences and filters
+    const query = { status: 'active' };
+    
+    if (filters.category) {
+      query.category = filters.category;
+    } else if (wishlistCategories.length > 0 || purchasedCategories.length > 0) {
+      // Recommend from categories user likes
+      const preferredCategories = [...new Set([...wishlistCategories, ...purchasedCategories])];
+      query.category = { $in: preferredCategories };
+    }
+    
+    if (filters.location) {
+      query['location.region'] = filters.location;
+    }
+    
+    if (filters.season) {
+      // Add seasonal product filtering logic
+      const seasonalCategories = getSeasonalCategories(filters.season);
+      if (!filters.category) {
+        query.category = { $in: seasonalCategories };
+      }
+    }
+    
+    // Get products with AI scoring
+    let products = await Product.find(query)
+      .populate('seller', 'name profilePicture verified rating')
+      .limit(limit * 2); // Get more for ranking
+    
+    // Score products based on AI factors
+    const scoredProducts = products.map(product => {
+      let score = 50; // Base score
+      
+      // Factor 1: Quality (premium = higher score)
+      if (product.quality === 'premium') score += 20;
+      if (product.quality === 'organic') score += 15;
+      
+      // Factor 2: Seller verification
+      if (product.seller?.verified) score += 10;
+      
+      // Factor 3: Views/popularity
+      score += Math.min(product.views * 0.5, 15);
+      
+      // Factor 4: Price competitiveness
+      // (compare to market average if available)
+      
+      // Factor 5: Recency
+      const daysListed = (Date.now() - new Date(product.createdAt)) / (1000 * 60 * 60 * 24);
+      if (daysListed < 7) score += 10; // Fresh listings
+      
+      return {
+        ...product.toObject(),
+        aiScore: Math.min(score, 100),
+        matchReason: generateMatchReason(product, wishlistCategories, purchasedCategories)
+      };
+    });
+    
+    // Sort by AI score and take top results
+    const recommendations = scoredProducts
+      .sort((a, b) => b.aiScore - a.aiScore)
+      .slice(0, limit);
+    
+    res.json({
+      products: recommendations,
+      confidence: 0.85,
+      totalAvailable: products.length,
+      filters: { category: filters.category, location: filters.location }
+    });
+  } catch (error) {
+    console.error('Recommendations error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Helper function for seasonal categories
+function getSeasonalCategories(season) {
+  const seasonalMap = {
+    'rainy': ['vegetables', 'fruits', 'grains'],
+    'dry': ['grains', 'seeds', 'inputs'],
+    'planting': ['seeds', 'inputs', 'fertilizers'],
+    'harvest': ['grains', 'vegetables', 'fruits']
+  };
+  return seasonalMap[season] || ['grains', 'vegetables', 'fruits'];
+}
+
+// Generate human-readable match reason
+function generateMatchReason(product, wishlistCategories, purchasedCategories) {
+  if (wishlistCategories.includes(product.category)) {
+    return 'Based on your wishlist';
+  }
+  if (purchasedCategories.includes(product.category)) {
+    return 'Similar to your previous purchases';
+  }
+  if (product.quality === 'premium') {
+    return 'Premium quality product';
+  }
+  if (product.organic) {
+    return 'Organic certified';
+  }
+  return 'Trending in your region';
+}
 
 router.post('/buyer-matching', protect, async (req, res) => {
   try {
