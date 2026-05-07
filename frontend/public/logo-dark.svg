@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="#065F46"/>
+  
+  <!-- Inner Circle -->
+  <circle cx="256" cy="256" r="200" fill="#047857"/>
+  
+  <!-- Stylized M letter formed by crops/plants -->
+  <g fill="#D1FAE5">
+    <!-- Left plant -->
+    <path d="M140 350 L140 200 Q140 160 160 180 Q180 200 160 220 L160 350 Z"/>
+    <ellipse cx="150" cy="180" rx="20" ry="25"/>
+    <ellipse cx="140" cy="220" rx="18" ry="22"/>
+    
+    <!-- Center plant (tallest) -->
+    <path d="M236 350 L236 150 Q236 110 256 130 Q276 150 256 170 L256 350 Z"/>
+    <ellipse cx="246" cy="130" rx="25" ry="30"/>
+    <ellipse cx="236" cy="180" rx="22" ry="27"/>
+    <ellipse cx="246" cy="230" rx="20" ry="25"/>
+    
+    <!-- Right plant -->
+    <path d="M352 350 L352 200 Q352 160 372 180 Q392 200 372 220 L372 350 Z"/>
+    <ellipse cx="362" cy="180" rx="20" ry="25"/>
+    <ellipse cx="372" cy="220" rx="18" ry="22"/>
+  </g>
+  
+  <!-- Connection lines (representing marketplace link) -->
+  <g stroke="#10B981" stroke-width="8" stroke-linecap="round">
+    <line x1="160" y1="200" x2="236" y2="180"/>
+    <line x1="372" y1="200" x2="256" y2="180"/>
+    <circle cx="256" cy="180" r="15" fill="#065F46" stroke="#10B981" stroke-width="4"/>
+  </g>
+  
+  <!-- Ground/base -->
+  <ellipse cx="256" cy="360" rx="180" ry="25" fill="#064E3B"/>
+</svg>
