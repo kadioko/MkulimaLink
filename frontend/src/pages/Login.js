@@ -36,15 +36,36 @@ function Login() {
   const handleDemoLogin = async (account, idx) => {
     setDemoLoading(idx);
     try {
+      // Try backend first
       const response = await api.post('/api/auth/login', {
         email: account.email,
         password: account.password,
       });
-      setAuth(response.data, response.data.token);
+      setAuth(response.data.user, response.data.token);
       toast.success(`Logged in as ${account.label}`);
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Demo login failed — backend may be restarting, try again in 10s');
+      // Fallback to mock demo mode
+      console.log('Backend unavailable, using demo mode');
+      
+      const mockUser = {
+        _id: `demo-${idx}`,
+        name: account.label.replace(/[^a-zA-Z\s]/g, '').trim(),
+        email: account.email,
+        role: account.email.includes('farmer') ? 'farmer' : 'buyer',
+        isPremium: account.email.includes('premium'),
+        location: account.email.includes('.ke') 
+          ? { region: 'Nairobi', country: 'KE' }
+          : { region: 'Dar es Salaam', country: 'TZ' },
+        verified: true,
+        isDemo: true,
+      };
+      
+      const mockToken = `demo-token-${Date.now()}`;
+      
+      setAuth(mockUser, mockToken);
+      toast.success(`Demo mode: Logged in as ${account.label}`);
+      navigate('/dashboard');
     } finally {
       setDemoLoading(null);
     }
