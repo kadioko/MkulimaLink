@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { socketHandlers } = require('./socketHandlers');
 
 let io;
 
@@ -14,6 +15,9 @@ const initializeSocket = (server) => {
     pingTimeout: 60000,
     pingInterval: 25000
   });
+
+  // Expose io globally for cron jobs
+  global.io = io;
 
   io.use(async (socket, next) => {
     try {
@@ -109,6 +113,9 @@ const initializeSocket = (server) => {
       console.log(`User disconnected: ${socket.userId}`);
     });
   });
+
+  // Initialize enhanced socket handlers
+  socketHandlers(io);
 
   return io;
 };

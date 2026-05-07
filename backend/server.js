@@ -90,6 +90,11 @@ const sitemapRoutes = require('./routes/sitemap');
 const searchRoutes = require('./routes/search');
 const v1Routes = require('./routes/v1');
 
+// New routes for enhanced features
+const auctionRoutes = require('./routes/auctions');
+const wishlistRoutes = require('./routes/wishlist');
+const exchangeRateRoutes = require('./routes/exchangeRates');
+
 // API Documentation
 app.use('/api/docs', docsRoutes);
 app.use('/api/v1/docs', docsRoutes);
@@ -101,6 +106,11 @@ app.use('/robots.txt', sitemapRoutes);
 
 // API v1 routes (versioned)
 app.use('/api/v1', v1Routes);
+
+// New enhanced feature routes
+app.use('/api/auctions', auctionRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/exchange-rates', exchangeRateRoutes);
 
 // Legacy routes (for backwards compatibility)
 app.use('/api/auth', authRoutes);

@@ -2,7 +2,9 @@ const cron = require('node-cron');
 const { scrapeMarketPrices } = require('./marketScraper');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const Auction = require('../models/Auction');
 const { sendSMS } = require('./sms');
+const { handleAuctionEnding, handleEndedAuctions } = require('./socketHandlers');
 
 const startCronJobs = () => {
   cron.schedule('0 6 * * *', async () => {
@@ -73,6 +75,22 @@ const startCronJobs = () => {
       } catch (error) {
         console.error(`Error updating insights for product ${product._id}:`, error);
       }
+    }
+  });
+
+  // Auction ending soon notifications (every minute)
+  cron.schedule('* * * * *', async () => {
+    const io = global.io;
+    if (io) {
+      await handleAuctionEnding(io);
+    }
+  });
+
+  // End expired auctions (every minute)
+  cron.schedule('* * * * *', async () => {
+    const io = global.io;
+    if (io) {
+      await handleEndedAuctions(io);
     }
   });
 

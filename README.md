@@ -29,6 +29,26 @@
 - **Premium Tier** — Subscription plans for advanced features
 - **Responsive Design** — Mobile-first, works on all devices
 
+### 🆕 New Features (Recently Added)
+- **🌙 Dark Mode** — Full dark mode support with system preference detection
+- **💫 Animations** — Framer Motion animations throughout (page transitions, hover effects, scroll animations)
+- **💝 Wishlist** — Persistent wishlist with collections, priority levels, and notes
+- **⚖️ Product Comparison** — Compare up to 4 products side-by-side with attribute highlighting
+- **🔍 Advanced Search** — Debounced search, URL-persisted filters, fuzzy matching
+- **🔔 Toast Notifications** — Animated success/error/info notifications
+- **🔄 Real-time Chat** — WebSocket-powered messaging with typing indicators
+- **🏷️ Live Auctions** — Real-time bidding system with auto-bid and countdown timers
+- **📊 Price History** — Historical price charts with trend analysis and volatility metrics
+- **💱 Multi-Currency** — Live exchange rates (TZS, KES, USD, EUR, GBP) with automatic conversion
+- **🗺️ Interactive Maps** — Leaflet-powered product location maps with clustering
+- **📤 Drag & Drop Upload** — Image uploads with previews and validation
+- **♿ Accessibility** — Keyboard navigation, skip links, focus management
+- **📱 PWA Support** — Service worker, offline capabilities, installable app
+- **📈 Analytics** — Comprehensive tracking, Web Vitals monitoring
+- **🧪 Testing** — Jest + Testing Library test suite
+- **🔄 Infinite Scroll** — Virtual scrolling for large product lists
+- **⚡ Performance** — Image optimization, lazy loading, skeleton loading states
+
 ### Frontend Pages
 | Page | Route | Description |
 |------|-------|-------------|
@@ -44,6 +64,23 @@
 | AI Insights | `/ai-insights` | AI analysis (auth required) |
 | Premium | `/premium` | Subscription plans (auth required) |
 | Profile | `/profile` | User profile (auth required) |
+| Wishlist | `/wishlist` | Saved products (auth required) |
+| Auctions | `/auctions` | Live bidding marketplace |
+| Chat | `/chat/:id` | Real-time messaging (auth required) |
+| Map View | `/map` | Product locations on map |
+
+### API Endpoints (New)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/auctions` | List active auctions |
+| POST | `/api/auctions` | Create new auction |
+| POST | `/api/auctions/:id/bid` | Place bid on auction |
+| GET | `/api/wishlist` | Get user's wishlist |
+| POST | `/api/wishlist/items` | Add to wishlist |
+| DELETE | `/api/wishlist/items/:id` | Remove from wishlist |
+| GET | `/api/exchange-rates` | Get all exchange rates |
+| POST | `/api/exchange-rates/convert` | Convert currency |
+| GET | `/api/products/:id/price-history` | Price history data |
 
 ### API Endpoints
 | Method | Endpoint | Description |
@@ -68,15 +105,43 @@
 | Framer Motion | Animations |
 | i18next | Internationalization (EN/SW) |
 | Recharts | Charts & data visualization |
+| Leaflet | Interactive maps |
+| Socket.io-client | Real-time communication |
+| date-fns | Date formatting |
+
+### New Custom Hooks (25+)
+| Hook | Purpose |
+|------|---------|
+| `useAIRecommendations` | ML-powered product recommendations |
+| `usePricePrediction` | Price forecasting with historical data |
+| `useSmartSearch` | NLP search with intent detection |
+| `useChat` | Real-time messaging |
+| `useBidding` | Auction bidding management |
+| `useMultiCurrency` | Currency conversion & formatting |
+| `usePriceHistory` | Price trend analysis |
+| `useDebounce` | Debounced search input |
+| `useVirtualScroll` | Efficient list rendering |
+| `useFuzzySearch` | Fuzzy text matching |
+| `useWebSocket` | WebSocket connection management |
+| `useKeyboardNavigation` | Keyboard accessibility |
+| `useAnalytics` | Event tracking & Web Vitals |
+| `useTheme` | Dark mode management |
+| `useToast` | Notification system |
 
 ### Backend
 | Technology | Purpose |
 |------------|---------|
 | Node.js 20+ | Runtime |
 | Express 4.21 | Web framework |
-| CORS | Cross-origin support |
 | MongoDB Atlas | Database (connected) |
+| Socket.io | Real-time WebSocket server |
+| Mongoose 8 | ODM for MongoDB |
+| JWT | Authentication tokens |
 | Helmet | Security headers |
+| Express Rate Limit | API rate limiting |
+| Multer | File uploads |
+| node-cron | Scheduled tasks |
+| Jest | Testing framework |
 
 ### Deployment
 | Service | Purpose |
@@ -184,14 +249,39 @@ Automatic deployment via GitHub integration.
 
 ## 🌍 Data Available
 
-### Products (19 items)
+### Products (19+ items)
 Vegetables, Grains, Fruits, Legumes, Dairy, Seeds, Inputs — across Dar es Salaam, Morogoro, Arusha, Iringa, Dodoma, Mwanza, Mbeya, Kilimanjaro.
 
-### Market Prices (8 price points)
+### Market Prices (8+ price points)
 Tomatoes, Maize, Onions, Bananas, Beans, Rice — with trend indicators (up/down/stable).
 
 ### Weather (6 regions)
 Temperature, humidity, and conditions for major farming regions.
+
+### Auctions
+Live bidding marketplace for premium products with real-time updates.
+
+### Exchange Rates
+Live rates for TZS, KES, USD, EUR, GBP with automatic conversion.
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+# Frontend tests
+cd frontend && npm test
+
+# Backend tests
+cd backend && npm test
+
+# Coverage report
+npm run test:coverage
+```
+
+### Test Structure
+- **Unit Tests**: Components, hooks, utilities
+- **Integration Tests**: API endpoints, database operations
+- **E2E Tests**: User flows (login → browse → purchase)
 
 ## 🤝 Contributing
 

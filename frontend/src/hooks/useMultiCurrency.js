@@ -173,7 +173,7 @@ export const usePriceHistory = (productId, days = 30) => {
     } finally {
       setIsLoading(false);
     }
-  }, [productId, days]);
+  }, [days]);
 
   useEffect(() => {
     fetchHistory();
