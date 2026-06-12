@@ -21,7 +21,7 @@ RUN npm ci --only=production
 COPY backend/ ./backend/
 
 # Copy frontend build
-COPY --from=frontend-build /app/frontend/build ./frontend/build
+COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 # Create necessary directories
 RUN mkdir -p uploads/products logs

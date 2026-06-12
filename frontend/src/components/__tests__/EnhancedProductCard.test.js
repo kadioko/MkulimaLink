@@ -1,13 +1,13 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
+
+vi.mock('../../store/wishlistStore', () => ({
+  useWishlistStore: vi.fn(),
+}));
+
 import EnhancedProductCard from '../EnhancedProductCard';
 import { useWishlistStore } from '../../store/wishlistStore';
-
-// Mock the wishlist store
-jest.mock('../../store/wishlistStore', () => ({
-  useWishlistStore: jest.fn(),
-}));
 
 const mockProduct = {
   _id: '1',

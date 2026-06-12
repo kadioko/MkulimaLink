@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useWebSocket } from './useWebSocket';
 import api from '../api/axios';
+import { AUCTION_WS_URL } from '../config/env';
 
 export const useBidding = (auctionId, userId) => {
   const [auction, setAuction] = useState(null);
@@ -12,7 +13,7 @@ export const useBidding = (auctionId, userId) => {
   const [winner, setWinner] = useState(null);
 
   const { sendMessage, isConnected } = useWebSocket(
-    process.env.REACT_APP_AUCTION_WS_URL || 'wss://api.mkulimalink.com/auction',
+    AUCTION_WS_URL,
     {
       onOpen: () => {
         // Join auction room

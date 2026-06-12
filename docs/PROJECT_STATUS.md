@@ -50,7 +50,7 @@ MkulimaLink has been transformed from a basic agriculture marketplace into an **
 | Share Functionality | ✅ | `ShareButton.js` |
 | Batch Selection | ✅ | `BatchSelection.js` |
 | Keyboard Navigation | ✅ | `useKeyboardNavigation.js`, `SkipLink.js` |
-| PWA Service Worker | ✅ | `service-worker.js` |
+| PWA Service Worker | ✅ | `public/sw.js` |
 
 #### AI/ML & Real-time (Round 3)
 | Feature | Status | Files |
@@ -98,7 +98,8 @@ MkulimaLink has been transformed from a basic agriculture marketplace into an **
 |------|--------|----------|
 | Component Tests | ✅ | `EnhancedProductCard.test.js` |
 | Hook Tests | ✅ | `useDebounce.test.js` |
-| Storybook | ✅ | Already configured |
+| Backend Integration Tests | ✅ | Jest with in-memory MongoDB |
+| Storybook | Removed | Removed during Vite migration because no active stories require it |
 
 ---
 
@@ -153,9 +154,9 @@ Create `.env` files for all environments:
 
 ```bash
 # Frontend .env
-REACT_APP_API_URL=https://api.mkulimalink.com
-REACT_APP_WS_URL=wss://api.mkulimalink.com
-REACT_APP_MAPS_API_KEY=...
+VITE_API_URL=https://api.mkulimalink.com
+VITE_WS_URL=wss://api.mkulimalink.com
+VITE_MAPS_API_KEY=...
 
 # Backend .env
 MONGODB_URI=mongodb+srv://...
@@ -176,7 +177,7 @@ node utils/seedData.js
 - [ ] Integration tests for all APIs
 - [ ] E2E tests for critical user flows
 - [ ] Performance testing (Lighthouse > 90)
-- [ ] Security audit
+- [x] npm audit passes for root, frontend, and mobile
 
 ### 5. Deployment
 - [ ] Frontend → Vercel
@@ -242,7 +243,7 @@ src/
 ├── store/
 │   ├── themeStore.js
 │   └── wishlistStore.js
-└── service-worker.js
+└── public/sw.js
 ```
 
 ### Backend Files Created/Updated (10+)
@@ -319,7 +320,7 @@ backend/
 3. **Backend:** Node.js + Express + MongoDB
 4. **Real-time:** Socket.io for WebSocket communication
 5. **Styling:** TailwindCSS for rapid UI development
-6. **Testing:** Jest + Testing Library
+6. **Testing:** Jest, Vitest, Testing Library, mongodb-memory-server
 7. **Deployment:** Vercel (frontend) + Heroku (backend)
 
 ---

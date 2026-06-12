@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build",
-  "outputDirectory": "frontend/build",
+  "buildCommand": "cd frontend && npm ci && npm run build",
+  "outputDirectory": "frontend/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

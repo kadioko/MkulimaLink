@@ -14,6 +14,10 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, phone, password, role, location, farmDetails, businessDetails } = req.body;
 
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ message: 'Please provide name, email, phone, and password' });
+    }
+
     const userExists = await User.findOne({ $or: [{ email }, { phone }] });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists with this email or phone' });
@@ -32,12 +36,17 @@ router.post('/register', async (req, res) => {
 
     const token = generateToken(user._id);
 
-    res.status(201).json({
+    const userResponse = {
       _id: user._id,
       name: user.name,
       email: user.email,
       phone: user.phone,
-      role: user.role,
+      role: user.role
+    };
+
+    res.status(201).json({
+      user: userResponse,
+      ...userResponse,
       token
     });
   } catch (error) {
@@ -81,13 +90,18 @@ router.post('/login', async (req, res) => {
 
     const token = generateToken(user._id);
 
-    res.json({
+    const userResponse = {
       _id: user._id,
       name: user.name,
       email: user.email,
       phone: user.phone,
       role: user.role,
-      isPremium: user.isPremium,
+      isPremium: user.isPremium
+    };
+
+    res.json({
+      user: userResponse,
+      ...userResponse,
       token
     });
   } catch (error) {

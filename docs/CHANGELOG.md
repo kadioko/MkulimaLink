@@ -61,8 +61,8 @@
 
 #### Backend
 - Updated to Node.js 20+ with latest Express 4.21
-- Mongoose 8.5 with improved performance
-- Socket.io 4.7 for real-time features
+- Mongoose 9 with improved performance and updated middleware compatibility
+- Socket.io 4.8 for real-time features
 - Redis caching for faster responses
 - BullMQ for background job processing
 - Winston logging for better debugging
@@ -70,11 +70,14 @@
 
 #### Frontend
 - React 18.3 with latest features
+- Vite 7 build tooling replacing Create React App
 - TanStack Query v5 for data fetching
 - Framer Motion for smooth animations
 - React Leaflet for maps
-- PWA with offline support via Workbox
+- PWA with offline support via a Vite-compatible service worker
 - IndexedDB for offline data storage
+- Self-contained backend tests using mongodb-memory-server
+- Modular AWS SDK v3 usage replacing AWS SDK v2
 
 #### Infrastructure
 - Service worker for offline functionality

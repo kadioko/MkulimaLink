@@ -6,6 +6,7 @@ Automated monitoring, alerting, and retraining for ML models
 import os
 import logging
 import asyncio
+import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 import pandas as pd
@@ -488,7 +489,10 @@ class ModelMonitor:
                 if not job_data:
                     break
 
-                job = eval(job_data)  # Convert string back to dict
+                if isinstance(job_data, bytes):
+                    job_data = job_data.decode('utf-8')
+
+                job = json.loads(job_data)
                 model_name = job['model_name']
 
                 logger.info(f"Processing retraining job for {model_name}")

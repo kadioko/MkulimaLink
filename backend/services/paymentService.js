@@ -14,7 +14,14 @@ class PaymentService {
     });
   }
 
+  validateConfig() {
+    if (!clickpesaConfig.clientId || !clickpesaConfig.apiKey) {
+      throw new Error('ClickPesa credentials are not configured');
+    }
+  }
+
   generateSignature(data) {
+    this.validateConfig();
     const message = JSON.stringify(data);
     return crypto
       .createHmac('sha256', clickpesaConfig.apiKey)

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { ANALYTICS_KEY } from '../config/env';
 
 // Simple analytics tracking hook
 export const useAnalytics = () => {
@@ -20,7 +21,7 @@ export const useAnalytics = () => {
     };
 
     // In production, send to analytics service
-    if (process.env.REACT_APP_ANALYTICS_KEY) {
+    if (ANALYTICS_KEY) {
       // Send to your analytics provider (e.g., Google Analytics, Mixpanel, Amplitude)
       console.log('[Analytics]', event);
       

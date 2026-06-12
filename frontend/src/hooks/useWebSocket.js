@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { WS_URL } from '../config/env';
 
 export const useWebSocket = (url, options = {}) => {
   const {
@@ -114,7 +115,7 @@ export const useRealtimeNotifications = (userId) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const { isConnected, sendMessage } = useWebSocket(
-    process.env.REACT_APP_WS_URL || 'wss://api.mkulimalink.com/ws',
+    WS_URL,
     {
       onOpen: () => {
         // Subscribe to user notifications

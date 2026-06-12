@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWebSocket } from './useWebSocket';
+import { CHAT_WS_URL } from '../config/env';
 
 export const useChat = (userId, roomId = null) => {
   const [messages, setMessages] = useState([]);
@@ -9,7 +10,7 @@ export const useChat = (userId, roomId = null) => {
   const typingTimeoutRef = useRef({});
 
   const { sendMessage: sendWsMessage, isConnected: wsConnected } = useWebSocket(
-    process.env.REACT_APP_CHAT_WS_URL || 'wss://api.mkulimalink.com/chat',
+    CHAT_WS_URL,
     {
       onOpen: () => {
         setIsConnected(true);

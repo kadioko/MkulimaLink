@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, AlertCircle, Loader, Plus, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../config/env';
 import axios from 'axios';
 import './ProductManagement.css';
 
@@ -113,7 +114,7 @@ export default function ListProduct() {
       });
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/products`,
+        `${API_URL}/api/products`,
         formDataToSend,
         {
           headers: {

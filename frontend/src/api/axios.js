@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
+import { API_URL } from '../config/env';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://mkulimalink-api-aa384e99a888.herokuapp.com',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

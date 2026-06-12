@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Star, Loader } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '../../config/env';
 import './AdvancedSearch.css';
 
 export default function AdvancedSearch() {
@@ -62,7 +63,7 @@ export default function AdvancedSearch() {
       };
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/products`,
+        `${API_URL}/api/products`,
         { params }
       );
 
@@ -85,7 +86,7 @@ export default function AdvancedSearch() {
       const timer = setTimeout(async () => {
         try {
           const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}/api/search/autocomplete`,
+            `${API_URL}/api/search/autocomplete`,
             { params: { q: searchQuery, limit: 10 } }
           );
           setSuggestions(response.data.suggestions || []);

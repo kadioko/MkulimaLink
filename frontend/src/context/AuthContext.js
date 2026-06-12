@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { LOCAL_API_URL } from '../config/env';
 
 const AuthContext = createContext();
 
@@ -17,7 +18,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const API_URL = LOCAL_API_URL;
 
   useEffect(() => {
     const initAuth = async () => {
@@ -43,11 +44,11 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const response = await axios.post(`${API_URL}/api/auth/register`, userData);
-      const { token: newToken, ...userData_ } = response.data;
+      const { token: newToken, user: responseUser, ...userData_ } = response.data;
       
       localStorage.setItem('token', newToken);
       setToken(newToken);
-      setUser(userData_);
+      setUser(responseUser || userData_);
       
       return response.data;
     } catch (err) {
@@ -61,11 +62,11 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-      const { token: newToken, ...userData_ } = response.data;
+      const { token: newToken, user: responseUser, ...userData_ } = response.data;
       
       localStorage.setItem('token', newToken);
       setToken(newToken);
-      setUser(userData_);
+      setUser(responseUser || userData_);
       
       return response.data;
     } catch (err) {

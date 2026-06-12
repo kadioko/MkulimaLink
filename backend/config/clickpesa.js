@@ -1,6 +1,6 @@
 module.exports = {
-  clientId: process.env.CLICKPESA_CLIENT_ID || 'IDl5CN86PZ8RdXa7wBsWTnVYZ66fAhCc',
-  apiKey: process.env.CLICKPESA_API_KEY || 'SKhzMHaU2hL9FcaCR4gZMaSvJ78Mr8bH40tVkeQQgj',
+  clientId: process.env.CLICKPESA_CLIENT_ID,
+  apiKey: process.env.CLICKPESA_API_KEY,
   baseUrl: process.env.CLICKPESA_BASE_URL || 'https://api.clickpesa.com',
   
   // Supported payment methods

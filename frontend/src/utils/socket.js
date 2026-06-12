@@ -1,5 +1,6 @@
 import { io } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
+import { LOCAL_API_URL } from '../config/env';
 
 let socket = null;
 
@@ -10,7 +11,7 @@ export const initSocket = () => {
   
   if (socket?.connected) return socket;
 
-  socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+  socket = io(LOCAL_API_URL, {
     auth: { token },
     transports: ['websocket', 'polling'],
     reconnection: true,

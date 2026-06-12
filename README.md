@@ -96,6 +96,7 @@
 | Technology | Purpose |
 |------------|---------|
 | React 18.3 | UI framework |
+| Vite 7 | Frontend dev server and production build |
 | React Router 6 | Client-side routing |
 | React Query 3 | Data fetching & caching |
 | Zustand 4.5 | State management |
@@ -108,6 +109,7 @@
 | Leaflet | Interactive maps |
 | Socket.io-client | Real-time communication |
 | date-fns | Date formatting |
+| Vitest + Testing Library | Frontend tests |
 
 ### New Custom Hooks (25+)
 | Hook | Purpose |
@@ -135,13 +137,13 @@
 | Express 4.21 | Web framework |
 | MongoDB Atlas | Database (connected) |
 | Socket.io | Real-time WebSocket server |
-| Mongoose 8 | ODM for MongoDB |
+| Mongoose 9 | ODM for MongoDB |
 | JWT | Authentication tokens |
 | Helmet | Security headers |
 | Express Rate Limit | API rate limiting |
 | Multer | File uploads |
 | node-cron | Scheduled tasks |
-| Jest | Testing framework |
+| Jest + mongodb-memory-server | Self-contained backend tests |
 
 ### Deployment
 | Service | Purpose |
@@ -156,9 +158,10 @@
 ```
 MkulimaLink/
 ├── frontend/                    # React SPA
+│   ├── index.html               # Vite HTML entry
 │   ├── public/
-│   │   ├── index.html
-│   │   └── manifest.json       # PWA config
+│   │   ├── manifest.json       # PWA config
+│   │   └── sw.js               # Service worker
 │   └── src/
 │       ├── api/axios.js         # API client (baseURL config)
 │       ├── components/
@@ -210,11 +213,10 @@ git clone https://github.com/kadioko/MkulimaLink.git
 cd MkulimaLink
 
 # Install dependencies
-npm install
-cd frontend && npm install --legacy-peer-deps && cd ..
+npm run install-all
 
-# Start frontend (connects to live API)
-cd frontend && npm start
+# Start backend + frontend
+npm run dev
 # Opens at http://localhost:3000
 ```
 
@@ -224,7 +226,7 @@ The frontend is pre-configured to connect to the live backend API at `https://mk
 
 **Frontend** (Vercel):
 ```
-REACT_APP_API_URL=https://mkulimalink-api-aa384e99a888.herokuapp.com
+VITE_API_URL=https://mkulimalink-api-aa384e99a888.herokuapp.com
 ```
 
 **Backend** (Heroku):
@@ -238,8 +240,8 @@ PORT=<assigned by Heroku>
 
 ### Frontend → Vercel
 Automatic deployment on push to `main` branch.
-- **Build command**: `cd frontend && npm install --legacy-peer-deps && npm run build`
-- **Output directory**: `frontend/build`
+- **Build command**: `cd frontend && npm ci && npm run build`
+- **Output directory**: `frontend/dist`
 - **SPA rewrites**: All routes → `index.html`
 
 ### Backend → Heroku
@@ -268,14 +270,17 @@ Live rates for TZS, KES, USD, EUR, GBP with automatic conversion.
 
 ### Run Tests
 ```bash
+# Backend tests, using in-memory MongoDB by default
+npm test
+
 # Frontend tests
-cd frontend && npm test
+npm run test:frontend
 
-# Backend tests
-cd backend && npm test
+# Mobile tests
+npm run test:mobile
 
-# Coverage report
-npm run test:coverage
+# Security audit across root, frontend, and mobile
+npm run audit:all
 ```
 
 ### Test Structure

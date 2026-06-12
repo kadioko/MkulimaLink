@@ -3,7 +3,7 @@
  * Handles video uploads, processing, and marketplace functionality for agricultural products
  */
 
-const AWS = require('aws-sdk');
+const { DeleteObjectCommand, PutObjectCommand, S3Client } = require('@aws-sdk/client-s3');
 const { Product } = require('../models/Product');
 const { Video } = require('../models/Video');
 const fs = require('fs').promises;
@@ -14,10 +14,14 @@ const { v4: uuidv4 } = require('uuid');
 class VideoMarketplaceService {
   constructor() {
     // Configure AWS S3
-    this.s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'us-east-1'
+    this.s3 = new S3Client({
+      region: process.env.AWS_REGION || 'us-east-1',
+      credentials: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+        ? {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+          }
+        : undefined
     });
 
     this.bucketName = process.env.AWS_S3_BUCKET_NAME;
@@ -144,7 +148,7 @@ class VideoMarketplaceService {
       ACL: 'public-read' // Make videos publicly accessible
     };
 
-    const result = await this.s3.upload(params).promise();
+    await this.s3.send(new PutObjectCommand(params));
 
     if (this.cloudfrontUrl) {
       // Return CloudFront URL for better performance
@@ -152,7 +156,7 @@ class VideoMarketplaceService {
       return `${this.cloudfrontUrl}/${cloudfrontKey}`;
     }
 
-    return result.Location;
+    return `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
   }
 
   /**
@@ -518,10 +522,10 @@ class VideoMarketplaceService {
         key = urlParts.slice(-2).join('/'); // Get last two parts
       }
 
-      await this.s3.deleteObject({
+      await this.s3.send(new DeleteObjectCommand({
         Bucket: this.bucketName,
         Key: key
-      }).promise();
+      }));
 
     } catch (error) {
       console.error('Delete from S3 error:', error);

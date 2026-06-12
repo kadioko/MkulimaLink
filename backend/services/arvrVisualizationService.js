@@ -4,7 +4,7 @@
  */
 
 const { Product, ARVRModel } = require('../models/ARVR');
-const AWS = require('aws-sdk');
+const { DeleteObjectCommand, PutObjectCommand, S3Client } = require('@aws-sdk/client-s3');
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
@@ -12,10 +12,14 @@ const { v4: uuidv4 } = require('uuid');
 class ARVRVisualizationService {
   constructor() {
     // Configure AWS S3 for 3D model storage
-    this.s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'us-east-1'
+    this.s3 = new S3Client({
+      region: process.env.AWS_REGION || 'us-east-1',
+      credentials: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+        ? {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+          }
+        : undefined
     });
 
     this.bucketName = process.env.AWS_S3_BUCKET_NAME;
@@ -159,14 +163,14 @@ class ARVRVisualizationService {
       ACL: 'public-read'
     };
 
-    const result = await this.s3.upload(params).promise();
+    await this.s3.send(new PutObjectCommand(params));
 
     if (this.cloudfrontUrl) {
       const cloudfrontKey = key.replace(/^ar-vr\//, '');
       return `${this.cloudfrontUrl}/${cloudfrontKey}`;
     }
 
-    return result.Location;
+    return `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
   }
 
   /**
@@ -603,10 +607,10 @@ class ARVRVisualizationService {
             }
 
             deletePromises.push(
-              this.s3.deleteObject({
+              this.s3.send(new DeleteObjectCommand({
                 Bucket: this.bucketName,
                 Key: key
-              }).promise()
+              }))
             );
           }
         }

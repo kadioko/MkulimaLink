@@ -1,12 +1,11 @@
-const AfricasTalking = require('africastalking');
+const axios = require('axios');
 
 const credentials = {
-  apiKey: process.env.AFRICASTALKING_API_KEY || 'test',
-  username: process.env.AFRICASTALKING_USERNAME || 'sandbox'
+  apiKey: process.env.AFRICASTALKING_API_KEY,
+  username: process.env.AFRICASTALKING_USERNAME
 };
 
-const africasTalking = AfricasTalking(credentials);
-const sms = africasTalking.SMS;
+const smsApiUrl = 'https://api.africastalking.com/version1/messaging';
 
 const sendSMS = async (phoneNumber, message) => {
   try {
@@ -27,15 +26,28 @@ const sendSMS = async (phoneNumber, message) => {
       return { success: true, message: 'SMS logged (dev mode)' };
     }
 
-    const options = {
-      to: [formattedPhone],
-      message: message,
-      from: 'MkulimaLink'
-    };
+    if (!credentials.apiKey || !credentials.username) {
+      return { success: false, message: 'SMS provider is not configured' };
+    }
 
-    const response = await sms.send(options);
-    console.log('SMS sent successfully:', response);
-    return { success: true, response };
+    const params = new URLSearchParams({
+      username: credentials.username,
+      to: formattedPhone,
+      message,
+      from: process.env.AFRICASTALKING_SENDER_ID || 'MkulimaLink'
+    });
+
+    const response = await axios.post(smsApiUrl, params, {
+      headers: {
+        apiKey: credentials.apiKey,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json'
+      },
+      timeout: 10000
+    });
+
+    console.log('SMS sent successfully:', response.data);
+    return { success: true, response: response.data };
   } catch (error) {
     console.error('SMS sending error:', error);
     return { success: false, error: error.message };

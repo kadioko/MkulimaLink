@@ -45,7 +45,7 @@ pm2 save
 pm2 startup
 ```
 
-### Option 2: Docker (Coming Soon)
+### Option 2: Docker
 
 ```bash
 docker-compose up -d
@@ -88,8 +88,8 @@ ssh -i "your-key.pem" ubuntu@your-instance-public-ip
 # Update system
 sudo apt update && sudo apt upgrade -y
 
-# Install Node.js 18
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+# Install Node.js 20+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # Install MongoDB
@@ -117,14 +117,9 @@ cd /home/ubuntu
 git clone <your-repository-url> MkulimaLink
 cd MkulimaLink
 
-# Install backend dependencies
-npm install
-
-# Install frontend dependencies and build
-cd frontend
-npm install
+# Install dependencies and build frontend
+npm run install-all
 npm run build
-cd ..
 
 # Create uploads directory
 mkdir -p uploads/products
@@ -165,7 +160,7 @@ server {
 
     # Serve static files
     location / {
-        root /home/ubuntu/MkulimaLink/frontend/build;
+        root /home/ubuntu/MkulimaLink/frontend/dist;
         try_files $uri $uri/ /index.html;
     }
 
@@ -313,8 +308,8 @@ crontab -e
 ```bash
 cd /home/ubuntu/MkulimaLink
 git pull
-npm install
-cd frontend && npm install && npm run build && cd ..
+npm run install-all
+npm run build
 pm2 restart mkulimalink
 ```
 

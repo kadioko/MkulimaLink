@@ -2,10 +2,11 @@
  * Push Notifications Service
  * Handles web push notifications using Service Workers
  */
+import { VAPID_PUBLIC_KEY } from '../config/env';
 
 class PushNotificationService {
   constructor() {
-    this.publicKey = process.env.VITE_VAPID_PUBLIC_KEY || 
+    this.publicKey = VAPID_PUBLIC_KEY ||
       'BLbZxJ1K2Y4t8X7p3Q6R9w5E2T8Y7U4I1O0P3A6S9D2F5G8H1J4K7L0M3N6P9Q';
     this.subscription = null;
     this.isSupported = this.checkSupport();

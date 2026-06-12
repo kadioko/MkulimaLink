@@ -33,6 +33,9 @@ const upload = multer({
 router.post('/', protect, authorize('farmer'), upload.array('images', 5), async (req, res) => {
   try {
     const { name, category, description, price, unit, quantity, location, harvestDate, quality, organic } = req.body;
+    const productLocation = typeof location === 'string'
+      ? JSON.parse(location)
+      : location || req.user.location;
 
     const images = [];
     if (req.files && req.files.length > 0) {
@@ -56,10 +59,10 @@ router.post('/', protect, authorize('farmer'), upload.array('images', 5), async 
       unit,
       quantity,
       images,
-      location: location ? JSON.parse(location) : req.user.location,
+      location: productLocation,
       harvestDate,
       quality,
-      organic: organic === 'true'
+      organic: organic === true || organic === 'true'
     });
 
     if (req.user.isPremium) {
@@ -106,19 +109,22 @@ router.get('/', async (req, res) => {
       query.$text = { $search: search };
     }
 
+    const pageNumber = Number.parseInt(page, 10) || 1;
+    const limitNumber = Number.parseInt(limit, 10) || 20;
+
     const products = await Product.find(query)
       .populate('seller', 'name phone location rating')
       .sort(sort)
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .limit(limitNumber)
+      .skip((pageNumber - 1) * limitNumber)
       .lean();
 
     const count = await Product.countDocuments(query);
 
     res.json({
       products,
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
+      totalPages: Math.ceil(count / limitNumber),
+      currentPage: pageNumber,
       total: count
     });
   } catch (error) {

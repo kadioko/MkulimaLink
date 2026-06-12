@@ -1,4 +1,5 @@
 import React from 'react';
+import { IS_DEVELOPMENT } from '../config/env';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
@@ -15,7 +16,7 @@ class ErrorBoundary extends React.Component {
     this.setState({ errorInfo });
     
     // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
+    if (IS_DEVELOPMENT) {
       console.error('Error caught by boundary:', error, errorInfo);
     }
     
@@ -53,7 +54,7 @@ class ErrorBoundary extends React.Component {
               We're sorry, but something unexpected happened. Please try refreshing the page or go back to the home page.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {IS_DEVELOPMENT && this.state.error && (
               <details className="mb-6 text-left bg-gray-100 rounded-lg p-4">
                 <summary className="cursor-pointer text-sm font-medium text-gray-700">
                   Error Details (Development Only)

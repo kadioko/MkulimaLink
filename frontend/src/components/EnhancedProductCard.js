@@ -59,6 +59,9 @@ const EnhancedProductCard = ({
                 {product.name}
               </h3>
               <p className="text-gray-500 text-sm">{product.category} • {product.region}</p>
+              {product.seller && (
+                <p className="mt-1 text-sm text-gray-600">{product.seller.name}</p>
+              )}
             </div>
             <div className="flex gap-2">
               <motion.button
@@ -216,6 +219,10 @@ const EnhancedProductCard = ({
           <MapPin size={14} />
           {product.region}, {product.country}
         </p>
+
+        {product.category && (
+          <p className="text-sm text-gray-600 mb-3">{product.category}</p>
+        )}
         
         <div className="flex items-end justify-between">
           <div>

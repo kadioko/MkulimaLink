@@ -4,7 +4,13 @@ const User = require('../models/User');
 const Product = require('../models/Product');
 const MarketPrice = require('../models/MarketPrice');
 
-const SEED_SECRET = process.env.SEED_SECRET || 'mkulima-seed-2024';
+const getSeedSecret = () => {
+  if (process.env.SEED_SECRET) {
+    return process.env.SEED_SECRET;
+  }
+
+  return process.env.NODE_ENV === 'production' ? null : 'mkulima-seed-2024';
+};
 
 // Real East African agricultural market prices (TZS)
 const marketPricesData = [
@@ -47,7 +53,12 @@ const productsData = [
 router.post('/run', async (req, res) => {
   try {
     const { secret } = req.body;
-    if (secret !== SEED_SECRET) {
+    const seedSecret = getSeedSecret();
+    if (!seedSecret) {
+      return res.status(503).json({ message: 'Seed route is not configured' });
+    }
+
+    if (secret !== seedSecret) {
       return res.status(403).json({ message: 'Invalid seed secret' });
     }
 
