@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery } from 'react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Grid3X3, List, X, SlidersHorizontal } from 'lucide-react';
+import { BarChart3, Grid3X3, List, MapPin, Search, ShieldCheck, SlidersHorizontal, Sprout, X } from 'lucide-react';
 import api from '../api/axios';
 import { demoProducts } from '../utils/demoData';
 import { useCountryStore, COUNTRIES } from '../store/countryStore';
@@ -51,6 +51,7 @@ function Products() {
       }
     },
     {
+      initialData: { products: demoProducts, totalPages: 1, isDemo: true },
       keepPreviousData: true,
       staleTime: 2 * 60 * 1000,
     }
@@ -86,85 +87,101 @@ function Products() {
   }, [success, info]);
 
   const activeFiltersCount = Object.values(filters).filter(v => v !== '').length;
+  const productCount = data?.products?.length || 0;
+  const marketplaceStats = [
+    { label: 'Available lots', value: productCount || '12+', icon: Sprout },
+    { label: 'Active regions', value: regions.length, icon: MapPin },
+    { label: 'Verified sellers', value: '94%', icon: ShieldCheck },
+    { label: 'Price signals', value: 'Live', icon: BarChart3 },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+        className="border border-slate-200 bg-white p-6"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Browse Products</h1>
-          <p className="text-gray-500 mt-1">
-            {data?.products?.length || 0} products available in {currentCountry.flag} {currentCountry.name}
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-green-600' : 'text-gray-500'}`}
-            >
-              <Grid3X3 size={20} />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-green-600' : 'text-gray-500'}`}
-            >
-              <List size={20} />
-            </motion.button>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-emerald-700">Marketplace supply</p>
+            <h1 className="mt-2 text-4xl font-black tracking-tight text-slate-950">Find produce with price context.</h1>
+            <p className="mt-3 max-w-2xl text-slate-600">
+              Browse active lots in {currentCountry.name}, compare sellers, and filter by crop, region, grade, and organic status.
+            </p>
           </div>
-          
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              showFilters || activeFiltersCount > 0
-                ? 'bg-green-100 text-green-700' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <SlidersHorizontal size={18} />
-            Filters
-            {activeFiltersCount > 0 && (
-              <span className="bg-green-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                {activeFiltersCount}
-              </span>
-            )}
-          </motion.button>
+
+          <div className="flex items-center gap-3">
+            <div className="flex border border-slate-200 bg-slate-50 p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                title="Grid view"
+              >
+                <Grid3X3 size={20} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                title="List view"
+              >
+                <List size={20} />
+              </button>
+            </div>
+            
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 border px-4 py-2 font-bold transition-colors ${
+                showFilters || activeFiltersCount > 0
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800' 
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <SlidersHorizontal size={18} />
+              Filters
+              {activeFiltersCount > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center bg-emerald-700 text-xs font-black text-white">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {marketplaceStats.map((stat) => (
+            <div key={stat.label} className="border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-2xl font-black text-slate-950">{stat.value}</p>
+                <stat.icon size={20} className="text-emerald-700" />
+              </div>
+              <p className="mt-2 text-xs font-bold uppercase tracking-wide text-slate-500">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </motion.div>
 
-      {/* Search Bar */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
+        className="border border-slate-200 bg-white p-4"
       >
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input
             type="text"
             placeholder="Search products, categories, regions..."
             value={filters.search}
             onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
+            className="w-full border border-slate-200 bg-slate-50 py-3 pl-12 pr-11 font-semibold text-slate-900 outline-none transition-all placeholder:font-medium placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           />
           {filters.search && (
             <motion.button
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               onClick={() => handleFilterChange('search', '')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
             >
               <X size={16} />
             </motion.button>
@@ -172,22 +189,21 @@ function Products() {
         </div>
       </motion.div>
 
-      {/* Filters Panel */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+            className="overflow-hidden border border-slate-200 bg-white"
           >
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <label className="mb-2 block text-sm font-bold text-slate-700">Category</label>
                 <select
                   value={filters.category}
                   onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                  className="w-full border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 >
                   <option value="">All Categories</option>
                   {categories.map(cat => (
@@ -197,11 +213,11 @@ function Products() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                <label className="mb-2 block text-sm font-bold text-slate-700">Region</label>
                 <select
                   value={filters.region}
                   onChange={(e) => handleFilterChange('region', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                  className="w-full border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 >
                   <option value="">All Regions</option>
                   {regions.map(region => (
@@ -211,11 +227,11 @@ function Products() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Quality</label>
+                <label className="mb-2 block text-sm font-bold text-slate-700">Quality</label>
                 <select
                   value={filters.quality}
                   onChange={(e) => handleFilterChange('quality', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                  className="w-full border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 >
                   <option value="">All Quality</option>
                   <option value="premium">Premium</option>
@@ -225,11 +241,11 @@ function Products() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                <label className="mb-2 block text-sm font-bold text-slate-700">Type</label>
                 <select
                   value={filters.organic}
                   onChange={(e) => handleFilterChange('organic', e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                  className="w-full border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 >
                   <option value="">All Types</option>
                   <option value="true">Organic Only</option>
@@ -239,12 +255,12 @@ function Products() {
             </div>
             
             {activeFiltersCount > 0 && (
-              <div className="px-4 pb-4 flex justify-end">
+              <div className="flex justify-end px-4 pb-4">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={resetFilters}
-                  className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                  className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-slate-700"
                 >
                   <X size={14} />
                   Clear all filters
@@ -272,7 +288,7 @@ function Products() {
         <motion.div
           layout
           className={viewMode === 'grid'
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            ? "grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
             : "space-y-4"
           }
         >

@@ -41,37 +41,37 @@ function Layout() {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-md sticky top-0 z-50">
+    <div className="min-h-screen bg-slate-50">
+      <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-18 py-3">
+          <div className="flex justify-between py-3">
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-3 group">
-                <div className="w-11 h-11 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                <div className="flex h-11 w-11 items-center justify-center bg-slate-950 shadow-sm transition-all group-hover:bg-emerald-700">
                   <span className="text-white font-extrabold text-2xl tracking-tighter">M</span>
                 </div>
-                <span className="text-2xl font-black text-gray-900 hidden sm:block tracking-tight">Mkulima<span className="text-primary-600">Link</span></span>
+                <span className="hidden text-2xl font-black tracking-tight text-slate-950 sm:block">Mkulima<span className="text-emerald-700">Link</span></span>
               </Link>
             </div>
 
             <div className="hidden lg:flex items-center justify-center flex-1 px-8">
-              <div className="flex items-center space-x-1.5 bg-gray-50/80 p-1.5 rounded-2xl border border-gray-100 shadow-sm backdrop-blur-sm">
+              <div className="flex items-center border border-slate-200 bg-slate-50 p-1">
                 {navItems.map((item) => {
                   const active = isActive(item.path);
                   return (
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                         item.highlight 
-                          ? 'bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-800 hover:from-yellow-100 hover:to-yellow-200 shadow-sm ring-1 ring-yellow-200/50' 
+                          ? 'bg-amber-100 text-amber-900 hover:bg-amber-200' 
                           : active
-                            ? 'bg-white text-primary-700 shadow-sm'
-                            : 'text-gray-600 hover:text-primary-700 hover:bg-white hover:shadow-sm'
+                            ? 'bg-white text-emerald-800 shadow-sm'
+                            : 'text-slate-600 hover:bg-white hover:text-emerald-800 hover:shadow-sm'
                       }`}
                       style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
-                      <item.icon size={18} className={item.highlight ? 'text-yellow-600' : active ? 'text-primary-600' : 'text-gray-400 group-hover:text-primary-500'} />
+                      <item.icon size={18} className={item.highlight ? 'text-amber-700' : active ? 'text-emerald-700' : 'text-slate-400'} />
                       {item.name}
                     </Link>
                   );
@@ -83,12 +83,12 @@ function Layout() {
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        active ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-600 hover:text-primary-700 hover:bg-white hover:shadow-sm'
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+                        active ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-emerald-800 hover:shadow-sm'
                       }`}
                       style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
-                      <item.icon size={18} className={active ? "text-primary-600" : "text-gray-400"} />
+                      <item.icon size={18} className={active ? "text-emerald-700" : "text-slate-400"} />
                       {item.name}
                       {item.premium && !user.isPremium && (
                         <span className="text-[9px] bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1">Pro</span>
@@ -103,11 +103,11 @@ function Layout() {
               <select
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="bg-gray-50 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl px-3 py-2 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 cursor-pointer transition-colors outline-none"
+                className="cursor-pointer border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none transition-colors hover:bg-slate-50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
               >
                 {Object.values(COUNTRIES).map((c) => (
                   <option key={c.code} value={c.code}>
-                    {c.flag} {c.code}
+                    {c.code}
                   </option>
                 ))}
               </select>
@@ -129,7 +129,7 @@ function Layout() {
                       )}
                     </AnimatePresence>
                   </Link>
-                  <button className="relative p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-colors hidden sm:block">
+                  <button className="relative hidden p-2 text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-700 sm:block">
                     <Bell size={22} />
                     <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                   </button>
@@ -138,7 +138,7 @@ function Layout() {
                   
                   <div className="hidden md:flex items-center space-x-3">
                     <Link to="/profile" className="flex items-center gap-2 text-gray-700 hover:text-primary-600 font-medium">
-                      <div className="w-8 h-8 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold text-sm">
+                      <div className="flex h-8 w-8 items-center justify-center bg-emerald-100 text-sm font-bold text-emerald-800">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="hidden xl:block">{user.name.split(' ')[0]}</span>
@@ -150,8 +150,8 @@ function Layout() {
                 </div>
               ) : (
                 <div className="hidden md:flex items-center space-x-3">
-                  <Link to="/login" className="px-4 py-2 text-gray-600 font-semibold hover:text-primary-600 transition-colors">Login</Link>
-                  <Link to="/register" className="px-5 py-2 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 shadow-sm transition-all hover:shadow hover:-translate-y-0.5">Sign Up</Link>
+                  <Link to="/login" className="px-4 py-2 font-semibold text-slate-600 transition-colors hover:text-emerald-800">Login</Link>
+                  <Link to="/register" className="bg-emerald-600 px-5 py-2 font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 hover:shadow">Sign Up</Link>
                 </div>
               )}
 
@@ -229,11 +229,11 @@ function Layout() {
         )}
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <Outlet />
       </main>
 
-      <footer className="bg-white border-t border-gray-200 mt-12">
+      <footer className="mt-12 border-t border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>

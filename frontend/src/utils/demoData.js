@@ -34,7 +34,7 @@ export const demoProducts = [
     price: 15000,
     quantity: 30,
     unit: 'bunch',
-    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=500&h=500&fit=crop',
+    image: 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=500&h=500&fit=crop',
     seller: { name: 'Peter Fruits', rating: 4.9 },
     location: 'Arusha',
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
