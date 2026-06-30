@@ -262,11 +262,11 @@ function Layout() {
 
                   <div className="h-7 w-px bg-slate-200 hidden sm:block mx-1"></div>
 
-                  <Link to="/dashboard" className="hidden md:flex items-center gap-2 px-2 py-1.5 text-slate-700 hover:bg-slate-100 transition-colors rounded-sm">
+                  <Link to="/profile" className="hidden md:flex items-center gap-2 px-2 py-1.5 text-slate-700 hover:bg-slate-100 transition-colors rounded-sm" title="My Account">
                     <div className="flex h-7 w-7 items-center justify-center bg-emerald-600 text-xs font-bold text-white rounded-sm">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm font-semibold hidden xl:block">{user.name.split(' ')[0]}</span>
+                    <span className="text-sm font-semibold hidden xl:block">My Account</span>
                   </Link>
 
                   {user.role === 'admin' && (
