@@ -7,7 +7,7 @@ export default defineConfig({
       name: 'load-js-files-as-jsx',
       async transform(code, id) {
         const normalizedId = id.replace(/\\/g, '/');
-        if (!normalizedId.includes('/src/') || !normalizedId.endsWith('.js')) {
+        if (!normalizedId.includes('/src/') || !/\.[jt]sx?$/.test(normalizedId)) {
           return null;
         }
 
@@ -21,12 +21,13 @@ export default defineConfig({
   ],
   esbuild: {
     loader: 'jsx',
-    include: /src\/.*\.js$/,
+    include: /src\/.*\.[jt]sx?$/,
   },
   optimizeDeps: {
     esbuildOptions: {
       loader: {
         '.js': 'jsx',
+        '.jsx': 'jsx',
       },
     },
   },
