@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { MapContainer, TileLayer, Polygon, Popup } from 'react-leaflet';
 import { AlertCircle, TrendingUp, DollarSign, Zap, AlertTriangle, MapPin } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const AnalyticsDashboard = ({ farmId }) => {
   const [dashboard, setDashboard] = useState(null);
@@ -19,13 +18,12 @@ const AnalyticsDashboard = ({ farmId }) => {
 
   const fetchDashboard = async () => {
     try {
-      const response = await axios.get(`/api/analytics/farm/${farmId}/dashboard`);
+      const response = await api.get(`/api/analytics/farm/${farmId}/dashboard`);
       setDashboard(response.data.data);
-      
-      // Fetch alerts
-      const alertsResponse = await axios.get('/api/analytics/alerts?status=active&limit=5');
-      setAlerts(alertsResponse.data.data.alerts);
-      
+
+      const alertsResponse = await api.get('/api/analytics/alerts?status=active&limit=5');
+      setAlerts(alertsResponse.data?.data?.alerts || []);
+
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch dashboard:', error);
@@ -205,35 +203,17 @@ const AnalyticsDashboard = ({ farmId }) => {
           
           {gps_data.coordinates && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Map */}
-              <div className="lg:col-span-2 h-96 rounded-lg overflow-hidden border border-gray-200">
-                <MapContainer
-                  center={[gps_data.coordinates[1], gps_data.coordinates[0]]}
-                  zoom={15}
-                  style={{ height: '100%', width: '100%' }}
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; OpenStreetMap contributors'
-                  />
-                  {gps_data.boundary && gps_data.boundary.length > 0 && (
-                    <Polygon
-                      positions={gps_data.boundary.map(coord => [coord[1], coord[0]])}
-                      color="green"
-                      weight={2}
-                      opacity={0.7}
-                      fillOpacity={0.2}
-                    >
-                      <Popup>
-                        <div className="text-sm">
-                          <p><strong>Area:</strong> {gps_data.area_sqm} m²</p>
-                          <p><strong>Soil Type:</strong> {gps_data.soil_type}</p>
-                          <p><strong>Elevation:</strong> {gps_data.elevation}m</p>
-                        </div>
-                      </Popup>
-                    </Polygon>
-                  )}
-                </MapContainer>
+              {/* Map placeholder */}
+              <div className="lg:col-span-2 h-96 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-3">
+                <MapPin className="w-12 h-12 text-green-400" />
+                <div className="text-center">
+                  <p className="font-semibold text-gray-700">Farm Map</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Lat: {gps_data.coordinates[1].toFixed(5)}, Lng: {gps_data.coordinates[0].toFixed(5)}
+                  </p>
+                  {gps_data.area_sqm && <p className="text-xs text-gray-400 mt-1">Area: {gps_data.area_sqm} m² · {gps_data.soil_type} soil · {gps_data.elevation}m elevation</p>}
+                </div>
+                <p className="text-xs text-gray-400">Interactive map coming soon</p>
               </div>
 
               {/* Satellite Data */}
@@ -273,7 +253,7 @@ const AnalyticsDashboard = ({ farmId }) => {
 
                 <button
                   onClick={() => {
-                    axios.post(`/api/analytics/farm/${farmId}/satellite/update`);
+                    api.post(`/api/analytics/farm/${farmId}/satellite/update`);
                   }}
                   className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
                 >
