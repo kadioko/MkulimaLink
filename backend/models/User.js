@@ -81,6 +81,24 @@ const userSchema = new mongoose.Schema({
     sms: { type: Boolean, default: true },
     email: { type: Boolean, default: true },
     push: { type: Boolean, default: true }
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  isBanned: {
+    type: Boolean,
+    default: false
+  },
+  bannedReason: {
+    type: String,
+    trim: true
+  },
+  bannedAt: {
+    type: Date
+  },
+  lastLogin: {
+    type: Date
   }
 }, {
   timestamps: true

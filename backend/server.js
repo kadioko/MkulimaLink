@@ -95,6 +95,7 @@ const auctionRoutes = require('./routes/auctions');
 const wishlistRoutes = require('./routes/wishlist');
 const exchangeRateRoutes = require('./routes/exchangeRates');
 const livestockRoutes = require('./routes/livestock');
+const adminRoutes = require('./routes/admin');
 
 // API Documentation
 app.use('/api/docs', docsRoutes);
@@ -109,6 +110,7 @@ app.use('/robots.txt', sitemapRoutes);
 app.use('/api/v1', v1Routes);
 
 // New enhanced feature routes
+app.use('/api/admin', adminRoutes);
 app.use('/api/auctions', auctionRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/exchange-rates', exchangeRateRoutes);

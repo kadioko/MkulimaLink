@@ -88,6 +88,13 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    if (user.isBanned) {
+      return res.status(403).json({ message: `Account suspended${user.bannedReason ? ': ' + user.bannedReason : ''}. Contact support@mkulimalink.com` });
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
     const token = generateToken(user._id);
 
     const userResponse = {

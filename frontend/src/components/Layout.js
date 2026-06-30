@@ -269,6 +269,15 @@ function Layout() {
                     <span className="text-sm font-semibold hidden xl:block">{user.name.split(' ')[0]}</span>
                   </Link>
 
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-900 text-emerald-400 hover:bg-slate-800 transition-colors"
+                    >
+                      <Shield size={12} /> Admin
+                    </Link>
+                  )}
+
                   <button
                     onClick={handleLogout}
                     className="hidden md:block p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded-sm"
@@ -370,6 +379,11 @@ function Layout() {
                       <Link to="/transactions" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-50 rounded-sm">
                         <ShoppingBag size={15} className="text-slate-400" /> Transactions
                       </Link>
+                      {user.role === 'admin' && (
+                        <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50 rounded-sm">
+                          <Shield size={15} /> Admin Panel
+                        </Link>
+                      )}
                       <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-sm w-full">
                         <LogOut size={15} /> Logout
                       </button>
