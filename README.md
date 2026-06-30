@@ -1,11 +1,12 @@
-# 🌾 MkulimaLink — Agriculture Marketplace for Tanzania
+# 🌾 MkulimaLink — Agriculture Super-App for East Africa
 
 [![Live](https://img.shields.io/badge/Frontend-Live-brightgreen)](https://mkulimalink.vercel.app)
 [![API](https://img.shields.io/badge/API-Live-brightgreen)](https://mkulimalink-api-aa384e99a888.herokuapp.com/api/health)
 [![GitHub](https://img.shields.io/badge/GitHub-kadioko%2FMkulimaLink-blue)](https://github.com/kadioko/MkulimaLink)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-2.1.0-blue)](docs/CHANGELOG.md)
 
-**MkulimaLink** connects farmers, buyers, and suppliers across Tanzania through a modern web marketplace with real-time market prices, weather data, and AI-powered insights.
+**MkulimaLink** is a comprehensive agriculture super-app for East African farmers — combining a marketplace, AI insights, real-time chat, live auctions, and a full **livestock management system** in one platform.
 
 ## 🚀 Live Demo
 
@@ -19,7 +20,7 @@
 
 ## ✨ Features
 
-### Live & Working
+### Core Platform
 - **Product Marketplace** — Browse 19+ agricultural products with search, category/region filters
 - **Market Prices** — Real-time commodity prices across 6+ regions with trend indicators
 - **Weather Forecasts** — Current conditions for Dar es Salaam, Morogoro, Arusha, Iringa, Mbeya, Mwanza
@@ -29,49 +30,61 @@
 - **Premium Tier** — Subscription plans for advanced features
 - **Responsive Design** — Mobile-first, works on all devices
 
-### 🆕 New Features (Recently Added)
-- **🌙 Dark Mode** — Full dark mode support with system preference detection
-- **💫 Animations** — Framer Motion animations throughout (page transitions, hover effects, scroll animations)
+### 🐄 Livestock Management (v2.1 — New)
+- **Herd Management** — Animal profiles with photos, vital metrics, species, breed, parentage lineage
+- **Life Events Timeline** — Log nutrition, births, vaccinations, medical events and milestones with reminders
+- **Smart Inventory** — Track feed, medications, vaccines and equipment with automatic low-stock alerts
+- **Reproduction Tracking** — Record heat cycles, mating, pregnancy status and birth outcomes
+- **Breeds Library** — Comprehensive East African breed database with care requirements and metrics
+- **Farm Workspaces** — Manage multiple farms, invite team members, assign roles and permissions
+
+### 🆕 Platform Features
+- **🌙 Dark Mode** — Full dark mode with system preference detection
+- **💫 Animations** — Framer Motion throughout (page transitions, hover, scroll)
 - **💝 Wishlist** — Persistent wishlist with collections, priority levels, and notes
-- **⚖️ Product Comparison** — Compare up to 4 products side-by-side with attribute highlighting
-- **🔍 Advanced Search** — Debounced search, URL-persisted filters, fuzzy matching
+- **⚖️ Product Comparison** — Compare up to 4 products side-by-side
+- **🔍 Advanced Search** — Debounced search, URL-persisted filters, fuzzy matching, NLP
 - **🔔 Toast Notifications** — Animated success/error/info notifications
-- **🔄 Real-time Chat** — WebSocket-powered messaging with typing indicators
-- **🏷️ Live Auctions** — Real-time bidding system with auto-bid and countdown timers
-- **📊 Price History** — Historical price charts with trend analysis and volatility metrics
-- **💱 Multi-Currency** — Live exchange rates (TZS, KES, USD, EUR, GBP) with automatic conversion
-- **🗺️ Interactive Maps** — Leaflet-powered product location maps with clustering
+- **🔄 Real-time Chat** — WebSocket messaging with typing indicators
+- **🏷️ Live Auctions** — Real-time bidding with auto-bid and countdown timers
+- **📊 Price History** — Historical price charts with trend analysis
+- **💱 Multi-Currency** — Live exchange rates (TZS, KES, USD, EUR, GBP)
+- **🗺️ Interactive Maps** — Leaflet product location maps with clustering
 - **📤 Drag & Drop Upload** — Image uploads with previews and validation
 - **♿ Accessibility** — Keyboard navigation, skip links, focus management
 - **📱 PWA Support** — Service worker, offline capabilities, installable app
 - **📈 Analytics** — Comprehensive tracking, Web Vitals monitoring
-- **🧪 Testing** — Jest + Testing Library test suite
-- **🔄 Infinite Scroll** — Virtual scrolling for large product lists
-- **⚡ Performance** — Image optimization, lazy loading, skeleton loading states
+- **⚡ Performance** — Image optimization, lazy loading, skeleton states, virtual scrolling
 
 ### Frontend Pages
-| Page | Route | Description |
-|------|-------|-------------|
-| Home | `/` | Landing page with feature overview |
-| Products | `/products` | Browse & filter all products |
-| Product Detail | `/products/:id` | Individual product view |
-| Market Prices | `/market` | Real-time commodity prices |
-| Weather | `/weather` | Regional weather forecasts |
-| Login / Register | `/login`, `/register` | Authentication |
-| Dashboard | `/dashboard` | User dashboard (auth required) |
-| Add Product | `/add-product` | List a product (auth required) |
-| Transactions | `/transactions` | Order history (auth required) |
-| AI Insights | `/ai-insights` | AI analysis (auth required) |
-| Premium | `/premium` | Subscription plans (auth required) |
-| Profile | `/profile` | User profile (auth required) |
-| Wishlist | `/wishlist` | Saved products (auth required) |
-| Auctions | `/auctions` | Live bidding marketplace |
-| Chat | `/chat/:id` | Real-time messaging (auth required) |
-| Map View | `/map` | Product locations on map |
+| Page | Route | Auth | Description |
+|------|-------|------|-------------|
+| Home | `/` | No | Landing page with feature overview |
+| Products | `/products` | No | Browse & filter all products |
+| Product Detail | `/products/:id` | No | Individual product view |
+| Market Prices | `/market` | No | Real-time commodity prices |
+| Weather | `/weather` | No | Regional weather forecasts |
+| Login / Register | `/login`, `/register` | No | Authentication |
+| Dashboard | `/dashboard` | ✅ | Personalized user dashboard |
+| Add Product | `/add-product` | ✅ | List a product for sale |
+| Transactions | `/transactions` | ✅ | Order history |
+| AI Insights | `/ai-insights` | ✅ | AI analysis & recommendations |
+| Premium | `/premium` | No | Subscription plans |
+| Profile | `/profile` | ✅ | User profile |
+| **Livestock Hub** | **`/livestock`** | ✅ | **Herd overview & stats** |
+| Animal Profile | `/livestock/:id` | ✅ | Full animal profile & events timeline |
+| Livestock Inventory | `/livestock/inventory` | ✅ | Stock levels & movement logs |
+| Reproduction Tracker | `/livestock/reproduction` | ✅ | Heat cycles, mating, pregnancy |
+| Breeds Library | `/livestock/breeds` | No | Searchable breed database |
+| Farm Workspaces | `/livestock/workspace` | ✅ | Multi-farm & team management |
 
-### API Endpoints (New)
+### Core API Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/api/health` | Health check with data counts |
+| GET | `/api/products` | List all products |
+| GET | `/api/market` | Market prices |
+| GET | `/api/weather` | Weather data (6 regions) |
 | GET | `/api/auctions` | List active auctions |
 | POST | `/api/auctions` | Create new auction |
 | POST | `/api/auctions/:id/bid` | Place bid on auction |
@@ -82,34 +95,51 @@
 | POST | `/api/exchange-rates/convert` | Convert currency |
 | GET | `/api/products/:id/price-history` | Price history data |
 
-### API Endpoints
+### Livestock API Endpoints (`/api/livestock/*`)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/health` | Health check with data counts |
-| GET | `/api/products` | List all products (19 items) |
-| GET | `/api/market` | Market prices (8 price points) |
-| GET | `/api/weather` | Weather data (6 regions) |
+| GET | `/api/livestock/animals` | List herd (filterable by species, gender, status) |
+| POST | `/api/livestock/animals` | Add new animal |
+| GET | `/api/livestock/animals/:id` | Animal profile |
+| PUT | `/api/livestock/animals/:id` | Update animal |
+| DELETE | `/api/livestock/animals/:id` | Remove animal |
+| GET | `/api/livestock/animals/:id/offspring` | List offspring |
+| GET | `/api/livestock/stats` | Herd summary stats |
+| GET | `/api/livestock/events` | Life events (filterable) |
+| POST | `/api/livestock/events` | Log new event |
+| GET | `/api/livestock/reminders` | Upcoming reminders |
+| GET | `/api/livestock/inventory` | Stock list |
+| POST | `/api/livestock/inventory` | Add inventory item |
+| POST | `/api/livestock/inventory/:id/movement` | Log stock movement |
+| GET | `/api/livestock/reproduction` | Reproduction records |
+| POST | `/api/livestock/reproduction` | Add record |
+| GET | `/api/livestock/reproduction/upcoming-births` | Upcoming due dates |
+| GET | `/api/livestock/breeds` | Breed library (public) |
+| GET | `/api/livestock/workspaces` | User's farm workspaces |
+| POST | `/api/livestock/workspaces` | Create workspace |
+| POST | `/api/livestock/workspaces/:id/members` | Invite team member |
+| DELETE | `/api/livestock/workspaces/:id/members/:uid` | Remove team member |
 
 ## 🛠 Tech Stack
 
 ### Frontend
-| Technology | Purpose |
-|------------|---------|
-| React 18.3 | UI framework |
-| Vite 7 | Frontend dev server and production build |
-| React Router 6 | Client-side routing |
-| React Query 3 | Data fetching & caching |
-| Zustand 4.5 | State management |
-| TailwindCSS 3.4 | Styling |
-| Lucide React | Icons |
-| Axios | HTTP client |
-| Framer Motion | Animations |
-| i18next | Internationalization (EN/SW) |
-| Recharts | Charts & data visualization |
-| Leaflet | Interactive maps |
-| Socket.io-client | Real-time communication |
-| date-fns | Date formatting |
-| Vitest + Testing Library | Frontend tests |
+| Technology | Version | Purpose |
+|------------|---------|--------|
+| React | 18.3 | UI framework |
+| Vite | 7.x | Dev server & production build |
+| React Router | 6.30 | Client-side routing |
+| TanStack Query | 5.x | Data fetching & caching |
+| Zustand | 4.5 | State management |
+| TailwindCSS | 3.4 | Styling |
+| Lucide React | 0.436 | Icons |
+| Axios | 1.17 | HTTP client |
+| Framer Motion | 11.x | Animations |
+| i18next | 23.x | Internationalization (EN/SW) |
+| Recharts | 2.12 | Charts & data visualization |
+| Leaflet / React-Leaflet | 1.9 / 4.2 | Interactive maps |
+| Socket.io-client | 4.7 | Real-time communication |
+| date-fns | 3.6 | Date formatting |
+| Vitest + Testing Library | 3.x / 16.x | Frontend tests |
 
 ### New Custom Hooks (25+)
 | Hook | Purpose |
@@ -131,19 +161,22 @@
 | `useToast` | Notification system |
 
 ### Backend
-| Technology | Purpose |
-|------------|---------|
-| Node.js 20+ | Runtime |
-| Express 4.21 | Web framework |
-| MongoDB Atlas | Database (connected) |
-| Socket.io | Real-time WebSocket server |
-| Mongoose 9 | ODM for MongoDB |
-| JWT | Authentication tokens |
-| Helmet | Security headers |
-| Express Rate Limit | API rate limiting |
-| Multer | File uploads |
-| node-cron | Scheduled tasks |
-| Jest + mongodb-memory-server | Self-contained backend tests |
+| Technology | Version | Purpose |
+|------------|---------|--------|
+| Node.js | 20+ | Runtime |
+| Express | 4.22 | Web framework |
+| MongoDB Atlas | — | Cloud database |
+| Mongoose | 9.7 | ODM for MongoDB |
+| Socket.io | 4.8 | Real-time WebSocket server |
+| JWT | 9.x | Authentication tokens |
+| Helmet | 7.x | Security headers |
+| Express Rate Limit | 8.x | API rate limiting |
+| Multer | 2.x | File uploads |
+| Sharp | 0.34 | Image processing |
+| Winston | 3.x | Logging |
+| node-cron | 4.x | Scheduled tasks |
+| Sentry | 10.x | Error monitoring |
+| Jest + mongodb-memory-server | 30.x / 11.x | Backend tests |
 
 ### Deployment
 | Service | Purpose |
@@ -157,46 +190,60 @@
 
 ```
 MkulimaLink/
-├── frontend/                    # React SPA
+├── frontend/                    # React SPA (Vite)
 │   ├── index.html               # Vite HTML entry
+│   ├── vite.config.js           # Vite configuration
 │   ├── public/
-│   │   ├── manifest.json       # PWA config
-│   │   └── sw.js               # Service worker
+│   │   ├── manifest.json        # PWA config
+│   │   └── sw.js                # Service worker
 │   └── src/
-│       ├── api/axios.js         # API client (baseURL config)
-│       ├── components/
-│       │   ├── Layout.js        # Main layout with nav
-│       │   ├── ErrorBoundary.js # Error handling
-│       │   └── Toast.js         # Notifications
+│       ├── api/axios.js          # API client (auth interceptors)
+│       ├── config/env.js         # Environment config
+│       ├── components/           # 60+ UI components
+│       │   ├── Layout.js         # Main layout with nav
+│       │   ├── ErrorBoundary.js  # Error handling
+│       │   └── ToastContainer.js # Notifications
 │       ├── pages/
-│       │   ├── Home.js          # Landing page
-│       │   ├── Products.js      # Product marketplace
-│       │   ├── ProductDetail.js # Single product view
-│       │   ├── Market.js        # Market prices
-│       │   ├── Weather.js       # Weather forecasts
-│       │   ├── Dashboard.js     # User dashboard
-│       │   ├── Login.js         # Authentication
-│       │   ├── Register.js      # Registration
-│       │   ├── AddProduct.js    # Product listing form
-│       │   ├── Transactions.js  # Order management
-│       │   ├── AIInsights.js    # AI analysis
-│       │   ├── Premium.js       # Subscription plans
-│       │   └── Profile.js       # User profile
-│       ├── store/authStore.js   # Zustand auth state
-│       ├── i18n/                # Translations (EN/SW)
-│       └── App.js               # Routes & providers
-├── backend/                     # Express API (full version)
-│   ├── models/                  # Mongoose schemas
-│   ├── routes/                  # API route handlers
-│   ├── middleware/              # Auth, validation
+│       │   ├── Home.js           # Landing page
+│       │   ├── Products.js       # Product marketplace
+│       │   ├── Market.js         # Market prices
+│       │   ├── Weather.js        # Weather forecasts
+│       │   ├── Dashboard.js      # User dashboard
+│       │   ├── AIInsights.js     # AI analysis
+│       │   ├── Premium.js        # Subscription plans
+│       │   ├── Profile.js        # User profile
+│       │   └── Livestock/        # 🐄 Livestock module
+│       │       ├── LivestockDashboard.js
+│       │       ├── AnimalProfile.js
+│       │       ├── LivestockInventory.js
+│       │       ├── ReproductionTracker.js
+│       │       ├── BreedsLibrary.js
+│       │       └── FarmWorkspace.js
+│       ├── hooks/                # 25+ custom hooks
+│       ├── store/                # Zustand stores
+│       ├── i18n/                 # Translations (EN/SW)
+│       └── App.js                # Routes & providers
+├── backend/                     # Express API
+│   ├── models/                  # 43 Mongoose schemas
+│   │   ├── Livestock.js         # Animal profiles
+│   │   ├── LivestockEvent.js    # Events timeline
+│   │   ├── LivestockInventory.js# Stock management
+│   │   ├── Reproduction.js      # Breeding records
+│   │   ├── BreedsLibrary.js     # Breed database
+│   │   └── FarmWorkspace.js     # Multi-farm/team
+│   ├── routes/                  # 47 API route files
+│   │   └── livestock.js         # Livestock API
+│   ├── middleware/              # Auth, validation, caching
 │   ├── services/                # Business logic
 │   └── server.js                # Express app entry
-├── index-final.js               # Production API server (Heroku)
-├── seedData.js                  # Database seeding script
+├── ai-ml/                       # Python ML services
+├── mobile/                      # React Native app
+├── docs/                        # Documentation
+├── index-final.js               # Production server (Heroku)
 ├── vercel.json                  # Vercel build config
 ├── Procfile                     # Heroku process config
-├── package.json                 # Root dependencies
-└── docker-compose.yml           # Docker setup
+├── docker-compose.yml           # Docker setup
+└── package.json                 # Root dependencies
 ```
 
 ## 🚀 Quick Start

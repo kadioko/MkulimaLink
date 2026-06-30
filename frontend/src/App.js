@@ -28,6 +28,31 @@ const Profile = lazy(() => import('./pages/Profile'));
 const CropYieldCalculator = lazy(() => import('./pages/CropYieldCalculator'));
 const PestAndDiseaseGuide = lazy(() => import('./pages/PestAndDiseaseGuide'));
 const SoilHealthTips = lazy(() => import('./pages/SoilHealthTips'));
+const CropCalendar = lazy(() => import('./pages/CropCalendar'));
+
+// Livestock Management
+const LivestockDashboard = lazy(() => import('./pages/Livestock/LivestockDashboard'));
+const AnimalProfile = lazy(() => import('./pages/Livestock/AnimalProfile'));
+const LivestockInventory = lazy(() => import('./pages/Livestock/LivestockInventory'));
+const ReproductionTracker = lazy(() => import('./pages/Livestock/ReproductionTracker'));
+const BreedsLibrary = lazy(() => import('./pages/Livestock/BreedsLibrary'));
+const FarmWorkspace = lazy(() => import('./pages/Livestock/FarmWorkspace'));
+const LivestockCalendar = lazy(() => import('./pages/Livestock/LivestockCalendar'));
+
+// Analytics
+const AnalyticsDashboard = lazy(() => import('./pages/Analytics/AnalyticsDashboard.jsx'));
+const MarketIntelligence = lazy(() => import('./pages/Analytics/MarketIntelligence.jsx'));
+const PredictiveAnalytics = lazy(() => import('./pages/Analytics/PredictiveAnalytics.jsx'));
+
+// Community
+const CommunityHub = lazy(() => import('./pages/Community/CommunityHub.jsx'));
+const ExpertNetwork = lazy(() => import('./pages/Community/ExpertNetwork.jsx'));
+const TrainingPlatform = lazy(() => import('./pages/Community/TrainingPlatform.jsx'));
+
+// Marketplace extras
+const GroupBuying = lazy(() => import('./pages/GroupBuying'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const Chats = lazy(() => import('./pages/Chats'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -202,6 +227,154 @@ function App() {
                   <PrivateRoute>
                     <PageSuspense>
                       <Profile />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+
+                {/* Farm Tools */}
+                <Route path="crop-calendar" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <CropCalendar />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+
+                {/* Analytics */}
+                <Route path="analytics" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <AnalyticsDashboard />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+                <Route path="analytics/market" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <MarketIntelligence />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+                <Route path="analytics/predictive" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <PredictiveAnalytics />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+
+                {/* Community */}
+                <Route path="community" element={
+                  <PageSuspense>
+                    <CommunityHub />
+                  </PageSuspense>
+                } />
+                <Route path="community/experts" element={
+                  <PageSuspense>
+                    <ExpertNetwork />
+                  </PageSuspense>
+                } />
+                <Route path="community/training" element={
+                  <PageSuspense>
+                    <TrainingPlatform />
+                  </PageSuspense>
+                } />
+
+                {/* Marketplace extras */}
+                <Route path="group-buying" element={
+                  <PageSuspense>
+                    <GroupBuying />
+                  </PageSuspense>
+                } />
+
+                {/* Chat */}
+                <Route path="chat" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <Chats />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+
+                {/* Redirect-to-nearest pages for nav links without dedicated pages yet */}
+                <Route path="notifications" element={<Navigate to="/dashboard" />} />
+                <Route path="auctions" element={
+                  <PageSuspense>
+                    <Products />
+                  </PageSuspense>
+                } />
+                <Route path="suppliers" element={
+                  <PageSuspense>
+                    <Products />
+                  </PageSuspense>
+                } />
+                <Route path="loans" element={
+                  <PageSuspense>
+                    <Premium />
+                  </PageSuspense>
+                } />
+                <Route path="insurance" element={
+                  <PageSuspense>
+                    <Premium />
+                  </PageSuspense>
+                } />
+
+                {/* Admin */}
+                <Route path="admin" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <AdminDashboard />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+
+                {/* Livestock Calendar */}
+                <Route path="livestock/calendar" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <LivestockCalendar />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+
+                {/* Livestock Management Routes - static paths must come before :id */}
+                <Route path="livestock" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <LivestockDashboard />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+                <Route path="livestock/inventory" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <LivestockInventory />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+                <Route path="livestock/reproduction" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <ReproductionTracker />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+                <Route path="livestock/breeds" element={
+                  <PageSuspense>
+                    <BreedsLibrary />
+                  </PageSuspense>
+                } />
+                <Route path="livestock/workspace" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <FarmWorkspace />
+                    </PageSuspense>
+                  </PrivateRoute>
+                } />
+                <Route path="livestock/:id" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <AnimalProfile />
                     </PageSuspense>
                   </PrivateRoute>
                 } />

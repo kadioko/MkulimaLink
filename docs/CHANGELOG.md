@@ -1,5 +1,57 @@
 # MkulimaLink Changelog
 
+## v2.1.0 (July 2026) - Livestock Management Module
+
+### 🐄 Livestock Management
+
+#### Herd Management
+- **Animal Profiles** — Detailed records with photos, species, breed, DOB, weight history, gender, status (active/sold/deceased/transferred)
+- **Parentage & Lineage** — Link sire and dam, view full offspring lists per animal
+- **Group & Location Tracking** — Assign animals to groups and farm locations
+- **Acquisition Records** — Track purchase date, price, and source
+
+#### Life Events Timeline
+- **Event Logging** — Record nutrition, births, health checks, vaccinations, milestones, treatments, sales
+- **Medication Tracking** — Log dosage, route, withdrawal periods, veterinarian info
+- **Reminders** — Set event-based reminders with configurable lead time
+- **Filtering** — Filter events by type, date range, or animal
+
+#### Smart Inventory
+- **Stock Tracking** — Feed, medications, vaccines, equipment with current quantities
+- **Movement Logs** — Record purchases, usage, disposal with running balances
+- **Low Stock Alerts** — Automatic alerts when stock falls below reorder point
+- **Expiry Tracking** — Flag items approaching or past expiry date
+
+#### Reproduction Management
+- **Heat Cycle Records** — Log cycles with predicted next heat date
+- **Mating Records** — Natural, AI, or embryo transfer with sire identification
+- **Pregnancy Tracking** — Suspected/confirmed status, confirmation method, expected due date
+- **Birth Outcomes** — Record live births, stillbirths, offspring count, complications
+- **Upcoming Births Dashboard** — Colour-coded countdown for all pregnant animals
+
+#### Breeds Library
+- **Comprehensive Database** — East African and international breeds across all species
+- **Production Metrics** — Milk yield, eggs/year, wool/year
+- **Reproduction Metrics** — Gestation days, average litter size
+- **Care Requirements** — Feeding notes, housing, common vaccinations
+- **Built-in Fallback** — 8 pre-loaded East African breeds (Boran, Galla, Red Maasai, Kuroiler, etc.)
+
+#### Farm Workspaces
+- **Multi-farm Support** — Create and manage multiple farm locations
+- **Team Collaboration** — Invite team members by user ID
+- **Role-Based Access** — Owner, Manager, Worker, Vet, Viewer roles with appropriate permissions
+- **Per-farm Settings** — Currency, weight unit, notification preferences
+
+### 🔧 Technical (v2.1)
+- 6 new Mongoose models: `Livestock`, `LivestockEvent`, `LivestockInventory`, `Reproduction`, `BreedsLibrary`, `FarmWorkspace`
+- `backend/routes/livestock.js` — 21 new RESTful endpoints under `/api/livestock/*`
+- 6 new React pages under `frontend/src/pages/Livestock/`
+- 🐄 Livestock navigation added to desktop and mobile nav in `Layout.js`
+- React Router routes registered in `App.js` with `PrivateRoute` guards
+- Static sub-routes ordered before dynamic `/:id` param to prevent route conflicts
+
+---
+
 ## v2.0.0 (January 2026) - Major Update
 
 ### 🚀 New Features
@@ -132,13 +184,18 @@
 
 ## Roadmap
 
-### v2.1.0 (Q2 2026)
+### v2.1.0 (Q2 2026) ✅ Complete
+- [x] Livestock management module (herd, events, inventory, reproduction, breeds, workspaces)
 - [ ] Video product listings
 - [ ] AI crop disease diagnosis from photos
 - [ ] Multi-language support (Swahili, English, French)
 - [ ] Integration with agricultural extension services
 
 ### v2.2.0 (Q3 2026)
+- [ ] Livestock calendar — unified view of all herd events and farm tasks
+- [ ] Veterinary visit scheduling and records
+- [ ] Feed cost & profitability calculator per animal
+- [ ] Livestock marketplace — sell directly from herd profile
 - [ ] Blockchain traceability for organic products
 - [ ] Carbon credit marketplace
 - [ ] Integration with cooperative societies
@@ -149,3 +206,4 @@
 - [ ] B2B wholesale marketplace
 - [ ] Export facilitation services
 - [ ] Agricultural input financing
+- [ ] IoT sensor integration (weight scales, temperature monitors)

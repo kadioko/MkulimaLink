@@ -94,6 +94,7 @@ const v1Routes = require('./routes/v1');
 const auctionRoutes = require('./routes/auctions');
 const wishlistRoutes = require('./routes/wishlist');
 const exchangeRateRoutes = require('./routes/exchangeRates');
+const livestockRoutes = require('./routes/livestock');
 
 // API Documentation
 app.use('/api/docs', docsRoutes);
@@ -111,14 +112,15 @@ app.use('/api/v1', v1Routes);
 app.use('/api/auctions', auctionRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/exchange-rates', exchangeRateRoutes);
+app.use('/api/livestock', livestockRoutes);
 
 // Legacy routes (for backwards compatibility)
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/products', productRoutes);
+app.use('/api/products', cacheConfig.products, productRoutes);
 app.use('/api/transactions', transactionRoutes);
-app.use('/api/market', marketRoutes);
-app.use('/api/weather', weatherRoutes);
+app.use('/api/market', cacheConfig.marketPrices, marketRoutes);
+app.use('/api/weather', cacheConfig.weather, weatherRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -139,11 +141,6 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/seed', seedRoutes);
-
-// Apply caching to API routes
-app.use('/api/products', cacheConfig.products);
-app.use('/api/market', cacheConfig.marketPrices);
-app.use('/api/weather', cacheConfig.weather);
 
 // Sentry error handler (must be last)
 app.use(sentryErrorHandler);

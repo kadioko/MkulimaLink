@@ -109,13 +109,14 @@ function Home() {
               </div>
             </motion.div>
 
-            <div className="mt-12 grid grid-cols-3 border-y border-slate-200">
+            <div className="mt-12 grid grid-cols-4 border-y border-slate-200">
               {[
-                ['19+', 'Product types'],
-                ['6+', 'Market regions'],
-                ['24h', 'Price visibility'],
+                ['55+', 'API endpoints'],
+                ['6', 'Regions covered'],
+                ['43', 'Data models'],
+                ['24h', 'Live prices'],
               ].map(([value, label]) => (
-                <div key={label} className="border-r border-slate-200 py-5 last:border-r-0">
+                <div key={label} className="border-r border-slate-200 py-5 last:border-r-0 px-3">
                   <p className="text-2xl font-black text-slate-950">{value}</p>
                   <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
                 </div>
@@ -276,24 +277,147 @@ function Home() {
         </div>
       </section>
 
+      {/* Platform modules showcase */}
+      <section>
+        <div className="mb-8 text-center">
+          <p className="text-sm font-bold uppercase tracking-widest text-emerald-700 mb-2">Everything in one platform</p>
+          <h2 className="text-3xl font-black tracking-tight text-slate-950">Built for the full farming cycle</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[
+            {
+              emoji: '🛒', title: 'Marketplace', color: 'border-emerald-200 bg-emerald-50',
+              desc: 'List produce, browse verified supply, place bulk orders, live auctions, group buying.',
+              path: '/products', cta: 'Browse products',
+            },
+            {
+              emoji: '🐄', title: 'Livestock Management', color: 'border-amber-200 bg-amber-50',
+              desc: 'Full herd profiles, events timeline, reproduction tracker, smart inventory, breeds library, multi-farm workspaces.',
+              path: '/livestock', cta: 'Manage herd',
+            },
+            {
+              emoji: '📊', title: 'Analytics & AI', color: 'border-violet-200 bg-violet-50',
+              desc: 'Farm performance, market intelligence, predictive pricing, AI-powered crop recommendations.',
+              path: '/analytics', cta: 'View analytics',
+            },
+            {
+              emoji: '🌤️', title: 'Farm Tools', color: 'border-blue-200 bg-blue-50',
+              desc: 'Weather by region, crop calendar, yield calculator, pest guide, soil health tips.',
+              path: '/weather', cta: 'Open tools',
+            },
+            {
+              emoji: '👥', title: 'Community', color: 'border-rose-200 bg-rose-50',
+              desc: 'Connect with farmers, consult agronomists and vets, take online training courses.',
+              path: '/community', cta: 'Join community',
+            },
+            {
+              emoji: '💳', title: 'Finance', color: 'border-yellow-200 bg-yellow-50',
+              desc: 'Agricultural loans, crop and livestock insurance, premium AI tools, mobile money.',
+              path: '/premium', cta: 'See plans',
+            },
+          ].map((mod, i) => (
+            <motion.div
+              key={mod.title}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06 }}
+              className={`border ${mod.color} p-5 flex flex-col`}
+            >
+              <span className="text-3xl mb-3">{mod.emoji}</span>
+              <h3 className="font-black text-slate-950 mb-2">{mod.title}</h3>
+              <p className="text-sm text-slate-600 leading-relaxed flex-1">{mod.desc}</p>
+              <Link to={mod.path} className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-900">
+                {mod.cta} <ArrowRight size={13} />
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Livestock spotlight */}
+      <section className="border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 overflow-hidden">
+        <div className="grid lg:grid-cols-2 gap-0">
+          <div className="p-8 lg:p-12 flex flex-col justify-center">
+            <div className="inline-flex items-center gap-2 border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-800 uppercase tracking-wide mb-6 w-fit">
+              New in v2.1
+            </div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-950 mb-4">
+              Complete livestock management — built for East African farmers.
+            </h2>
+            <p className="text-slate-600 leading-relaxed mb-6">
+              Track every animal from birth to sale. Monitor pregnancies, log health events, manage feed and medication stock, and collaborate with your team across multiple farms.
+            </p>
+            <div className="grid grid-cols-2 gap-3 mb-8">
+              {[
+                ['🐄', 'Herd Profiles', 'Every animal, fully documented'],
+                ['🧬', 'Reproduction', 'Heat cycles, pregnancy, births'],
+                ['📦', 'Smart Inventory', 'Feed & meds with low-stock alerts'],
+                ['🏡', 'Multi-farm', 'Team roles & workspace management'],
+              ].map(([icon, title, desc]) => (
+                <div key={title} className="bg-white border border-amber-100 p-3">
+                  <span className="text-xl">{icon}</span>
+                  <p className="text-sm font-bold text-slate-900 mt-1">{title}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <Link to="/livestock" className="inline-flex items-center gap-2 bg-amber-600 text-white px-5 py-2.5 text-sm font-bold hover:bg-amber-700 transition-colors">
+                Open Livestock Hub <ArrowRight size={15} />
+              </Link>
+              <Link to="/livestock/breeds" className="inline-flex items-center gap-2 border border-amber-300 text-amber-800 px-5 py-2.5 text-sm font-bold hover:bg-amber-100 transition-colors">
+                Browse Breeds
+              </Link>
+            </div>
+          </div>
+          <div className="hidden lg:flex flex-col justify-center items-center bg-amber-100/60 p-12 gap-4">
+            {[
+              { label: 'Total Animals', value: '—', sub: 'Track your full herd' },
+              { label: 'Pregnant', value: '—', sub: 'Upcoming births tracked' },
+              { label: 'Low Stock Alerts', value: '—', sub: 'Auto inventory warnings' },
+            ].map((stat) => (
+              <div key={stat.label} className="w-full bg-white border border-amber-200 p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{stat.sub}</p>
+                </div>
+                <p className="text-2xl font-black text-slate-400">{stat.value}</p>
+              </div>
+            ))}
+            <Link to="/livestock" className="w-full text-center py-3 bg-amber-600 text-white text-sm font-bold hover:bg-amber-700 transition-colors">
+              🐄 Set up your herd →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="border border-slate-200 bg-slate-950 px-6 py-10 text-white sm:px-10">
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_auto]">
           <div>
             <div className="mb-4 flex items-center gap-2 text-emerald-300">
               <Wheat size={20} />
-              <span className="text-sm font-bold uppercase tracking-wide">Built for the agriculture trade cycle</span>
+              <span className="text-sm font-bold uppercase tracking-wide">Built for the full agriculture cycle</span>
             </div>
             <h2 className="max-w-3xl text-3xl font-black tracking-tight sm:text-4xl">
-              From farm gate to buyer inbox, keep every decision tied to supply, price, and timing.
+              Marketplace, livestock, analytics, community — one platform, zero switching.
             </h2>
           </div>
-          <Link
-            to="/register"
-            className="inline-flex items-center justify-center gap-2 bg-white px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-emerald-50"
-          >
-            Start free
-            <Check size={18} />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center gap-2 bg-white px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-emerald-50"
+            >
+              Start free
+              <Check size={18} />
+            </Link>
+            <Link
+              to="/livestock"
+              className="inline-flex items-center justify-center gap-2 border border-white/20 bg-white/10 px-6 py-3 text-sm font-black text-white transition hover:bg-white/20"
+            >
+              🐄 Try Livestock
+            </Link>
+          </div>
         </div>
       </section>
     </div>
