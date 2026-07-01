@@ -76,10 +76,12 @@ router.post('/price-prediction', protect, checkPremium, async (req, res) => {
 // Get AI-powered product recommendations for user
 router.post('/recommendations', protect, async (req, res) => {
   try {
-    const { userId, limit = 10, filters = {} } = req.body;
+    const { limit = 10, filters = {} } = req.body;
+    const userId = req.user._id;
+    const safeLimit = Math.min(Number(limit) || 10, 30);
     
     // Get user's wishlist for preference analysis
-    const wishlist = await Wishlist.findOne({ user: userId });
+    const wishlist = await Wishlist.findOne({ user: userId }).populate('items.product', 'category');
     const wishlistCategories = wishlist ? 
       [...new Set(wishlist.items.map(item => item.product?.category).filter(Boolean))] : 
       [];
@@ -119,8 +121,19 @@ router.post('/recommendations', protect, async (req, res) => {
     
     // Get products with AI scoring
     let products = await Product.find(query)
-      .populate('seller', 'name profilePicture verified rating')
-      .limit(limit * 2); // Get more for ranking
+      .populate('seller', 'name profilePicture verified rating location')
+      .limit(safeLimit * 3); // Get more for ranking
+
+    const marketAverages = await MarketPrice.aggregate([
+      { $match: { category: { $in: [...new Set(products.map(p => p.category))] } } },
+      { $sort: { date: -1 } },
+      { $group: { _id: { category: '$category', region: '$region' }, avgPrice: { $avg: '$price.average' } } }
+    ]);
+
+    const marketLookup = marketAverages.reduce((acc, row) => {
+      acc[`${row._id.category}:${row._id.region}`] = row.avgPrice;
+      return acc;
+    }, {});
     
     // Score products based on AI factors
     const scoredProducts = products.map(product => {
@@ -128,16 +141,19 @@ router.post('/recommendations', protect, async (req, res) => {
       
       // Factor 1: Quality (premium = higher score)
       if (product.quality === 'premium') score += 20;
-      if (product.quality === 'organic') score += 15;
+      if (product.organic) score += 12;
       
       // Factor 2: Seller verification
       if (product.seller?.verified) score += 10;
+      if (product.seller?.rating >= 4.5) score += 8;
       
       // Factor 3: Views/popularity
-      score += Math.min(product.views * 0.5, 15);
+      score += Math.min((product.views || 0) * 0.5, 15);
       
       // Factor 4: Price competitiveness
-      // (compare to market average if available)
+      const marketAverage = marketLookup[`${product.category}:${product.location?.region}`];
+      if (marketAverage && product.price <= marketAverage * 0.95) score += 14;
+      else if (marketAverage && product.price <= marketAverage * 1.05) score += 8;
       
       // Factor 5: Recency
       const daysListed = (Date.now() - new Date(product.createdAt)) / (1000 * 60 * 60 * 24);
@@ -145,19 +161,26 @@ router.post('/recommendations', protect, async (req, res) => {
       
       return {
         ...product.toObject(),
-        aiScore: Math.min(score, 100),
-        matchReason: generateMatchReason(product, wishlistCategories, purchasedCategories)
+        aiScore: Math.min(Math.round(score), 100),
+        matchReason: generateMatchReason(product, wishlistCategories, purchasedCategories),
+        aiSignals: {
+          verifiedSeller: !!product.seller?.verified,
+          sellerRating: product.seller?.rating || 0,
+          marketAverage: marketAverage ? Math.round(marketAverage) : null,
+          pricePosition: marketAverage ? (product.price < marketAverage ? 'below_market' : product.price > marketAverage ? 'above_market' : 'at_market') : 'unknown',
+          freshnessDays: Math.round(daysListed),
+        }
       };
     });
     
     // Sort by AI score and take top results
     const recommendations = scoredProducts
       .sort((a, b) => b.aiScore - a.aiScore)
-      .slice(0, limit);
+      .slice(0, safeLimit);
     
     res.json({
       products: recommendations,
-      confidence: 0.85,
+      confidence: recommendations.length ? 0.88 : 0.4,
       totalAvailable: products.length,
       filters: { category: filters.category, location: filters.location }
     });
@@ -171,8 +194,8 @@ router.post('/recommendations', protect, async (req, res) => {
 function getSeasonalCategories(season) {
   const seasonalMap = {
     'rainy': ['vegetables', 'fruits', 'grains'],
-    'dry': ['grains', 'seeds', 'inputs'],
-    'planting': ['seeds', 'inputs', 'fertilizers'],
+    'dry': ['grains', 'seeds', 'fertilizers'],
+    'planting': ['seeds', 'fertilizers', 'equipment'],
     'harvest': ['grains', 'vegetables', 'fruits']
   };
   return seasonalMap[season] || ['grains', 'vegetables', 'fruits'];

@@ -27,7 +27,10 @@ function Products() {
     category: '',
     region: '',
     quality: '',
-    organic: ''
+    organic: '',
+    minPrice: '',
+    maxPrice: '',
+    sort: '-createdAt'
   });
   
   const debouncedSearch = useDebounce(filters.search, 400);
@@ -58,10 +61,17 @@ function Products() {
   );
 
   const categories = [
-    'Grains', 'Vegetables', 'Fruits', 'Livestock',
-    'Dairy', 'Poultry', 'Seeds', 'Fertilizers', 'Inputs',
-    ...(country === 'KE' ? ['Cash Crops'] : []),
-    'Equipment'
+    { label: 'Grains', value: 'grains' },
+    { label: 'Legumes', value: 'legumes' },
+    { label: 'Vegetables', value: 'vegetables' },
+    { label: 'Fruits', value: 'fruits' },
+    { label: 'Livestock', value: 'livestock' },
+    { label: 'Dairy', value: 'dairy' },
+    { label: 'Poultry', value: 'poultry' },
+    { label: 'Seeds', value: 'seeds' },
+    { label: 'Fertilizers', value: 'fertilizers' },
+    { label: 'Equipment', value: 'equipment' },
+    { label: 'Other', value: 'other' },
   ];
 
   const regions = currentCountry.regions;
@@ -207,7 +217,7 @@ function Products() {
                 >
                   <option value="">All Categories</option>
                   {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
                   ))}
                 </select>
               </div>
@@ -250,6 +260,45 @@ function Products() {
                   <option value="">All Types</option>
                   <option value="true">Organic Only</option>
                   <option value="false">Non-Organic</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-700">Min Price</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={filters.minPrice}
+                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                  placeholder="0"
+                  className="w-full border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-700">Max Price</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={filters.maxPrice}
+                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                  placeholder="500000"
+                  className="w-full border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-700">Sort</label>
+                <select
+                  value={filters.sort}
+                  onChange={(e) => handleFilterChange('sort', e.target.value)}
+                  className="w-full border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                >
+                  <option value="-createdAt">Newest first</option>
+                  <option value="price">Lowest price</option>
+                  <option value="-price">Highest price</option>
+                  <option value="-views">Most viewed</option>
+                  <option value="quality">Quality</option>
                 </select>
               </div>
             </div>

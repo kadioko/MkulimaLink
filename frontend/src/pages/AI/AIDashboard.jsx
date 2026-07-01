@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, Zap, TrendingUp, AlertCircle, CheckCircle, Upload } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const AIDashboard = () => {
   const [models, setModels] = useState([]);
@@ -17,14 +17,14 @@ const AIDashboard = () => {
     try {
       setLoading(true);
       const [modelsRes, predictionsRes, recsRes] = await Promise.all([
-        axios.get('/api/aiml/models'),
-        axios.get('/api/aiml/predictions'),
-        axios.get('/api/aiml/recommendations')
+        api.get('/api/aiml/models'),
+        api.get('/api/aiml/predictions'),
+        api.get('/api/aiml/recommendations')
       ]);
 
-      setModels(modelsRes.data.data);
-      setPredictions(predictionsRes.data.data.predictions || []);
-      setRecommendations(recsRes.data.data.recommendations || []);
+      setModels(modelsRes.data.data || []);
+      setPredictions(predictionsRes.data.data?.predictions || []);
+      setRecommendations(recsRes.data.data?.recommendations || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch AI data:', error);
