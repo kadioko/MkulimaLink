@@ -9,6 +9,7 @@ const Livestock = require('../models/Livestock');
 const LivestockEvent = require('../models/LivestockEvent');
 const LivestockInventory = require('../models/LivestockInventory');
 const Reproduction = require('../models/Reproduction');
+const FailedAction = require('../models/FailedAction');
 
 const getSeedSecret = () => {
   if (process.env.SEED_SECRET) {
@@ -65,6 +66,7 @@ router.post('/run', async (req, res) => {
     }
 
     if (secret !== seedSecret) {
+      await FailedAction.create({ type: 'seed', ip: req.ip, requestId: req.id, reason: 'invalid_seed_secret' });
       return res.status(403).json({ message: 'Invalid seed secret' });
     }
 
@@ -304,6 +306,7 @@ router.post('/run', async (req, res) => {
     });
   } catch (error) {
     console.error('Seed error:', error);
+    await FailedAction.create({ type: 'seed', ip: req.ip, requestId: req.id, reason: error.message });
     res.status(500).json({ message: error.message });
   }
 });

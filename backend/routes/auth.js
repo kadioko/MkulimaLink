@@ -3,12 +3,30 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const FailedAction = require('../models/FailedAction');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '30d'
   });
 };
+
+const buildAuthUser = (user) => ({
+  _id: user._id,
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  phone: user.phone,
+  role: user.role,
+  isPremium: user.isPremium,
+  location: user.location,
+  verified: user.verified
+});
+
+const buildAuthResponse = (user, token) => ({
+  user: buildAuthUser(user),
+  token
+});
 
 router.post('/register', async (req, res) => {
   try {
@@ -36,19 +54,7 @@ router.post('/register', async (req, res) => {
 
     const token = generateToken(user._id);
 
-    const userResponse = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role
-    };
-
-    res.status(201).json({
-      user: userResponse,
-      ...userResponse,
-      token
-    });
+    res.status(201).json(buildAuthResponse(user, token));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -80,15 +86,18 @@ router.post('/login', async (req, res) => {
     }
 
     if (!user) {
+      await FailedAction.create({ type: 'login', email, ip: req.ip, requestId: req.id, reason: 'user_not_found' });
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
+      await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'wrong_password' });
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     if (user.isBanned) {
+      await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'user_banned' });
       return res.status(403).json({ message: `Account suspended${user.bannedReason ? ': ' + user.bannedReason : ''}. Contact support@mkulimalink.com` });
     }
 
@@ -97,20 +106,7 @@ router.post('/login', async (req, res) => {
 
     const token = generateToken(user._id);
 
-    const userResponse = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      isPremium: user.isPremium
-    };
-
-    res.json({
-      user: userResponse,
-      ...userResponse,
-      token
-    });
+    res.json(buildAuthResponse(user, token));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -171,7 +167,7 @@ router.post('/refresh-token', async (req, res) => {
     }
     
     const newToken = generateToken(user._id);
-    res.json({ token: newToken });
+    res.json(buildAuthResponse(user, newToken));
   } catch (error) {
     res.status(401).json({ message: 'Invalid token' });
   }

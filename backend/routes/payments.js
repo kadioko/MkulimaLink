@@ -4,9 +4,28 @@ const axios = require('axios');
 const { protect } = require('../middleware/auth');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
+const PaymentEvent = require('../models/PaymentEvent');
+const FailedAction = require('../models/FailedAction');
 const mpesaService = require('../services/mpesaService');
 const airtelMoneyService = require('../services/airtelMoneyService');
 const walletService = require('../services/walletService');
+
+const registerPaymentEvent = async ({ provider, eventId, payload, transaction }) => {
+  try {
+    const event = await PaymentEvent.create({ provider, eventId, payload, transaction });
+    return { duplicate: false, event };
+  } catch (error) {
+    if (error.code === 11000) {
+      const event = await PaymentEvent.findOne({ provider, eventId });
+      if (event) {
+        event.status = 'duplicate';
+        await event.save();
+      }
+      return { duplicate: true, event };
+    }
+    throw error;
+  }
+};
 
 // Enhanced M-Pesa integration with the service class
 
@@ -77,10 +96,21 @@ router.post('/mpesa/initiate', protect, async (req, res) => {
 // Enhanced M-Pesa callback with service integration
 router.post('/mpesa/callback', async (req, res) => {
   try {
+    const stkCallback = req.body?.Body?.stkCallback || req.body;
+    const eventId = stkCallback.CheckoutRequestID || stkCallback.MerchantRequestID || req.headers['x-request-id'] || req.id;
+    const paymentEvent = await registerPaymentEvent({ provider: 'mpesa', eventId, payload: req.body });
+    if (paymentEvent.duplicate) {
+      return res.json({ ResultCode: 0, ResultDesc: 'Duplicate ignored' });
+    }
+
     await mpesaService.handleCallback(req.body);
+    paymentEvent.event.status = 'processed';
+    paymentEvent.event.processedAt = new Date();
+    await paymentEvent.event.save();
     res.json({ ResultCode: 0, ResultDesc: 'Success' });
   } catch (error) {
     console.error('Callback error:', error);
+    await FailedAction.create({ type: 'payment', ip: req.ip, requestId: req.id, reason: error.message, metadata: { provider: 'mpesa' } });
     res.json({ ResultCode: 1, ResultDesc: 'Failed' });
   }
 });
@@ -120,6 +150,10 @@ router.post('/mpesa/c2b/confirmation', async (req, res) => {
   try {
     console.log('C2B Confirmation received:', req.body);
     const { TransID, TransAmount, BillRefNumber } = req.body;
+    const paymentEvent = await registerPaymentEvent({ provider: 'mpesa', eventId: TransID, payload: req.body });
+    if (paymentEvent.duplicate) {
+      return res.json({ ResultCode: 0, ResultDesc: 'Duplicate ignored' });
+    }
 
     // Process C2B payment (wallet top-up, etc.)
     if (BillRefNumber.startsWith('WALLET_')) {
@@ -131,9 +165,13 @@ router.post('/mpesa/c2b/confirmation', async (req, res) => {
       }
     }
 
+    paymentEvent.event.status = 'processed';
+    paymentEvent.event.processedAt = new Date();
+    await paymentEvent.event.save();
     res.json({ ResultCode: 0, ResultDesc: 'Confirmation received successfully' });
   } catch (error) {
     console.error('C2B confirmation error:', error);
+    await FailedAction.create({ type: 'payment', ip: req.ip, requestId: req.id, reason: error.message, metadata: { provider: 'mpesa_c2b' } });
     res.json({ ResultCode: 1, ResultDesc: 'Confirmation failed' });
   }
 });
@@ -215,10 +253,20 @@ router.post('/airtel/initiate', protect, async (req, res) => {
 // Airtel Money callback handler
 router.post('/airtel/callback', async (req, res) => {
   try {
+    const eventId = req.body?.transaction?.id || req.body?.transactionId || req.body?.id || req.id;
+    const paymentEvent = await registerPaymentEvent({ provider: 'airtel', eventId, payload: req.body });
+    if (paymentEvent.duplicate) {
+      return res.json({ success: true, message: 'Duplicate ignored' });
+    }
+
     await airtelMoneyService.handleCallback(req.body);
+    paymentEvent.event.status = 'processed';
+    paymentEvent.event.processedAt = new Date();
+    await paymentEvent.event.save();
     res.json({ success: true, message: 'Callback processed successfully' });
   } catch (error) {
     console.error('Airtel callback error:', error);
+    await FailedAction.create({ type: 'payment', ip: req.ip, requestId: req.id, reason: error.message, metadata: { provider: 'airtel' } });
     res.status(500).json({ success: false, message: 'Callback processing failed' });
   }
 });

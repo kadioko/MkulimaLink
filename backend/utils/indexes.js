@@ -197,10 +197,10 @@ async function createIndexes(Model, indexes) {
     for (const index of indexes) {
       if (typeof index === 'string') {
         // Simple index
-        await Model.createIndex({ [index]: 1 });
+        await Model.collection.createIndex({ [index]: 1 });
       } else if (typeof index === 'object') {
         // Compound or text index
-        await Model.createIndex(index);
+        await Model.collection.createIndex(index);
       }
     }
     console.log(`✅ Indexes created for ${Model.modelName}`);

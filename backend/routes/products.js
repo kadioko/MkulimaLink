@@ -3,9 +3,16 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const Product = require('../models/Product');
+const MarketPrice = require('../models/MarketPrice');
 const { protect, authorize } = require('../middleware/auth');
 const { detectPests, compressImage } = require('../utils/imageProcessing');
 const { generateAIInsights } = require('../utils/aiInsights');
+const {
+  getPriceRecommendation,
+  calculateProductRisk,
+  buildFarmerInsights,
+  isSellerAvailableToday
+} = require('../services/marketplaceIntelligence');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -30,12 +37,73 @@ const upload = multer({
   }
 });
 
+const SELLER_STATUSES = ['draft', 'active', 'reserved', 'expired'];
+
+const getPriceInsight = async ({ category, region, price, unit }) => {
+  const numericPrice = Number(price);
+  if (!category || !region || !numericPrice) return null;
+
+  const marketPrice = await MarketPrice.findOne({
+    category,
+    region,
+    ...(unit ? { unit } : {})
+  }).sort({ date: -1 }).lean();
+
+  const average = marketPrice?.price?.average;
+  if (!average) return null;
+
+  const deltaPercent = Math.round(((numericPrice - average) / average) * 100);
+  const severity = Math.abs(deltaPercent) >= 25 ? 'warning' : 'ok';
+  const direction = deltaPercent > 0 ? 'above' : deltaPercent < 0 ? 'below' : 'at';
+
+  return {
+    marketAverage: average,
+    deltaPercent,
+    severity,
+    message: direction === 'at'
+      ? 'Price matches the latest market average.'
+      : `Price is ${Math.abs(deltaPercent)}% ${direction} the latest market average.`
+  };
+};
+
+router.get('/price-recommendation', async (req, res) => {
+  try {
+    const recommendation = await getPriceRecommendation(req.query);
+    if (!recommendation) {
+      return res.status(404).json({ message: 'No market price data available for this category and region' });
+    }
+    res.json({ success: true, data: recommendation });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.post('/', protect, authorize('farmer'), upload.array('images', 5), async (req, res) => {
   try {
-    const { name, category, description, price, unit, quantity, location, harvestDate, quality, organic } = req.body;
+    const {
+      name,
+      category,
+      description,
+      price,
+      unit,
+      quantity,
+      location,
+      harvestDate,
+      quality,
+      organic,
+      status,
+      availability,
+      fulfillment
+    } = req.body;
     const productLocation = typeof location === 'string'
       ? JSON.parse(location)
       : location || req.user.location;
+    const priceInsight = await getPriceInsight({
+      category,
+      region: productLocation?.region,
+      price,
+      unit
+    });
 
     const images = [];
     if (req.files && req.files.length > 0) {
@@ -62,16 +130,35 @@ router.post('/', protect, authorize('farmer'), upload.array('images', 5), async 
       location: productLocation,
       harvestDate,
       quality,
-      organic: organic === true || organic === 'true'
+      organic: organic === true || organic === 'true',
+      status: SELLER_STATUSES.includes(status) ? status : 'active',
+      availability: typeof availability === 'string' ? JSON.parse(availability) : availability,
+      fulfillment: typeof fulfillment === 'string' ? JSON.parse(fulfillment) : fulfillment,
+      aiInsights: priceInsight ? {
+        priceRecommendation: priceInsight.marketAverage,
+        competitorAnalysis: priceInsight.message
+      } : undefined
     });
+
+    const productRisk = await calculateProductRisk(await product.populate('seller', 'createdAt verified verification location'));
+    product.risk = { ...productRisk, assessedAt: new Date() };
+    product.aiInsights = {
+      ...(product.aiInsights || {}),
+      marketDemand: product.aiInsights?.marketDemand,
+      priceRecommendation: product.aiInsights?.priceRecommendation,
+      competitorAnalysis: product.aiInsights?.competitorAnalysis,
+      farmerInsights: await buildFarmerInsights(product)
+    };
 
     if (req.user.isPremium) {
       const aiInsights = await generateAIInsights(product);
-      product.aiInsights = aiInsights;
-      await product.save();
+      product.aiInsights = { ...product.aiInsights, ...aiInsights };
     }
 
-    res.status(201).json(product);
+    await product.save();
+
+    const productResponse = product.toObject();
+    res.status(201).json({ ...productResponse, priceInsight });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -79,6 +166,7 @@ router.post('/', protect, authorize('farmer'), upload.array('images', 5), async 
 
 router.get('/', async (req, res) => {
   try {
+    await Product.expireOldListings();
     const { 
       category, 
       region, 
@@ -113,7 +201,7 @@ router.get('/', async (req, res) => {
     const limitNumber = Number.parseInt(limit, 10) || 20;
 
     const products = await Product.find(query)
-      .populate('seller', 'name phone location rating')
+      .populate('seller', 'name phone location rating verified verification')
       .sort(sort)
       .limit(limitNumber)
       .skip((pageNumber - 1) * limitNumber)
@@ -122,7 +210,11 @@ router.get('/', async (req, res) => {
     const count = await Product.countDocuments(query);
 
     res.json({
-      products,
+      products: products.map((product) => ({
+        ...product,
+        sellerBadge: product.seller?.verification?.state === 'verified' || product.seller?.verified ? 'verified' : 'unverified',
+        sellerAvailableToday: isSellerAvailableToday(product)
+      })),
       totalPages: Math.ceil(count / limitNumber),
       currentPage: pageNumber,
       total: count
@@ -132,10 +224,20 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/my/listings', protect, async (req, res) => {
+  try {
+    const products = await Product.find({ seller: req.user._id })
+      .sort('-createdAt');
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate('seller', 'name phone location rating totalRatings');
+      .populate('seller', 'name phone location rating totalRatings verified verification');
     
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -144,7 +246,12 @@ router.get('/:id', async (req, res) => {
     product.views += 1;
     await product.save();
 
-    res.json(product);
+    const response = product.toObject();
+    response.sellerBadge = product.seller?.verification?.state === 'verified' || product.seller?.verified ? 'verified' : 'unverified';
+    response.sellerAvailableToday = isSellerAvailableToday(product);
+    response.farmerInsights = await buildFarmerInsights(product);
+
+    res.json(response);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -162,14 +269,21 @@ router.put('/:id', protect, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this product' });
     }
 
-    const { name, description, price, quantity, status, quality } = req.body;
+    const { name, description, price, quantity, status, quality, availability, fulfillment } = req.body;
 
     if (name) product.name = name;
     if (description) product.description = description;
     if (price) product.price = price;
     if (quantity !== undefined) product.quantity = quantity;
-    if (status) product.status = status;
+    if (status) {
+      if (!SELLER_STATUSES.includes(status)) {
+        return res.status(400).json({ message: 'Invalid product status for seller update' });
+      }
+      product.status = status;
+    }
     if (quality) product.quality = quality;
+    if (availability) product.availability = availability;
+    if (fulfillment) product.fulfillment = fulfillment;
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
@@ -214,16 +328,6 @@ router.post('/:id/favorite', protect, async (req, res) => {
 
     await product.save();
     res.json({ favorites: product.favorites.length });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-router.get('/my/listings', protect, async (req, res) => {
-  try {
-    const products = await Product.find({ seller: req.user._id })
-      .sort('-createdAt');
-    res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

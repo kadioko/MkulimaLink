@@ -23,7 +23,7 @@ function Login() {
     setLoading(true);
     try {
       const response = await api.post('/api/auth/login', data);
-      setAuth(response.data, response.data.token);
+      setAuth(response.data.user, response.data.token);
       toast.success('Login successful!');
       navigate('/dashboard');
     } catch (error) {

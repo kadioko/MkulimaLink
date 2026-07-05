@@ -53,6 +53,26 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  verification: {
+    state: {
+      type: String,
+      enum: ['unverified', 'pending_review', 'verified', 'rejected'],
+      default: 'unverified'
+    },
+    method: {
+      type: String,
+      enum: ['document', 'manual', 'demo', 'none'],
+      default: 'none'
+    },
+    documentType: String,
+    documentUrl: String,
+    adminNotes: String,
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    reviewedAt: Date
+  },
   rating: {
     type: Number,
     default: 0,
@@ -120,5 +140,15 @@ userSchema.methods.updateRating = function(newRating) {
   this.rating = ((this.rating * this.totalRatings) + newRating) / (this.totalRatings + 1);
   this.totalRatings += 1;
 };
+
+userSchema.pre('save', function syncVerificationState() {
+  if (this.verified && this.verification?.state !== 'verified') {
+    this.verification = {
+      ...(this.verification || {}),
+      state: 'verified',
+      method: this.verification?.method || 'manual'
+    };
+  }
+});
 
 module.exports = mongoose.model('User', userSchema);

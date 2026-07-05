@@ -5,11 +5,12 @@ import {
   Menu, X, Home, ShoppingBag, TrendingUp, Cloud, Sparkles, User, LogOut,
   Bell, Crown, Heart, ChevronDown, BarChart3, Users, Wrench, BookOpen,
   Gavel, Globe, MessageSquare, Calculator, Leaf, Package, Calendar,
-  ShieldCheck, Layers, ArrowRight,
+  Shield, ShieldCheck, Layers, ArrowRight,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useCountryStore, COUNTRIES } from '../store/countryStore';
 import { useWishlistStore } from '../store/wishlistStore';
+import { API_URL } from '../config/env';
 
 function Sprout2({ size = 18, className = '' }) {
   return <Leaf size={size} className={className} />;
@@ -150,6 +151,7 @@ function Layout() {
   const [openGroup, setOpenGroup] = useState(null);
   const [mobileOpenGroup, setMobileOpenGroup] = useState(null);
   const { user, logout } = useAuthStore();
+  const [backendStatus, setBackendStatus] = useState(null);
   const { country, setCountry } = useCountryStore();
   const { getWishlistCount } = useWishlistStore();
   const wishlistCount = getWishlistCount();
@@ -177,6 +179,24 @@ function Layout() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  useEffect(() => {
+    if (!user || (user.role !== 'admin' && !user.email?.endsWith('@demo.com') && !user.isDemo)) return;
+
+    let cancelled = false;
+    fetch(`${API_URL}/api/ready`)
+      .then((res) => res.json().then((body) => ({ ok: res.ok, body })))
+      .then(({ ok, body }) => {
+        if (!cancelled) setBackendStatus({ ok, status: body.status });
+      })
+      .catch(() => {
+        if (!cancelled) setBackendStatus({ ok: false, status: 'offline' });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -400,6 +420,17 @@ function Layout() {
           )}
         </AnimatePresence>
       </nav>
+
+      {user && (user.role === 'admin' || user.email?.endsWith('@demo.com') || user.isDemo) && (
+        <div className={`border-b px-4 py-2 text-xs font-semibold ${
+          backendStatus?.ok ? 'border-emerald-100 bg-emerald-50 text-emerald-800' : 'border-amber-100 bg-amber-50 text-amber-800'
+        }`}>
+          <div className="mx-auto flex max-w-7xl items-center justify-between">
+            <span>{user.email?.endsWith('@demo.com') || user.isDemo ? 'Demo Mode' : 'Admin Mode'}</span>
+            <span>Backend: {backendStatus?.status || 'checking'}</span>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <Outlet />

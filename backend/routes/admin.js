@@ -3,6 +3,8 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const MarketPrice = require('../models/MarketPrice');
+const FailedAction = require('../models/FailedAction');
 const { protect, authorize } = require('../middleware/auth');
 
 const adminOnly = [protect, authorize('admin')];
@@ -240,9 +242,24 @@ router.put('/users/:id/premium', adminOnly, async (req, res) => {
 // PUT /api/admin/users/:id/verify
 router.put('/users/:id/verify', adminOnly, async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { verified: true }, { new: true }).select('-password');
+    const { state = 'verified', method = 'manual', adminNotes, documentType, documentUrl } = req.body;
+    if (!['unverified', 'pending_review', 'verified', 'rejected'].includes(state)) {
+      return res.status(400).json({ success: false, message: 'Invalid verification state' });
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, {
+      verified: state === 'verified',
+      verification: {
+        state,
+        method,
+        adminNotes,
+        documentType,
+        documentUrl,
+        reviewedBy: req.user._id,
+        reviewedAt: new Date()
+      }
+    }, { new: true }).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    res.json({ success: true, data: user, message: 'User verified' });
+    res.json({ success: true, data: user, message: `User verification set to ${state}` });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -297,7 +314,7 @@ router.get('/products', adminOnly, async (req, res) => {
 router.put('/products/:id/status', adminOnly, async (req, res) => {
   try {
     const { status } = req.body;
-    const allowed = ['active', 'sold', 'reserved', 'expired'];
+    const allowed = ['draft', 'active', 'reserved', 'sold', 'expired'];
     if (!allowed.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
@@ -423,6 +440,108 @@ router.get('/activity', adminOnly, async (req, res) => {
     ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 12);
 
     res.json({ success: true, data: activity });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/admin/system
+router.get('/system', adminOnly, async (req, res) => {
+  try {
+    const Transaction = mongoose.models.Transaction || null;
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const [
+      users,
+      products,
+      activeProducts,
+      expiredProducts,
+      transactions,
+      pendingTransactions
+    ] = await Promise.all([
+      User.countDocuments(),
+      Product.countDocuments(),
+      Product.countDocuments({ status: 'active' }),
+      Product.countDocuments({ status: 'expired' }),
+      Transaction ? Transaction.countDocuments() : Promise.resolve(0),
+      Transaction ? Transaction.countDocuments({ status: 'pending' }) : Promise.resolve(0)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        app: {
+          name: 'MkulimaLink',
+          version: process.env.npm_package_version || '2.0.0',
+          environment: process.env.NODE_ENV || 'development',
+          uptimeSeconds: Math.round(process.uptime())
+        },
+        services: {
+          mongodb: mongoose.connection.readyState === 1 ? 'healthy' : 'unhealthy',
+          redis: global.redisClient ? 'configured' : 'not_configured',
+          sentry: process.env.SENTRY_DSN ? 'configured' : 'not_configured'
+        },
+        counts: {
+          users,
+          products,
+          activeProducts,
+          expiredProducts,
+          transactions,
+          pendingTransactions,
+          collections: collections.length
+        },
+        env: {
+          railway: Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID),
+          frontendUrl: process.env.FRONTEND_URL || null,
+          listingExpiryDays: process.env.LISTING_EXPIRY_DAYS || '45'
+        }
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/admin/seed-status
+router.get('/seed-status', adminOnly, async (req, res) => {
+  try {
+    const [demoUsers, products, marketPrices, transactions, failedSeedAttempts] = await Promise.all([
+      User.countDocuments({ email: /@demo\.com$/ }),
+      Product.countDocuments(),
+      MarketPrice.countDocuments(),
+      mongoose.models.Transaction ? mongoose.models.Transaction.countDocuments() : Promise.resolve(0),
+      FailedAction.countDocuments({ type: 'seed' })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        demoUsers,
+        products,
+        marketPrices,
+        transactions,
+        failedSeedAttempts,
+        complete: demoUsers >= 4 && products >= 9 && marketPrices >= 20 && transactions >= 2
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/admin/failed-actions
+router.get('/failed-actions', adminOnly, async (req, res) => {
+  try {
+    const { type, page = 1, limit = 50 } = req.query;
+    const filter = type ? { type } : {};
+    const [actions, total] = await Promise.all([
+      FailedAction.find(filter)
+        .populate('user', 'name email role')
+        .sort({ createdAt: -1 })
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit)),
+      FailedAction.countDocuments(filter)
+    ]);
+    res.json({ success: true, data: actions, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

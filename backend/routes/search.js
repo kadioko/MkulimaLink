@@ -2,11 +2,29 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const User = require('../models/User');
+const SavedSearch = require('../models/SavedSearch');
+const RecentSearch = require('../models/RecentSearch');
 const { protect } = require('../middleware/auth');
+const { getPriceRecommendation, isSellerAvailableToday } = require('../services/marketplaceIntelligence');
 
 /**
  * Search and autocomplete endpoints
  */
+
+const toRadians = (value) => (value * Math.PI) / 180;
+
+const getDistanceKm = (fromLat, fromLng, toLat, toLng) => {
+  if ([fromLat, fromLng, toLat, toLng].some((value) => value === undefined || value === null || Number.isNaN(Number(value)))) {
+    return null;
+  }
+
+  const earthRadiusKm = 6371;
+  const dLat = toRadians(Number(toLat) - Number(fromLat));
+  const dLng = toRadians(Number(toLng) - Number(fromLng));
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRadians(Number(fromLat))) * Math.cos(toRadians(Number(toLat))) * Math.sin(dLng / 2) ** 2;
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
 
 // Autocomplete suggestions
 router.get('/autocomplete', async (req, res) => {
@@ -23,7 +41,7 @@ router.get('/autocomplete', async (req, res) => {
     // Product suggestions
     const products = await Product.find({
       name: regex,
-      status: 'available'
+      status: 'active'
     })
     .select('name category')
     .limit(5)
@@ -84,6 +102,57 @@ router.get('/autocomplete', async (req, res) => {
   }
 });
 
+router.get('/saved', protect, async (req, res) => {
+  try {
+    const searches = await SavedSearch.find({ user: req.user._id }).sort({ createdAt: -1 });
+    res.json({ success: true, data: searches });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch saved searches' });
+  }
+});
+
+router.post('/saved', protect, async (req, res) => {
+  try {
+    const { name, query, notify = true } = req.body;
+    const savedSearch = await SavedSearch.create({ user: req.user._id, name, query, notify });
+    res.status(201).json({ success: true, data: savedSearch });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to save search' });
+  }
+});
+
+router.delete('/saved/:id', protect, async (req, res) => {
+  try {
+    await SavedSearch.deleteOne({ _id: req.params.id, user: req.user._id });
+    res.json({ success: true, message: 'Saved search deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete saved search' });
+  }
+});
+
+router.get('/recent', protect, async (req, res) => {
+  try {
+    const searches = await RecentSearch.find({ user: req.user._id }).sort({ lastSearchedAt: -1 }).limit(20);
+    res.json({ success: true, data: searches });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch recent searches' });
+  }
+});
+
+router.post('/recent', protect, async (req, res) => {
+  try {
+    const { query, filters } = req.body;
+    const search = await RecentSearch.findOneAndUpdate(
+      { user: req.user._id, query: query || '' },
+      { $set: { filters, lastSearchedAt: new Date() }, $inc: { count: 1 } },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true, data: search });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to store recent search' });
+  }
+});
+
 // Advanced search
 router.get('/', async (req, res) => {
   try {
@@ -96,12 +165,15 @@ router.get('/', async (req, res) => {
       maxPrice,
       sortBy = 'createdAt',
       sortOrder = 'desc',
+      lat,
+      lng,
+      radiusKm,
       page = 1,
       limit = 20
     } = req.query;
 
     // Build search filter
-    const filter = { status: 'available' };
+    const filter = { status: 'active' };
 
     // Text search
     if (query) {
@@ -142,7 +214,7 @@ router.get('/', async (req, res) => {
     
     const [products, total] = await Promise.all([
       Product.find(filter)
-        .populate('seller', 'name email phone location')
+        .populate('seller', 'name email phone location rating verified verification')
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit))
@@ -151,18 +223,40 @@ router.get('/', async (req, res) => {
     ]);
 
     // Add search metadata
-    const results = products.map(product => ({
-      ...product,
-      relevanceScore: calculateRelevanceScore(product, query)
-    }));
+    const results = await Promise.all(products
+      .map(async product => {
+        const distanceKm = getDistanceKm(
+          lat,
+          lng,
+          product.location?.coordinates?.latitude,
+          product.location?.coordinates?.longitude
+        );
+        const priceRecommendation = await getPriceRecommendation({
+          category: product.category,
+          region: product.location?.region,
+          unit: product.unit,
+          price: product.price
+        });
+        return {
+          ...product,
+          distanceKm,
+          sellerBadge: product.seller?.verification?.state === 'verified' || product.seller?.verified ? 'verified' : 'unverified',
+          sellerAvailableToday: isSellerAvailableToday(product),
+          priceRecommendation,
+          relevanceScore: calculateRelevanceScore(product, query, { category, region, distanceKm, priceRecommendation })
+        };
+      }));
+
+    const filteredResults = results
+      .filter(product => !radiusKm || (product.distanceKm !== null && product.distanceKm <= Number(radiusKm)));
 
     // Sort by relevance if there's a text query
     if (query) {
-      results.sort((a, b) => b.relevanceScore - a.relevanceScore);
+      filteredResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
     }
 
     res.json({
-      products: results,
+      products: filteredResults,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -178,6 +272,9 @@ router.get('/', async (req, res) => {
         district,
         minPrice,
         maxPrice,
+        lat,
+        lng,
+        radiusKm,
         sortBy,
         sortOrder
       }
@@ -185,6 +282,49 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Search error:', error);
     res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// Similar products
+router.get('/similar/:productId', async (req, res) => {
+  try {
+    const { limit = 8 } = req.query;
+    const product = await Product.findById(req.params.productId).lean();
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const products = await Product.find({
+      _id: { $ne: product._id },
+      status: 'active',
+      $or: [
+        { category: product.category },
+        { 'location.region': product.location?.region },
+        { name: { $regex: product.name.split(' ')[0], $options: 'i' } }
+      ]
+    })
+      .populate('seller', 'name phone location rating verified verification')
+      .limit(Number(limit) * 2)
+      .lean();
+
+    const results = products
+      .map(candidate => ({
+        ...candidate,
+        sellerBadge: candidate.seller?.verification?.state === 'verified' || candidate.seller?.verified ? 'verified' : 'unverified',
+        sellerAvailableToday: isSellerAvailableToday(candidate),
+        relevanceScore: calculateRelevanceScore(candidate, product.name, {
+          category: product.category,
+          region: product.location?.region
+        })
+      }))
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, Number(limit));
+
+    res.json({ products: results });
+  } catch (error) {
+    console.error('Similar products error:', error);
+    res.status(500).json({ error: 'Failed to fetch similar products' });
   }
 });
 
@@ -291,10 +431,14 @@ router.get('/analytics', protect, async (req, res) => {
 });
 
 // Helper function to calculate relevance score
-function calculateRelevanceScore(product, query) {
-  if (!query) return 0;
-  
+function calculateRelevanceScore(product, query, context = {}) {
   let score = 0;
+  if (!query) {
+    if (context.category && product.category === context.category) score += 25;
+    if (context.region && product.location?.region === context.region) score += 20;
+    return score;
+  }
+  
   const queryLower = query.toLowerCase();
   
   // Exact name match
@@ -318,6 +462,43 @@ function calculateRelevanceScore(product, query) {
   // Category matches
   if (product.category && product.category.toLowerCase().includes(queryLower)) {
     score += 40;
+  }
+
+  if (context.category && product.category === context.category) {
+    score += 25;
+  }
+
+  if (context.region && product.location?.region === context.region) {
+    score += 20;
+  }
+
+  if (product.createdAt) {
+    const ageDays = (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    score += Math.max(0, 20 - Math.floor(ageDays));
+  }
+
+  if (product.seller?.rating) {
+    score += Number(product.seller.rating) * 4;
+  }
+
+  if (product.seller?.verified || product.seller?.verification?.state === 'verified') {
+    score += 12;
+  }
+
+  if (product.fulfillment?.delivery) {
+    score += 6;
+  }
+
+  if (isSellerAvailableToday(product)) {
+    score += 8;
+  }
+
+  if (context.priceRecommendation && Math.abs(context.priceRecommendation.deltaPercent) <= 15) {
+    score += 10;
+  }
+
+  if (typeof context.distanceKm === 'number') {
+    score += Math.max(0, 20 - Math.floor(context.distanceKm / 10));
   }
   
   return score;

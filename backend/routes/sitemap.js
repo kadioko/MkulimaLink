@@ -75,7 +75,7 @@ const generateSitemapIndex = (sitemaps) => {
 // Generate products sitemap
 const generateProductsSitemap = async () => {
   try {
-    const products = await Product.find({ status: 'available' })
+    const products = await Product.find({ status: 'active' })
       .select('_id updatedAt')
       .lean();
 

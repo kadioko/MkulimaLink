@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { CATEGORIES, UNITS } = require('../config/marketplaceMeta');
+const { getCategoryExpiryDate } = require('../services/marketplaceIntelligence');
 
 const productSchema = new mongoose.Schema({
   seller: {
@@ -14,7 +16,7 @@ const productSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['grains', 'legumes', 'vegetables', 'fruits', 'livestock', 'dairy', 'poultry', 'seeds', 'fertilizers', 'equipment', 'other']
+    enum: CATEGORIES
   },
   description: {
     type: String,
@@ -28,11 +30,16 @@ const productSchema = new mongoose.Schema({
   unit: {
     type: String,
     required: true,
-    enum: ['kg', 'ton', 'bag', 'piece', 'liter', 'dozen', 'bundle']
+    enum: UNITS
   },
   quantity: {
     type: Number,
     required: true,
+    min: 0
+  },
+  reservedQuantity: {
+    type: Number,
+    default: 0,
     min: 0
   },
   images: [{
@@ -67,8 +74,41 @@ const productSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'sold', 'reserved', 'expired'],
+    enum: ['draft', 'active', 'reserved', 'sold', 'expired'],
     default: 'active'
+  },
+  expiresAt: {
+    type: Date
+  },
+  availability: {
+    days: [String],
+    hours: String,
+    notes: String
+  },
+  fulfillment: {
+    pickup: {
+      type: Boolean,
+      default: true
+    },
+    delivery: {
+      type: Boolean,
+      default: false
+    },
+    deliveryRadiusKm: Number,
+    deliveryFee: Number
+  },
+  risk: {
+    score: {
+      type: Number,
+      default: 0
+    },
+    flag: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'blocked'],
+      default: 'low'
+    },
+    reasons: [String],
+    assessedAt: Date
   },
   views: {
     type: Number,
@@ -82,7 +122,8 @@ const productSchema = new mongoose.Schema({
     marketDemand: String,
     priceRecommendation: Number,
     bestTimeToSell: Date,
-    competitorAnalysis: String
+    competitorAnalysis: String,
+    farmerInsights: [String]
   }
 }, {
   timestamps: true
@@ -92,5 +133,19 @@ productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ category: 1, status: 1 });
 productSchema.index({ 'location.region': 1, 'location.district': 1 });
 productSchema.index({ price: 1 });
+productSchema.index({ status: 1, expiresAt: 1 });
+
+productSchema.pre('save', function setDefaultExpiry() {
+  if (!this.expiresAt && this.status === 'active') {
+    this.expiresAt = getCategoryExpiryDate(this.category);
+  }
+});
+
+productSchema.statics.expireOldListings = function expireOldListings(now = new Date()) {
+  return this.updateMany(
+    { status: 'active', expiresAt: { $lte: now } },
+    { $set: { status: 'expired' } }
+  );
+};
 
 module.exports = mongoose.model('Product', productSchema);

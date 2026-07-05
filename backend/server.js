@@ -6,6 +6,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { cspMiddleware, securityHeaders } = require('./middleware/csp');
 const { cache, cacheConfig } = require('./middleware/cache');
+const requestId = require('./middleware/requestId');
 const { initSentry, sentryRequestHandler, sentryTracingHandler, sentryErrorHandler } = require('./utils/sentry');
 const path = require('path');
 const http = require('http');
@@ -25,6 +26,7 @@ initializeSocket(server);
 // Security headers
 app.use(securityHeaders);
 app.use(cspMiddleware);
+app.use(requestId);
 app.use(compression());
 const allowedOrigins = [
   process.env.FRONTEND_URL,
@@ -47,7 +49,8 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(morgan('dev'));
+morgan.token('id', (req) => req.id);
+app.use(morgan(':id :method :url :status :response-time ms'));
 
 const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
 app.use('/api/', apiLimiter);
@@ -101,6 +104,9 @@ const seedRoutes = require('./routes/seed');
 const sitemapRoutes = require('./routes/sitemap');
 const searchRoutes = require('./routes/search');
 const v1Routes = require('./routes/v1');
+const metaRoutes = require('./routes/meta');
+const reportRoutes = require('./routes/reports');
+const recommendationRoutes = require('./routes/recommendations');
 
 // New routes for enhanced features
 const auctionRoutes = require('./routes/auctions');
@@ -115,6 +121,9 @@ app.use('/api/v1/docs', docsRoutes);
 
 // SEO and Search
 app.use('/api/search', searchRoutes);
+app.use('/api/meta', metaRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 app.use('/sitemap.xml', sitemapRoutes);
 app.use('/robots.txt', sitemapRoutes);
 
@@ -155,6 +164,18 @@ app.use('/api/equipment', equipmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/health', healthRoutes);
+app.get('/api/ready', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ status: 'not_ready', error: 'MongoDB not ready' });
+    }
+
+    await mongoose.connection.db.admin().ping();
+    res.json({ status: 'ready', services: { mongodb: 'healthy' } });
+  } catch (error) {
+    res.status(503).json({ status: 'not_ready', error: error.message });
+  }
+});
 app.use('/api/seed', seedRoutes);
 
 // Sentry error handler (must be last)
