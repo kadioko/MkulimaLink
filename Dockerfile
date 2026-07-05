@@ -7,8 +7,7 @@ RUN apk add --no-cache \
     vips-dev \
     python3 \
     make \
-    g++ \
-    node-addon-api
+    g++
 
 # Copy backend package files
 COPY package*.json ./
