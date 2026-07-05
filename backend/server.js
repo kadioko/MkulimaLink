@@ -14,6 +14,7 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
+app.set('trust proxy', 1);
 
 // Initialize Sentry
 initSentry(app);
@@ -55,9 +56,19 @@ app.use('/api/v1/auth/login', authLimiter);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mkulimalink')
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mkulimalink';
+try {
+  const parsedMongoUri = new URL(mongoUri);
+  console.log(`MongoDB target: ${parsedMongoUri.hostname}:${parsedMongoUri.port || 'default'}${parsedMongoUri.pathname}`);
+} catch (error) {
+  console.error('MongoDB URI is not parseable:', error.message);
+}
+
+mongoose.connect(mongoUri, {
+  serverSelectionTimeoutMS: 10000,
+})
 .then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.error('MongoDB connection error:', err));
+.catch(err => console.error('MongoDB connection error:', err.message));
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
@@ -151,7 +162,7 @@ app.use(sentryErrorHandler);
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));
-  app.get('*', (req, res) => {
+  app.get('/{*splat}', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
   });
 }

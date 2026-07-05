@@ -10,14 +10,15 @@ RUN apk add --no-cache \
     g++
 
 # Copy backend package files
-COPY package*.json ./
-RUN npm ci --only=production
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
+RUN npm ci --omit=dev
 
 # Copy backend source
-COPY backend/ ./backend/
+COPY backend/ ./
 
 # Create necessary directories
-RUN mkdir -p uploads/products logs
+RUN mkdir -p ../uploads/products logs
 
 # Set environment
 ENV NODE_ENV=production
@@ -31,4 +32,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:5000/api/health || exit 1
 
 # Start application
-CMD ["node", "backend/server.js"]
+CMD ["node", "server.js"]

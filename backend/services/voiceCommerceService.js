@@ -5,7 +5,7 @@
 
 const axios = require('axios');
 const { Product, User } = require('../models');
-const { Transaction } = require('../models/Transaction');
+const Transaction = require('../models/Transaction');
 const natural = require('natural');
 const compromise = require('compromise');
 

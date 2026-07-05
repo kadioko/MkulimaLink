@@ -7,9 +7,14 @@ let redisClient = null;
 // Initialize Redis connection
 async function initRedis() {
   try {
+    if (!process.env.REDIS_URL) {
+      console.log('REDIS_URL not configured, cache disabled');
+      return;
+    }
+
     if (!redisClient) {
       redisClient = redis.createClient({
-        url: process.env.REDIS_URL || 'redis://localhost:6379',
+        url: process.env.REDIS_URL,
         retry_strategy: (options) => {
           if (options.error && options.error.code === 'ECONNREFUSED') {
             console.error('Redis connection refused');

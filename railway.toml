@@ -5,7 +5,7 @@ builder = "NIXPACKS"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
-startCommand = "cd backend && node server.js"
+startCommand = "node server.js"
 
 [env]
 NODE_ENV = "production"
