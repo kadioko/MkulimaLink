@@ -1,6 +1,5 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "cd backend && npm install"
 
 [deploy]
 healthcheckPath = "/api/health"
@@ -10,3 +9,4 @@ startCommand = "cd backend && node server.js"
 
 [env]
 NODE_ENV = "production"
+PORT = "5000"

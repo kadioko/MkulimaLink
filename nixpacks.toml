@@ -1,0 +1,18 @@
+[phases.setup]
+nixPkgs = ["...", "nodejs_20"]
+
+[phases.install]
+cmds = [
+  "cd backend && npm install"
+]
+
+[phases.build]
+cmds = [
+  "cd backend && npm cache clean --force"
+]
+
+[start]
+cmd = "cd backend && node server.js"
+
+[variables]
+NODE_ENV = "production"
