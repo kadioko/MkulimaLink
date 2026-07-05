@@ -68,7 +68,8 @@ router.get('/prices', async (req, res) => {
 
     const prices = await MarketPrice.find(query)
       .sort('-date')
-      .limit(100);
+      .limit(100)
+      .lean();
 
     cache.set(cacheKey, prices);
     res.json(prices);
@@ -123,7 +124,8 @@ router.get('/prices/trends/:product', async (req, res) => {
 
     const trends = await MarketPrice.find(query)
       .sort('date')
-      .select('date price.average region market');
+      .select('date price.average region market')
+      .lean();
 
     const analysis = {
       product,
