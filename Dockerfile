@@ -2,8 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies for sharp
-RUN apk add --no-cache vips-dev
+# Install build dependencies for sharp
+RUN apk add --no-cache \
+    vips-dev \
+    python3 \
+    make \
+    g++ \
+    node-addon-api
 
 # Copy backend package files
 COPY package*.json ./
