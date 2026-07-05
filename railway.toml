@@ -1,11 +1,12 @@
 [build]
 builder = "NIXPACKS"
+buildCommand = "cd backend && npm install"
 
 [deploy]
 healthcheckPath = "/api/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
+startCommand = "cd backend && node server.js"
 
-[[services]]
-name = "backend"
-source = "backend"
+[env]
+NODE_ENV = "production"
