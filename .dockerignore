@@ -4,7 +4,6 @@ mobile/MkulimaLink/node_modules
 ai-ml/__pycache__
 **/__pycache__
 
-Dockerfile
 docker-compose*.yml
 
 .git

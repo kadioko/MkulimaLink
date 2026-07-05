@@ -1,13 +1,5 @@
-# Build stage for frontend
-FROM node:20-alpine AS frontend-build
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm ci
-COPY frontend/ ./
-RUN npm run build
+FROM node:20-alpine
 
-# Production stage
-FROM node:20-alpine AS production
 WORKDIR /app
 
 # Install dependencies for sharp
@@ -19,9 +11,6 @@ RUN npm ci --only=production
 
 # Copy backend source
 COPY backend/ ./backend/
-
-# Copy frontend build
-COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 # Create necessary directories
 RUN mkdir -p uploads/products logs
