@@ -132,6 +132,10 @@ const productSchema = new mongoose.Schema({
 productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ category: 1, status: 1 });
 productSchema.index({ 'location.region': 1, 'location.district': 1 });
+productSchema.index({ 'location.region': 1, category: 1, status: 1 });
+productSchema.index({ category: 1, 'location.region': 1 });
+productSchema.index({ seller: 1, status: 1 });
+productSchema.index({ organic: 1, status: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ status: 1, expiresAt: 1 });
 

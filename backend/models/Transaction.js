@@ -128,6 +128,9 @@ const transactionSchema = new mongoose.Schema({
 transactionSchema.index({ buyer: 1, status: 1 });
 transactionSchema.index({ seller: 1, status: 1 });
 transactionSchema.index({ status: 1, createdAt: -1 });
+transactionSchema.index({ buyer: 1, createdAt: -1 });
+transactionSchema.index({ seller: 1, createdAt: -1 });
+transactionSchema.index({ product: 1, status: 1 });
 transactionSchema.index({ idempotencyKey: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Transaction', transactionSchema);

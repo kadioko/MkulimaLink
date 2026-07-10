@@ -29,5 +29,6 @@ const paymentEventSchema = new mongoose.Schema({
 
 paymentEventSchema.index({ provider: 1, eventId: 1 }, { unique: true });
 paymentEventSchema.index({ transaction: 1, createdAt: -1 });
+paymentEventSchema.index({ createdAt: 1 }, { expireAfterSeconds: 15552000 }); // 180 days TTL
 
 module.exports = mongoose.model('PaymentEvent', paymentEventSchema);

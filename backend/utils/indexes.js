@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const logger = require('./logger');
 
 /**
  * Database indexes for improved query performance
@@ -172,6 +173,96 @@ const supplierIndexes = [
   { region: 1, category: 1, isVerified: 1 } // Regional category verified
 ];
 
+// Livestock indexes
+const livestockIndexes = [
+  { owner: 1 }, // Owner's animals
+  { workspace: 1 }, // Workspace animals
+  { species: 1 }, // Species filtering
+  { healthStatus: 1 }, // Health status filtering
+  { tagId: 1 }, // Tag lookup
+  { isActive: 1 }, // Active animals
+  { createdAt: -1 }, // Recent animals
+  { owner: 1, species: 1, healthStatus: 1 }, // Owner's animals by species and health
+  { owner: 1, workspace: 1 }, // Owner's workspace animals
+  { owner: 1, isActive: 1 }, // Owner's active animals
+  { owner: 1, createdAt: -1 }, // Owner's recent animals
+  { species: 1, healthStatus: 1 }, // Species health filtering
+  { name: 'text', tagId: 'text', breed: 'text' } // Search
+];
+
+// Livestock Event indexes
+const livestockEventIndexes = [
+  { livestock: 1 }, // Events per animal
+  { type: 1 }, // Event type filtering
+  { date: -1 }, // Recent events
+  { livestock: 1, type: 1, date: -1 }, // Animal event history
+  { createdAt: -1 } // Recent events
+];
+
+// Livestock Inventory indexes
+const livestockInventoryIndexes = [
+  { owner: 1 }, // Owner's inventory
+  { workspace: 1 }, // Workspace inventory
+  { category: 1 }, // Category filtering
+  { itemType: 1 }, // Item type filtering
+  { lowStock: 1 }, // Low stock alerts
+  { owner: 1, category: 1 }, // Owner's inventory by category
+  { owner: 1, lowStock: 1 } // Owner's low stock items
+];
+
+// Farm Workspace indexes
+const farmWorkspaceIndexes = [
+  { owner: 1 }, // Owner's workspaces
+  { 'members.user': 1 }, // Member's workspaces
+  { createdAt: -1 }, // Recent workspaces
+  { owner: 1, createdAt: -1 } // Owner's recent workspaces
+];
+
+// Breeds Library indexes
+const breedsLibraryIndexes = [
+  { species: 1 }, // Species filtering
+  { createdBy: 1 }, // Custom breeds by creator
+  { name: 'text', species: 'text' } // Search
+];
+
+// Reproduction indexes
+const reproductionIndexes = [
+  { livestock: 1 }, // Reproduction records per animal
+  { status: 1 }, // Status filtering
+  { expectedDueDate: 1 }, // Upcoming births
+  { livestock: 1, status: 1, expectedDueDate: 1 } // Animal reproduction timeline
+];
+
+// Failed action indexes with TTL
+const failedActionIndexes = [
+  { type: 1, createdAt: -1 },
+  { user: 1, createdAt: -1 },
+  { email: 1, createdAt: -1 },
+  { ip: 1, createdAt: -1 },
+  [{ createdAt: 1 }, { expireAfterSeconds: 2592000 }] // 30 days TTL
+];
+
+// Recent search indexes with TTL
+const recentSearchIndexes = [
+  [{ user: 1, query: 1 }, { unique: true }],
+  { user: 1, lastSearchedAt: -1 },
+  [{ createdAt: 1 }, { expireAfterSeconds: 7776000 }] // 90 days TTL
+];
+
+// Notification indexes
+const notificationIndexes = [
+  { user: 1, read: 1, createdAt: -1 },
+  { user: 1, type: 1, createdAt: -1 },
+  [{ createdAt: 1 }, { expireAfterSeconds: 31536000 }] // 1 year TTL
+];
+
+// Payment event indexes with TTL
+const paymentEventIndexes = [
+  { transaction: 1 },
+  { type: 1, createdAt: -1 },
+  [{ createdAt: 1 }, { expireAfterSeconds: 15552000 }] // 180 days TTL
+];
+
 // Analytics Event indexes
 const analyticsIndexes = [
   { event: 1 }, // Event type
@@ -198,14 +289,17 @@ async function createIndexes(Model, indexes) {
       if (typeof index === 'string') {
         // Simple index
         await Model.collection.createIndex({ [index]: 1 });
+      } else if (Array.isArray(index) && index.length === 2) {
+        // Index with options (e.g. TTL, unique)
+        await Model.collection.createIndex(index[0], index[1]);
       } else if (typeof index === 'object') {
         // Compound or text index
         await Model.collection.createIndex(index);
       }
     }
-    console.log(`✅ Indexes created for ${Model.modelName}`);
+    logger.info(`Indexes created for ${Model.modelName}`);
   } catch (error) {
-    console.error(`❌ Error creating indexes for ${Model.modelName}:`, error);
+    logger.error(`Error creating indexes for ${Model.modelName}:`, error);
   }
 }
 
@@ -225,7 +319,17 @@ async function createAllIndexes() {
     Equipment: equipmentIndexes,
     PriceAlert: priceAlertIndexes,
     Supplier: supplierIndexes,
-    AnalyticsEvent: analyticsIndexes
+    AnalyticsEvent: analyticsIndexes,
+    Livestock: livestockIndexes,
+    LivestockEvent: livestockEventIndexes,
+    LivestockInventory: livestockInventoryIndexes,
+    FarmWorkspace: farmWorkspaceIndexes,
+    BreedsLibrary: breedsLibraryIndexes,
+    Reproduction: reproductionIndexes,
+    FailedAction: failedActionIndexes,
+    RecentSearch: recentSearchIndexes,
+    Notification: notificationIndexes,
+    PaymentEvent: paymentEventIndexes
   };
 
   for (const [modelName, indexes] of Object.entries(models)) {
@@ -233,11 +337,11 @@ async function createAllIndexes() {
       const Model = mongoose.model(modelName);
       await createIndexes(Model, indexes);
     } catch (error) {
-      console.error(`Model ${modelName} not found, skipping indexes`);
+      logger.error(`Model ${modelName} not found, skipping indexes`);
     }
   }
 
-  console.log('🎯 All database indexes created successfully');
+  logger.info('All database indexes created successfully');
 }
 
 /**
@@ -247,16 +351,18 @@ async function dropAllIndexes() {
   const models = [
     'User', 'Product', 'Transaction', 'Chat', 'Message',
     'Loan', 'Insurance', 'GroupBuy', 'Equipment', 'PriceAlert',
-    'Supplier', 'AnalyticsEvent'
+    'Supplier', 'AnalyticsEvent', 'Livestock', 'LivestockEvent',
+    'LivestockInventory', 'FarmWorkspace', 'BreedsLibrary', 'Reproduction',
+    'FailedAction', 'RecentSearch', 'Notification', 'PaymentEvent'
   ];
 
   for (const modelName of models) {
     try {
       const Model = mongoose.model(modelName);
       await Model.collection.dropIndexes();
-      console.log(`🗑️ Dropped indexes for ${modelName}`);
+      logger.info(`Dropped indexes for ${modelName}`);
     } catch (error) {
-      console.error(`Error dropping indexes for ${modelName}:`, error);
+      logger.error(`Error dropping indexes for ${modelName}:`, error);
     }
   }
 }
@@ -276,5 +382,15 @@ module.exports = {
   equipmentIndexes,
   priceAlertIndexes,
   supplierIndexes,
-  analyticsIndexes
+  analyticsIndexes,
+  livestockIndexes,
+  livestockEventIndexes,
+  livestockInventoryIndexes,
+  farmWorkspaceIndexes,
+  breedsLibraryIndexes,
+  reproductionIndexes,
+  failedActionIndexes,
+  recentSearchIndexes,
+  notificationIndexes,
+  paymentEventIndexes
 };

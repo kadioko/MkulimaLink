@@ -112,8 +112,11 @@ const livestockSchema = new mongoose.Schema({
 
 livestockSchema.index({ owner: 1, species: 1, healthStatus: 1 });
 livestockSchema.index({ owner: 1, workspace: 1 });
+livestockSchema.index({ owner: 1, isActive: 1 });
+livestockSchema.index({ owner: 1, createdAt: -1 });
 livestockSchema.index({ tagId: 1, owner: 1 });
 livestockSchema.index({ 'parentage.mother': 1 });
 livestockSchema.index({ 'parentage.father': 1 });
+livestockSchema.index({ name: 'text', tagId: 'text', breed: 'text' });
 
 module.exports = mongoose.model('Livestock', livestockSchema);

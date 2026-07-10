@@ -22,5 +22,7 @@ const failedActionSchema = new mongoose.Schema({
 failedActionSchema.index({ type: 1, createdAt: -1 });
 failedActionSchema.index({ user: 1, createdAt: -1 });
 failedActionSchema.index({ email: 1, createdAt: -1 });
+failedActionSchema.index({ ip: 1, createdAt: -1 });
+failedActionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 }); // 30 days TTL
 
 module.exports = mongoose.model('FailedAction', failedActionSchema);

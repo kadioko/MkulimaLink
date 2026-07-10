@@ -25,5 +25,6 @@ const recentSearchSchema = new mongoose.Schema({
 
 recentSearchSchema.index({ user: 1, query: 1 }, { unique: true });
 recentSearchSchema.index({ user: 1, lastSearchedAt: -1 });
+recentSearchSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 }); // 90 days TTL
 
 module.exports = mongoose.model('RecentSearch', recentSearchSchema);
