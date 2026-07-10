@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const { cspMiddleware, securityHeaders } = require('./middleware/csp');
 const { cache, cacheConfig, initRedis } = require('./middleware/cache');
 const requestId = require('./middleware/requestId');
+const { sanitizeInput } = require('./middleware/sanitize');
 const { initSentry, sentryRequestHandler, sentryTracingHandler, sentryErrorHandler } = require('./utils/sentry');
 const logger = require('./utils/logger');
 const path = require('path');
@@ -34,22 +35,27 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://mkulimalink.vercel.app',
+  'https://mkulima-link.vercel.app',
+  'https://mkulimalink-api-aa384e99a888.herokuapp.com',
+  'https://web-production-04667.up.railway.app',
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    // Allow any vercel.app subdomain (preview deployments)
-    if (origin.endsWith('.vercel.app') || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    const isAllowed = allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.up.railway.app');
+    if (isAllowed) return callback(null, true);
     callback(new Error(`CORS: Origin ${origin} not allowed`));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(sanitizeInput);
 morgan.token('id', (req) => req.id);
 app.use(morgan(':id :method :url :status :response-time ms', { stream: logger.stream }));
 

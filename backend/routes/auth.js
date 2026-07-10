@@ -88,8 +88,14 @@ router.post('/login', loginValidation, async (req, res) => {
       return error(res, 'Invalid credentials', 401);
     }
 
+    if (user.isLocked) {
+      await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'account_locked' });
+      return error(res, 'Account temporarily locked due to too many failed login attempts. Please try again later.', 423);
+    }
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
+      await user.incrementLoginAttempts();
       await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'wrong_password' });
       return error(res, 'Invalid credentials', 401);
     }
@@ -101,6 +107,7 @@ router.post('/login', loginValidation, async (req, res) => {
 
     user.lastLogin = new Date();
     await user.save();
+    await user.resetLoginAttempts();
 
     const token = generateToken(user._id);
 

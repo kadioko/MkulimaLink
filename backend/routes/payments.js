@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { protect } = require('../middleware/auth');
+const { validateWebhook } = require('../middleware/webhookAuth');
+const logger = require('../utils/logger');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const PaymentEvent = require('../models/PaymentEvent');
@@ -94,7 +96,7 @@ router.post('/mpesa/initiate', protect, async (req, res) => {
 });
 
 // Enhanced M-Pesa callback with service integration
-router.post('/mpesa/callback', async (req, res) => {
+router.post('/mpesa/callback', validateWebhook(), async (req, res) => {
   try {
     const stkCallback = req.body?.Body?.stkCallback || req.body;
     const eventId = stkCallback.CheckoutRequestID || stkCallback.MerchantRequestID || req.headers['x-request-id'] || req.id;
@@ -251,7 +253,7 @@ router.post('/airtel/initiate', protect, async (req, res) => {
 });
 
 // Airtel Money callback handler
-router.post('/airtel/callback', async (req, res) => {
+router.post('/airtel/callback', validateWebhook(), async (req, res) => {
   try {
     const eventId = req.body?.transaction?.id || req.body?.transactionId || req.body?.id || req.id;
     const paymentEvent = await registerPaymentEvent({ provider: 'airtel', eventId, payload: req.body });
