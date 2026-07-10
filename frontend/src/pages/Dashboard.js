@@ -6,9 +6,10 @@ import {
   BarChart3, Users, Calendar, Leaf, Calculator, Gavel, Crown,
   Sparkles, ArrowRight, AlertTriangle, CheckCircle2, Clock,
 } from 'lucide-react';
-import api from '../api/axios';
+import api, { extractData } from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 import { useCountryStore } from '../store/countryStore';
+import { ShimmerSkeleton, ErrorState } from '../components/EnhancedSkeleton';
 
 const MODULE_SHORTCUTS = [
   {
@@ -99,36 +100,63 @@ function StatCard({ label, value, icon: Icon, color }) {
   );
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div className="h-8 bg-slate-200 rounded w-1/3" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-white border border-slate-200 p-5 space-y-3">
+            <div className="flex justify-between">
+              <div className="h-4 bg-slate-200 rounded w-1/2" />
+              <div className="h-8 w-8 bg-slate-200 rounded" />
+            </div>
+            <div className="h-8 bg-slate-200 rounded w-1/3" />
+          </div>
+        ))}
+      </div>
+      <div className="h-40 bg-slate-200 rounded" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="h-48 bg-slate-200 rounded" />
+        <div className="h-48 bg-slate-200 rounded" />
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { user } = useAuthStore();
   const { getCurrency } = useCountryStore();
   const currency = getCurrency();
   const isFarmer = user?.role === 'farmer';
 
-  const { data: stats } = useQuery('dashboard-stats', async () => {
+  const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery('dashboard-stats', async () => {
     const response = await api.get('/transactions/stats/dashboard');
-    return response.data;
+    return extractData(response) || response.data;
   });
 
-  const { data: products } = useQuery('my-products', async () => {
+  const { data: products, isLoading: productsLoading, error: productsError, refetch: refetchProducts } = useQuery('my-products', async () => {
     const response = await api.get('/products/my/listings');
-    return Array.isArray(response.data)
-      ? response.data
-      : (response.data?.products || response.data?.data || []);
+    const data = extractData(response);
+    return Array.isArray(data)
+      ? data
+      : (data?.products || data?.data || []);
   }, { enabled: isFarmer });
 
-  const { data: transactions } = useQuery('recent-transactions', async () => {
+  const { data: transactions, isLoading: txLoading, error: txError, refetch: refetchTx } = useQuery('recent-transactions', async () => {
     const endpoint = isFarmer ? '/transactions/my/sales' : '/transactions/my/purchases';
     const response = await api.get(endpoint);
-    const list = Array.isArray(response.data)
-      ? response.data
-      : (response.data?.transactions || response.data?.data || []);
+    const data = extractData(response);
+    const list = Array.isArray(data)
+      ? data
+      : (data?.transactions || data?.data || []);
     return list.slice(0, 5);
   });
 
-  const { data: livestockStats } = useQuery('livestock-stats', async () => {
+  const { data: livestockStats, isLoading: livestockLoading, error: livestockError, refetch: refetchLivestock } = useQuery('livestock-stats', async () => {
     const response = await api.get('/livestock/stats');
-    return response.data.data;
+    const data = extractData(response);
+    return data?.data || data;
   }, { retry: false });
 
   const greeting = () => {
@@ -137,6 +165,28 @@ function Dashboard() {
     if (h < 17) return 'Good afternoon';
     return 'Good evening';
   };
+
+  const isLoading = statsLoading || txLoading || livestockLoading || (isFarmer && productsLoading);
+  const hasError = statsError || txError || livestockError || (isFarmer && productsError);
+
+  if (isLoading && !stats && !transactions) {
+    return <DashboardSkeleton />;
+  }
+
+  if (hasError && !stats && !transactions) {
+    return (
+      <ErrorState
+        title="Failed to load dashboard"
+        description="We couldn't fetch your dashboard data. Please try again."
+        onRetry={() => {
+          refetchStats();
+          refetchTx();
+          refetchLivestock();
+          if (isFarmer) refetchProducts();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -163,10 +213,21 @@ function Dashboard() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Transactions" value={stats?.totalTransactions || 0} icon={ShoppingBag} color="bg-emerald-50 text-emerald-600" />
-        <StatCard label="Completed" value={stats?.completedTransactions || 0} icon={CheckCircle2} color="bg-green-50 text-green-600" />
-        <StatCard label={isFarmer ? 'Revenue' : 'Spent'} value={`${currency} ${(stats?.totalRevenue || 0).toLocaleString()}`} icon={DollarSign} color="bg-blue-50 text-blue-600" />
-        <StatCard label="Active Listings" value={products?.filter(p => p.status === 'active').length || 0} icon={TrendingUp} color="bg-violet-50 text-violet-600" />
+        {statsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white border border-slate-200 p-5 space-y-3">
+              <ShimmerSkeleton width="60%" height={16} />
+              <ShimmerSkeleton width="40%" height={32} />
+            </div>
+          ))
+        ) : (
+          <>
+            <StatCard label="Total Transactions" value={stats?.totalTransactions || 0} icon={ShoppingBag} color="bg-emerald-50 text-emerald-600" />
+            <StatCard label="Completed" value={stats?.completedTransactions || 0} icon={CheckCircle2} color="bg-green-50 text-green-600" />
+            <StatCard label={isFarmer ? 'Revenue' : 'Spent'} value={`${currency} ${(stats?.totalRevenue || 0).toLocaleString()}`} icon={DollarSign} color="bg-blue-50 text-blue-600" />
+            <StatCard label="Active Listings" value={products?.filter(p => p.status === 'active').length || 0} icon={TrendingUp} color="bg-violet-50 text-violet-600" />
+          </>
+        )}
       </div>
 
       {/* Module shortcuts grid */}
@@ -207,7 +268,13 @@ function Dashboard() {
               View all <ArrowRight size={12} />
             </Link>
           </div>
-          {livestockStats ? (
+          {livestockLoading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <ShimmerSkeleton key={i} width="100%" height={80} />
+              ))}
+            </div>
+          ) : livestockStats ? (
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-amber-50 border border-amber-100 p-3 text-center">
                 <p className="text-2xl font-bold text-amber-800">{livestockStats.totalAnimals || 0}</p>
@@ -226,6 +293,8 @@ function Dashboard() {
                 <p className="text-xs text-orange-600 font-medium mt-0.5">Low Stock Alerts</p>
               </div>
             </div>
+          ) : livestockError ? (
+            <ErrorState title="Couldn't load livestock" onRetry={refetchLivestock} />
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center text-slate-400">
               <span className="text-4xl mb-2">🐄</span>
@@ -251,31 +320,41 @@ function Dashboard() {
             </Link>
           </div>
           <div className="space-y-2">
-            {transactions?.map((t) => (
-              <div key={t._id} className="flex items-center justify-between p-2.5 hover:bg-slate-50 transition-colors rounded-sm">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-800 truncate">{t.product?.name || 'Product'}</p>
-                  <p className="text-xs text-slate-500">{t.quantity} {t.product?.unit} · {currency} {t.totalAmount?.toLocaleString()}</p>
-                </div>
-                <span className={`ml-2 flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  t.status === 'completed' ? 'bg-green-100 text-green-700' :
-                  t.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                  t.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                }`}>{t.status}</span>
-              </div>
-            ))}
-            {(!transactions || transactions.length === 0) && (
-              <div className="text-center py-8 text-slate-400">
-                <Clock size={28} className="mx-auto mb-2 opacity-40" />
-                <p className="text-sm">No transactions yet</p>
-              </div>
+            {txLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <ShimmerSkeleton key={i} width="100%" height={48} />
+              ))
+            ) : txError ? (
+              <ErrorState title="Couldn't load transactions" onRetry={refetchTx} />
+            ) : (
+              <>
+                {transactions?.map((t) => (
+                  <div key={t._id} className="flex items-center justify-between p-2.5 hover:bg-slate-50 transition-colors rounded-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-800 truncate">{t.product?.name || 'Product'}</p>
+                      <p className="text-xs text-slate-500">{t.quantity} {t.product?.unit} · {currency} {t.totalAmount?.toLocaleString()}</p>
+                    </div>
+                    <span className={`ml-2 flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      t.status === 'completed' ? 'bg-green-100 text-green-700' :
+                      t.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      t.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                    }`}>{t.status}</span>
+                  </div>
+                ))}
+                {(!transactions || transactions.length === 0) && (
+                  <div className="text-center py-8 text-slate-400">
+                    <Clock size={28} className="mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No transactions yet</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
       </div>
 
       {/* Recent Listings (farmers only) */}
-      {isFarmer && products && products.length > 0 && (
+      {isFarmer && (
         <div className="bg-white border border-slate-200 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-slate-900">My Listings</h2>
@@ -283,24 +362,39 @@ function Dashboard() {
               <Plus size={12} /> Add new
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {products.slice(0, 6).map((p) => (
-              <Link
-                key={p._id}
-                to={`/products/${p._id}`}
-                className="flex items-center justify-between p-3 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors rounded-sm"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800 truncate">{p.name}</p>
-                  <p className="text-xs text-slate-500">{p.quantity} {p.unit} · {currency} {p.price?.toLocaleString()}</p>
-                </div>
-                <span className={`ml-2 flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  p.status === 'active' ? 'bg-green-100 text-green-700' :
-                  p.status === 'sold' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
-                }`}>{p.status}</span>
-              </Link>
-            ))}
-          </div>
+          {productsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <ShimmerSkeleton key={i} width="100%" height={72} />
+              ))}
+            </div>
+          ) : productsError ? (
+            <ErrorState title="Couldn't load listings" onRetry={refetchProducts} />
+          ) : products?.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {products.slice(0, 6).map((p) => (
+                <Link
+                  key={p._id}
+                  to={`/products/${p._id}`}
+                  className="flex items-center justify-between p-3 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors rounded-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-800 truncate">{p.name}</p>
+                    <p className="text-xs text-slate-500">{p.quantity} {p.unit} · {currency} {p.price?.toLocaleString()}</p>
+                  </div>
+                  <span className={`ml-2 flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    p.status === 'active' ? 'bg-green-100 text-green-700' :
+                    p.status === 'sold' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
+                  }`}>{p.status}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-slate-400">
+              <Package size={28} className="mx-auto mb-2 opacity-40" />
+              <p className="text-sm">No listings yet</p>
+            </div>
+          )}
         </div>
       )}
 
