@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
@@ -174,6 +175,14 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
 userSchema.methods.updateRating = function(newRating) {
   this.rating = ((this.rating * this.totalRatings) + newRating) / (this.totalRatings + 1);
   this.totalRatings += 1;
+};
+
+userSchema.methods.getSignedJwtToken = function() {
+  return jwt.sign(
+    { id: this._id, role: this.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE || '30d' }
+  );
 };
 
 userSchema.pre('save', function syncVerificationState() {

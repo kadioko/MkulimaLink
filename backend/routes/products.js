@@ -286,9 +286,9 @@ router.put('/:id', protect, async (req, res) => {
     if (fulfillment) product.fulfillment = fulfillment;
 
     const updatedProduct = await product.save();
-    res.json(updatedProduct);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, updatedProduct, 'Product updated successfully');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -297,17 +297,17 @@ router.delete('/:id', protect, async (req, res) => {
     const product = await Product.findById(req.params.id);
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return error(res, 'Product not found', 404);
     }
 
     if (product.seller.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to delete this product' });
+      return error(res, 'Not authorized to delete this product', 403);
     }
 
     await product.deleteOne();
-    res.json({ message: 'Product removed' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, null, 'Product removed');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 

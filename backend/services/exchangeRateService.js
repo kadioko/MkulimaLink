@@ -83,6 +83,14 @@ async function getRate(from, to) {
   return ExchangeRate.getRate(from, to);
 }
 
+async function getRatesForBase(base) {
+  const rates = {};
+  for (const target of CURRENCIES) {
+    rates[target] = await getRate(base, target);
+  }
+  return rates;
+}
+
 async function convert(amount, from, to) {
   const rate = await getRate(from, to);
   if (!rate) throw new Error(`Exchange rate not found for ${from} to ${to}`);
@@ -92,6 +100,7 @@ async function convert(amount, from, to) {
 module.exports = {
   updateRates,
   getRate,
+  getRatesForBase,
   convert,
   FALLBACK_RATES
 };

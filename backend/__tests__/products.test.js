@@ -76,7 +76,8 @@ describe('Products API', () => {
       const res = await request(app).get('/api/products');
 
       expect(res.status).toBe(200);
-      expect(res.body.products).toHaveLength(2);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveLength(2);
     });
 
     it('should filter products by category', async () => {
@@ -85,8 +86,9 @@ describe('Products API', () => {
         .query({ category: 'vegetables' });
 
       expect(res.status).toBe(200);
-      expect(res.body.products).toHaveLength(1);
-      expect(res.body.products[0].name).toBe('Fresh Tomatoes');
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].name).toBe('Fresh Tomatoes');
     });
 
     it('should filter products by region', async () => {
@@ -95,7 +97,8 @@ describe('Products API', () => {
         .query({ region: 'Arusha' });
 
       expect(res.status).toBe(200);
-      expect(res.body.products).toHaveLength(2);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveLength(2);
     });
 
     it('should search products by name', async () => {
@@ -104,7 +107,8 @@ describe('Products API', () => {
         .query({ search: 'tomato' });
 
       expect(res.status).toBe(200);
-      expect(res.body.products.length).toBeGreaterThanOrEqual(1);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should paginate results', async () => {
@@ -113,9 +117,10 @@ describe('Products API', () => {
         .query({ page: 1, limit: 1 });
 
       expect(res.status).toBe(200);
-      expect(res.body.products).toHaveLength(1);
-      expect(res.body).toHaveProperty('totalPages');
-      expect(res.body).toHaveProperty('currentPage', 1);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.meta.pagination).toHaveProperty('totalPages');
+      expect(res.body.meta.pagination).toHaveProperty('page', 1);
     });
   });
 
@@ -135,8 +140,9 @@ describe('Products API', () => {
         });
 
       expect(res.status).toBe(201);
-      expect(res.body).toHaveProperty('name', 'Fresh Beans');
-      expect(res.body).toHaveProperty('seller');
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('name', 'Fresh Beans');
+      expect(res.body.data).toHaveProperty('seller');
     });
 
     it('should not create product without authentication', async () => {
@@ -175,7 +181,8 @@ describe('Products API', () => {
       const res = await request(app).get(`/api/products/${product._id}`);
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('name', 'Test Product');
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('name', 'Test Product');
     });
 
     it('should return 404 for non-existent product', async () => {
@@ -212,8 +219,9 @@ describe('Products API', () => {
         });
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('price', 2500);
-      expect(res.body).toHaveProperty('quantity', 150);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('price', 2500);
+      expect(res.body.data).toHaveProperty('quantity', 150);
     });
 
     it('should not update another user product', async () => {

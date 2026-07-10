@@ -7,29 +7,25 @@ const { success, error } = require('../utils/apiResponse');
 // Get all exchange rates
 router.get('/', async (req, res) => {
   try {
-    const rates = await ExchangeRate.find()
-      .sort({ lastUpdated: -1 })
-      .lean();
-    
-    // Group by base currency
-    const grouped = rates.reduce((acc, rate) => {
-      if (!acc[rate.baseCurrency]) {
-        acc[rate.baseCurrency] = {};
-      }
-      acc[rate.baseCurrency][rate.targetCurrency] = {
-        rate: rate.rate,
-        lastUpdated: rate.lastUpdated
-      };
-      return acc;
-    }, {});
-    
-    res.json({
-      rates: grouped,
-      lastUpdated: new Date()
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const { base = 'TZS' } = req.query;
+    const rates = await exchangeRateService.getRatesForBase(base);
+    return success(res, rates, 'Exchange rates retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
+});
+
+// Get supported currencies (must come before /:from/:to)
+router.get('/currencies/supported', async (req, res) => {
+  const currencies = {
+    TZS: { name: 'Tanzanian Shilling', symbol: 'TSh', country: 'Tanzania' },
+    KES: { name: 'Kenyan Shilling', symbol: 'KSh', country: 'Kenya' },
+    USD: { name: 'US Dollar', symbol: '$', country: 'United States' },
+    EUR: { name: 'Euro', symbol: '€', country: 'European Union' },
+    GBP: { name: 'British Pound', symbol: '£', country: 'United Kingdom' }
+  };
+
+  return success(res, currencies, 'Supported currencies retrieved');
 });
 
 // Get specific exchange rate
@@ -85,19 +81,6 @@ router.post('/convert', async (req, res) => {
   } catch (err) {
     return error(res, err.message, 500);
   }
-});
-
-// Get supported currencies
-router.get('/currencies/supported', async (req, res) => {
-  const currencies = {
-    TZS: { name: 'Tanzanian Shilling', symbol: 'TSh', country: 'Tanzania' },
-    KES: { name: 'Kenyan Shilling', symbol: 'KSh', country: 'Kenya' },
-    USD: { name: 'US Dollar', symbol: '$', country: 'United States' },
-    EUR: { name: 'Euro', symbol: '€', country: 'European Union' },
-    GBP: { name: 'British Pound', symbol: '£', country: 'United Kingdom' }
-  };
-  
-  res.json({ currencies });
 });
 
 // Admin: Update exchange rate

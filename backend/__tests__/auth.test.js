@@ -28,9 +28,10 @@ describe('Auth API', () => {
         });
 
       expect(res.status).toBe(201);
-      expect(res.body).toHaveProperty('token');
-      expect(res.body.user).toHaveProperty('email', 'farmer@test.com');
-      expect(res.body.user).toHaveProperty('role', 'farmer');
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('token');
+      expect(res.body.data.user).toHaveProperty('email', 'farmer@test.com');
+      expect(res.body.data.user).toHaveProperty('role', 'farmer');
     });
 
     it('should register a new buyer', async () => {
@@ -49,8 +50,9 @@ describe('Auth API', () => {
         });
 
       expect(res.status).toBe(201);
-      expect(res.body).toHaveProperty('token');
-      expect(res.body.user).toHaveProperty('role', 'buyer');
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('token');
+      expect(res.body.data.user).toHaveProperty('role', 'buyer');
     });
 
     it('should not register with existing email', async () => {
@@ -106,8 +108,9 @@ describe('Auth API', () => {
         });
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('token');
-      expect(res.body.user).toHaveProperty('email', 'login@test.com');
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('token');
+      expect(res.body.data.user).toHaveProperty('email', 'login@test.com');
     });
 
     it('should not login with wrong password', async () => {

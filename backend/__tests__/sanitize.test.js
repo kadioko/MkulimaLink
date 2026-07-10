@@ -7,7 +7,7 @@ describe('Sanitize middleware', () => {
   });
 
   it('escapes HTML entities in strings', () => {
-    expect(sanitizeValue('<script>alert(1)</script>')).toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(sanitizeValue('<script>alert(1)</script>')).toBe('&lt;script&gt;alert(1)&lt;&#x2F;script&gt;');
   });
 
   it('removes leading $ from string values', () => {
@@ -22,7 +22,7 @@ describe('Sanitize middleware', () => {
   it('handles nested objects', () => {
     const input = { data: { $ne: null, title: '<b>Hello</b>' } };
     expect(sanitizeObject(input)).toEqual({
-      data: { ne: null, title: '&lt;b&gt;Hello&lt;/b&gt;' }
+      data: { ne: null, title: '&lt;b&gt;Hello&lt;&#x2F;b&gt;' }
     });
   });
 });
