@@ -1,7 +1,7 @@
 # 🌾 MkulimaLink — Agriculture Super-App for East Africa
 
-[![Live](https://img.shields.io/badge/Frontend-Live-brightgreen)](https://mkulimalink.vercel.app)
-[![API](https://img.shields.io/badge/API-Live-brightgreen)](https://mkulimalink-api-aa384e99a888.herokuapp.com/api/health)
+[![Live](https://img.shields.io/badge/Frontend-Live-brightgreen)](https://mkulima-link.vercel.app)
+[![API](https://img.shields.io/badge/API-Live-brightgreen)](https://web-production-04667.up.railway.app/api/health)
 [![GitHub](https://img.shields.io/badge/GitHub-kadioko%2FMkulimaLink-blue)](https://github.com/kadioko/MkulimaLink)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-2.1.0-blue)](docs/CHANGELOG.md)
@@ -12,9 +12,9 @@
 
 | Service | URL | Status |
 |---------|-----|--------|
-| **Frontend** | [mkulimalink.vercel.app](https://mkulimalink.vercel.app) | ✅ Live |
-| **Backend API** | [mkulimalink-api-aa384e99a888.herokuapp.com](https://mkulimalink-api-aa384e99a888.herokuapp.com) | ✅ Live |
-| **Health Check** | [/api/health](https://mkulimalink-api-aa384e99a888.herokuapp.com/api/health) | ✅ Running |
+| **Frontend** | [mkulima-link.vercel.app](https://mkulima-link.vercel.app) | ✅ Live |
+| **Backend API** | [web-production-04667.up.railway.app](https://web-production-04667.up.railway.app) | ✅ Live |
+| **Health Check** | [/api/health](https://web-production-04667.up.railway.app/api/health) | ✅ Running |
 
 **Try it now** — no login required to browse products, market prices, and weather.
 
@@ -182,7 +182,7 @@
 | Service | Purpose |
 |---------|---------|
 | **Vercel** | Frontend hosting + CI/CD |
-| **Heroku** | Backend API hosting |
+| **Railway** | Backend API hosting |
 | **MongoDB Atlas** | Cloud database |
 | **GitHub** | Source control + auto-deploy triggers |
 
@@ -239,9 +239,11 @@ MkulimaLink/
 ├── ai-ml/                       # Python ML services
 ├── mobile/                      # React Native app
 ├── docs/                        # Documentation
-├── index-final.js               # Production server (Heroku)
+├── index-final.js               # Production server entry
 ├── vercel.json                  # Vercel build config
-├── Procfile                     # Heroku process config
+├── railway.toml                 # Railway build config
+├── nixpacks.toml                # Railway Nixpacks config
+├── Dockerfile                   # Backend container image
 ├── docker-compose.yml           # Docker setup
 └── package.json                 # Root dependencies
 ```
@@ -267,20 +269,22 @@ npm run dev
 # Opens at http://localhost:3000
 ```
 
-The frontend is pre-configured to connect to the live backend API at `https://mkulimalink-api-aa384e99a888.herokuapp.com`.
+The frontend uses the Railway backend API in production and falls back to `http://localhost:5000` during local development.
 
 ### Environment Variables
 
 **Frontend** (Vercel):
 ```
-VITE_API_URL=https://mkulimalink-api-aa384e99a888.herokuapp.com
+VITE_API_URL=https://web-production-04667.up.railway.app
+VITE_WS_URL=wss://web-production-04667.up.railway.app
 ```
 
-**Backend** (Heroku):
+**Backend** (Railway):
 ```
 MONGODB_URI=<MongoDB Atlas connection string>
 NODE_ENV=production
-PORT=<assigned by Heroku>
+PORT=5000
+FRONTEND_URL=https://mkulima-link.vercel.app
 ```
 
 ## 🚢 Deployment
@@ -291,10 +295,11 @@ Automatic deployment on push to `main` branch.
 - **Output directory**: `frontend/dist`
 - **SPA rewrites**: All routes → `index.html`
 
-### Backend → Heroku
-Automatic deployment via GitHub integration.
-- **Procfile**: `web: node index-final.js`
-- **CORS**: Configured for `https://mkulimalink.vercel.app`
+### Backend → Railway
+Deploy with the Railway CLI or connect the GitHub repository.
+- **Service command**: `cd backend && node server.js`
+- **Dockerfile**: Backend-only container with Sharp image support
+- **CORS**: Configured for `https://mkulima-link.vercel.app` and Vercel preview domains
 
 ## 🌍 Data Available
 

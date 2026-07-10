@@ -193,7 +193,8 @@ node utils/seedData.js
 
 ### 5. Deployment
 - [ ] Frontend → Vercel
-- [ ] Backend → Heroku/Railway/AWS
+- [x] Backend → Railway
+- [ ] Backend → AWS (future)
 - [ ] Database → MongoDB Atlas (production cluster)
 - [ ] Configure CI/CD pipelines
 - [ ] Set up monitoring (Sentry, LogRocket)
