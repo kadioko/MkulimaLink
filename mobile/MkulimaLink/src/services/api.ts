@@ -1,14 +1,15 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../config/env';
 
 class ApiService {
   private api: AxiosInstance;
-  private baseURL = 'https://mkulimalink-api-aa384e99a888.herokuapp.com/api';
+  private baseURL = API_BASE_URL;
 
   constructor() {
     this.api = axios.create({
       baseURL: this.baseURL,
-      timeout: 10000,
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -20,7 +21,7 @@ class ApiService {
   private async setupInterceptors() {
     // Request interceptor
     this.api.interceptors.request.use(
-      async (config: AxiosRequestConfig) => {
+      async (config: InternalAxiosRequestConfig) => {
         const token = await AsyncStorage.getItem('token');
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -32,7 +33,13 @@ class ApiService {
 
     // Response interceptor
     this.api.interceptors.response.use(
-      (response: AxiosResponse) => response,
+      (response: AxiosResponse) => {
+        // Normalize standardized API responses: { success, data, message, meta }
+        if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+          response.data = response.data.data;
+        }
+        return response;
+      },
       async (error) => {
         if (error.response?.status === 401) {
           // Token expired, clear storage and redirect to login

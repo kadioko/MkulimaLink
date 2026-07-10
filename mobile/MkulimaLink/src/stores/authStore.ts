@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/env';
 
 interface User {
   id: string;
@@ -44,8 +45,6 @@ interface RegisterData {
   };
 }
 
-const API_BASE_URL = 'https://mkulimalink-api-aa384e99a888.herokuapp.com/api';
-
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
@@ -60,7 +59,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password,
       });
 
-      const { token, user } = response.data;
+      const payload = response.data?.data || response.data;
+      const { token, user } = payload;
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('user', JSON.stringify(user));
 
@@ -81,7 +81,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true });
       const response = await axios.post(`${API_BASE_URL}/auth/register`, userData);
 
-      const { token, user } = response.data;
+      const payload = response.data?.data || response.data;
+      const { token, user } = payload;
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('user', JSON.stringify(user));
 
@@ -156,7 +157,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       );
 
-      const updatedUser = response.data.user;
+      const updatedUser = response.data?.data?.user || response.data?.user || response.data;
       await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
 
       set({ user: updatedUser });
