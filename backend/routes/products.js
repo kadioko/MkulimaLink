@@ -13,6 +13,8 @@ const {
   buildFarmerInsights,
   isSellerAvailableToday
 } = require('../services/marketplaceIntelligence');
+const { success, error, paginate } = require('../utils/apiResponse');
+const { productValidation } = require('../middleware/validate');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -70,15 +72,15 @@ router.get('/price-recommendation', async (req, res) => {
   try {
     const recommendation = await getPriceRecommendation(req.query);
     if (!recommendation) {
-      return res.status(404).json({ message: 'No market price data available for this category and region' });
+      return error(res, 'No market price data available for this category and region', 404);
     }
-    res.json({ success: true, data: recommendation });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, recommendation, 'Price recommendation retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
-router.post('/', protect, authorize('farmer'), upload.array('images', 5), async (req, res) => {
+router.post('/', protect, authorize('farmer'), upload.array('images', 5), productValidation, async (req, res) => {
   try {
     const {
       name,
@@ -158,9 +160,9 @@ router.post('/', protect, authorize('farmer'), upload.array('images', 5), async 
     await product.save();
 
     const productResponse = product.toObject();
-    res.status(201).json({ ...productResponse, priceInsight });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, { ...productResponse, priceInsight }, 'Product created successfully', 201);
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -209,28 +211,26 @@ router.get('/', async (req, res) => {
 
     const count = await Product.countDocuments(query);
 
-    res.json({
-      products: products.map((product) => ({
-        ...product,
-        sellerBadge: product.seller?.verification?.state === 'verified' || product.seller?.verified ? 'verified' : 'unverified',
-        sellerAvailableToday: isSellerAvailableToday(product)
-      })),
-      totalPages: Math.ceil(count / limitNumber),
-      currentPage: pageNumber,
-      total: count
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    const productsWithMeta = products.map((product) => ({
+      ...product,
+      sellerBadge: product.seller?.verification?.state === 'verified' || product.seller?.verified ? 'verified' : 'unverified',
+      sellerAvailableToday: isSellerAvailableToday(product)
+    }));
+
+    return paginate(res, productsWithMeta, pageNumber, limitNumber, count, 'Products retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
 router.get('/my/listings', protect, async (req, res) => {
   try {
     const products = await Product.find({ seller: req.user._id })
-      .sort('-createdAt');
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+      .sort('-createdAt')
+      .lean();
+    return success(res, products, 'My listings retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -240,7 +240,7 @@ router.get('/:id', async (req, res) => {
       .populate('seller', 'name phone location rating totalRatings verified verification');
     
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return error(res, 'Product not found', 404);
     }
 
     product.views += 1;
@@ -251,9 +251,9 @@ router.get('/:id', async (req, res) => {
     response.sellerAvailableToday = isSellerAvailableToday(product);
     response.farmerInsights = await buildFarmerInsights(product);
 
-    res.json(response);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, response, 'Product retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 

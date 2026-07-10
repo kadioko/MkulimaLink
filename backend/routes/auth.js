@@ -3,7 +3,9 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const { registerValidation, loginValidation } = require('../middleware/validate');
 const FailedAction = require('../models/FailedAction');
+const { success, error } = require('../utils/apiResponse');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -28,17 +30,13 @@ const buildAuthResponse = (user, token) => ({
   token
 });
 
-router.post('/register', async (req, res) => {
+router.post('/register', registerValidation, async (req, res) => {
   try {
     const { name, email, phone, password, role, location, farmDetails, businessDetails } = req.body;
 
-    if (!name || !email || !phone || !password) {
-      return res.status(400).json({ message: 'Please provide name, email, phone, and password' });
-    }
-
     const userExists = await User.findOne({ $or: [{ email }, { phone }] });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists with this email or phone' });
+      return error(res, 'User already exists with this email or phone', 400);
     }
 
     const user = await User.create({
@@ -54,13 +52,13 @@ router.post('/register', async (req, res) => {
 
     const token = generateToken(user._id);
 
-    res.status(201).json(buildAuthResponse(user, token));
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, buildAuthResponse(user, token), 'User registered successfully', 201);
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginValidation, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -87,18 +85,18 @@ router.post('/login', async (req, res) => {
 
     if (!user) {
       await FailedAction.create({ type: 'login', email, ip: req.ip, requestId: req.id, reason: 'user_not_found' });
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return error(res, 'Invalid credentials', 401);
     }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'wrong_password' });
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return error(res, 'Invalid credentials', 401);
     }
 
     if (user.isBanned) {
       await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'user_banned' });
-      return res.status(403).json({ message: `Account suspended${user.bannedReason ? ': ' + user.bannedReason : ''}. Contact support@mkulimalink.com` });
+      return error(res, `Account suspended${user.bannedReason ? ': ' + user.bannedReason : ''}. Contact support@mkulimalink.com`, 403);
     }
 
     user.lastLogin = new Date();
@@ -106,9 +104,9 @@ router.post('/login', async (req, res) => {
 
     const token = generateToken(user._id);
 
-    res.json(buildAuthResponse(user, token));
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, buildAuthResponse(user, token), 'Login successful');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
