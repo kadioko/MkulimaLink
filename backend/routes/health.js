@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const os = require('os');
+const axios = require('axios');
+const { cacheHelpers } = require('../middleware/cache');
 
 // Basic health check
 router.get('/', (req, res) => {
@@ -54,24 +56,43 @@ router.get('/detailed', async (req, res) => {
   }
 
   // Check Redis connection (if available)
-  try {
-    if (global.redisClient) {
-      const start = Date.now();
-      await global.redisClient.ping();
+  if (!process.env.REDIS_URL) {
+    healthCheck.services.redis = { status: 'not_configured' };
+  } else {
+    try {
+      await cacheHelpers.get('__health_check__');
+      await cacheHelpers.set('__health_check__', 'ok', 60);
+      healthCheck.services.redis = { status: 'healthy' };
+    } catch (error) {
       healthCheck.services.redis = {
-        status: 'healthy',
+        status: 'unhealthy',
+        error: error.message
+      };
+      healthCheck.status = 'DEGRADED';
+    }
+  }
+
+  // Check external APIs (non-blocking)
+  const externalChecks = [
+    { name: 'openweather', url: 'https://api.openweathermap.org/data/2.5/weather?q=Dar%20es%20Salaam&appid=test' },
+    { name: 'africastalking', url: 'https://api.africastalking.com/version1/user' }
+  ];
+
+  healthCheck.services.external = {};
+  for (const check of externalChecks) {
+    const start = Date.now();
+    try {
+      await axios.head(check.url, { timeout: 5000, validateStatus: () => true });
+      healthCheck.services.external[check.name] = {
+        status: 'reachable',
         responseTime: `${Date.now() - start}ms`
       };
-    } else {
-      healthCheck.services.redis = {
-        status: 'not_configured'
+    } catch (error) {
+      healthCheck.services.external[check.name] = {
+        status: 'unreachable',
+        error: error.code || error.message
       };
     }
-  } catch (error) {
-    healthCheck.services.redis = {
-      status: 'unhealthy',
-      error: error.message
-    };
   }
 
   // System metrics

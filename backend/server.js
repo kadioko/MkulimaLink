@@ -5,9 +5,10 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { cspMiddleware, securityHeaders } = require('./middleware/csp');
-const { cache, cacheConfig } = require('./middleware/cache');
+const { cache, cacheConfig, initRedis } = require('./middleware/cache');
 const requestId = require('./middleware/requestId');
 const { initSentry, sentryRequestHandler, sentryTracingHandler, sentryErrorHandler } = require('./utils/sentry');
+const logger = require('./utils/logger');
 const path = require('path');
 const http = require('http');
 const morgan = require('morgan');
@@ -21,7 +22,7 @@ app.set('trust proxy', 1);
 initSentry(app);
 
 const { initializeSocket } = require('./utils/socket');
-initializeSocket(server);
+const io = initializeSocket(server);
 
 // Security headers
 app.use(securityHeaders);
@@ -50,7 +51,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 morgan.token('id', (req) => req.id);
-app.use(morgan(':id :method :url :status :response-time ms'));
+app.use(morgan(':id :method :url :status :response-time ms', { stream: logger.stream }));
 
 const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
 app.use('/api/', apiLimiter);
@@ -62,16 +63,29 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mkulimalink';
 try {
   const parsedMongoUri = new URL(mongoUri);
-  console.log(`MongoDB target: ${parsedMongoUri.hostname}:${parsedMongoUri.port || 'default'}${parsedMongoUri.pathname}`);
+  logger.info(`MongoDB target: ${parsedMongoUri.hostname}:${parsedMongoUri.port || 'default'}${parsedMongoUri.pathname}`);
 } catch (error) {
-  console.error('MongoDB URI is not parseable:', error.message);
+  logger.error('MongoDB URI is not parseable:', error.message);
 }
 
-mongoose.connect(mongoUri, {
-  serverSelectionTimeoutMS: 10000,
-})
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.error('MongoDB connection error:', err.message));
+const connectWithRetry = (retries = 5, delay = 3000) => {
+  mongoose.connect(mongoUri, {
+    serverSelectionTimeoutMS: 10000,
+    maxPoolSize: 10,
+  })
+  .then(() => logger.info('MongoDB connected successfully'))
+  .catch(err => {
+    logger.error('MongoDB connection error:', err.message);
+    if (retries > 0) {
+      logger.info(`Retrying MongoDB connection in ${delay}ms... (${retries} attempts left)`);
+      setTimeout(() => connectWithRetry(retries - 1, delay), delay);
+    } else {
+      logger.error('MongoDB connection failed after all retries');
+    }
+  });
+};
+
+connectWithRetry();
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
@@ -178,6 +192,35 @@ app.get('/api/ready', async (req, res) => {
 });
 app.use('/api/seed', seedRoutes);
 
+// Global error handler
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || err.status || 500;
+  const message = err.message || 'Internal Server Error';
+
+  const errorResponse = {
+    success: false,
+    error: {
+      message,
+      statusCode,
+      requestId: req.id
+    }
+  };
+
+  if (process.env.NODE_ENV !== 'production') {
+    errorResponse.error.stack = err.stack;
+  }
+
+  (req.logger || logger).error({
+    message,
+    statusCode,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method
+  });
+
+  res.status(statusCode).json(errorResponse);
+});
+
 // Sentry error handler (must be last)
 app.use(sentryErrorHandler);
 
@@ -190,15 +233,47 @@ if (process.env.NODE_ENV === 'production') {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Socket.io enabled for real-time features`);
+  logger.info(`Server running on port ${PORT}`);
+  logger.info(`Socket.io enabled for real-time features`);
 });
 
 // Initialize database indexes
 const { createAllIndexes } = require('./utils/indexes');
 mongoose.connection.once('open', () => {
+  logger.info('MongoDB connection open, creating indexes');
   createAllIndexes();
 });
 
 const cronJobs = require('./utils/cronJobs');
 cronJobs.startCronJobs();
+
+// Graceful shutdown
+const gracefulShutdown = (signal) => {
+  logger.info(`${signal} received, starting graceful shutdown...`);
+  server.close(async () => {
+    logger.info('HTTP server closed');
+    if (io) {
+      io.close();
+      logger.info('Socket.io server closed');
+    }
+    try {
+      await mongoose.connection.close();
+      logger.info('MongoDB connection closed');
+    } catch (error) {
+      logger.error('Error closing MongoDB connection:', error.message);
+    }
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Rejection:', reason);
+});

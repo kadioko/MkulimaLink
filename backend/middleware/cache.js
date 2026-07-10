@@ -1,5 +1,6 @@
 const redis = require('redis');
 const { promisify } = require('util');
+const logger = require('../utils/logger');
 
 // Redis client
 let redisClient = null;
@@ -8,7 +9,7 @@ let redisClient = null;
 async function initRedis() {
   try {
     if (!process.env.REDIS_URL) {
-      console.log('REDIS_URL not configured, cache disabled');
+      logger.info('REDIS_URL not configured, cache disabled');
       return;
     }
 
@@ -17,7 +18,7 @@ async function initRedis() {
         url: process.env.REDIS_URL,
         retry_strategy: (options) => {
           if (options.error && options.error.code === 'ECONNREFUSED') {
-            console.error('Redis connection refused');
+            logger.error('Redis connection refused');
             return new Error('Redis connection refused');
           }
           if (options.total_retry_time > 1000 * 60 * 60) {
@@ -31,17 +32,17 @@ async function initRedis() {
       });
 
       redisClient.on('error', (err) => {
-        console.error('Redis error:', err);
+        logger.error('Redis error:', err);
       });
 
       redisClient.on('connect', () => {
-        console.log('Connected to Redis');
+        logger.info('Connected to Redis');
       });
 
       await redisClient.connect();
     }
   } catch (error) {
-    console.error('Failed to connect to Redis:', error);
+    logger.error('Failed to connect to Redis:', error);
     redisClient = null;
   }
 }
@@ -90,7 +91,7 @@ const cache = (options = {}) => {
         // Only cache successful responses
         if (res.statusCode >= 200 && res.statusCode < 300) {
           redisClient.setEx(key, ttl, JSON.stringify(data)).catch(err => {
-            console.error('Cache set error:', err);
+            logger.error('Cache set error:', err);
           });
         }
         
@@ -99,7 +100,7 @@ const cache = (options = {}) => {
 
       next();
     } catch (error) {
-      console.error('Cache middleware error:', error);
+      logger.error('Cache middleware error:', error);
       next();
     }
   };
@@ -113,10 +114,10 @@ const invalidate = async (pattern) => {
     const keys = await redisClient.keys(pattern);
     if (keys.length > 0) {
       await redisClient.del(keys);
-      console.log(`Invalidated ${keys.length} cache keys: ${pattern}`);
+      logger.info(`Invalidated ${keys.length} cache keys: ${pattern}`);
     }
   } catch (error) {
-    console.error('Cache invalidation error:', error);
+    logger.error('Cache invalidation error:', error);
   }
 };
 
@@ -129,7 +130,7 @@ const cacheHelpers = {
       const value = await redisClient.get(key);
       return value ? JSON.parse(value) : null;
     } catch (error) {
-      console.error('Cache get error:', error);
+      logger.error('Cache get error:', error);
       return null;
     }
   },
@@ -140,7 +141,7 @@ const cacheHelpers = {
     try {
       await redisClient.setEx(key, ttl, JSON.stringify(value));
     } catch (error) {
-      console.error('Cache set error:', error);
+      logger.error('Cache set error:', error);
     }
   },
 
@@ -150,7 +151,7 @@ const cacheHelpers = {
     try {
       await redisClient.del(key);
     } catch (error) {
-      console.error('Cache delete error:', error);
+      logger.error('Cache delete error:', error);
     }
   },
 
@@ -159,9 +160,9 @@ const cacheHelpers = {
     if (!redisClient) return;
     try {
       await redisClient.flushDb();
-      console.log('Cache cleared');
+      logger.info('Cache cleared');
     } catch (error) {
-      console.error('Cache clear error:', error);
+      logger.error('Cache clear error:', error);
     }
   },
 
@@ -172,7 +173,7 @@ const cacheHelpers = {
       const info = await redisClient.info('memory');
       return info;
     } catch (error) {
-      console.error('Cache stats error:', error);
+      logger.error('Cache stats error:', error);
       return null;
     }
   }
