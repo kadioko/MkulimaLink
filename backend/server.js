@@ -237,11 +237,13 @@ server.listen(PORT, () => {
   logger.info(`Socket.io enabled for real-time features`);
 });
 
-// Initialize database indexes
+// Initialize database indexes and auto-seed
 const { createAllIndexes } = require('./utils/indexes');
+const { autoSeedOnEmpty } = require('./utils/autoSeed');
 mongoose.connection.once('open', () => {
   logger.info('MongoDB connection open, creating indexes');
   createAllIndexes();
+  autoSeedOnEmpty();
 });
 
 const cronJobs = require('./utils/cronJobs');

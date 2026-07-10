@@ -1,4 +1,5 @@
 const express = require('express');
+const logger = require('../utils/logger');
 const router = express.Router();
 const User = require('../models/User');
 const Product = require('../models/Product');
@@ -9,6 +10,7 @@ const Livestock = require('../models/Livestock');
 const LivestockEvent = require('../models/LivestockEvent');
 const LivestockInventory = require('../models/LivestockInventory');
 const Reproduction = require('../models/Reproduction');
+const { success, error } = require('../utils/apiResponse');
 const FailedAction = require('../models/FailedAction');
 
 const getSeedSecret = () => {
@@ -55,6 +57,11 @@ const productsData = [
   { name: 'Cabbage - Fresh Green', category: 'vegetables', description: 'Crisp green cabbage from Arusha highlands. Great for salads.', price: 25000, quantity: 20, unit: 'bag', location: { region: 'Arusha' }, quality: 'standard', organic: true, images: [{ url: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500&h=500&fit=crop' }] },
   { name: 'Carrots - Orange', category: 'vegetables', description: 'Sweet orange carrots from Dar es Salaam. Rich in vitamins.', price: 40000, quantity: 15, unit: 'bag', location: { region: 'Dar es Salaam' }, quality: 'premium', organic: true, images: [{ url: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=500&h=500&fit=crop' }] },
   { name: 'Mangoes - Sweet Alphonso', category: 'fruits', description: 'Juicy sweet mangoes from coastal Tanzania. In season now!', price: 20000, quantity: 40, unit: 'bag', location: { region: 'Dar es Salaam' }, quality: 'premium', organic: true, images: [{ url: 'https://images.unsplash.com/photo-1585518419759-3f4ee4dacc51?w=500&h=500&fit=crop' }] },
+  { name: 'Sweet Potatoes - Orange', category: 'vegetables', description: 'Nutritious orange sweet potatoes from Morogoro. Good for boiling and chips.', price: 37000, quantity: 22, unit: 'bag', location: { region: 'Morogoro' }, quality: 'standard', organic: true, images: [{ url: 'https://images.unsplash.com/photo-1596097635121-14b63b7f0c19?w=500&h=500&fit=crop' }] },
+  { name: 'Irish Potatoes - Shangi', category: 'vegetables', description: 'Shangi variety Irish potatoes from Iringa highlands. Excellent for chips and roasting.', price: 62000, quantity: 18, unit: 'bag', location: { region: 'Iringa' }, quality: 'premium', organic: false, images: [{ url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&h=500&fit=crop' }] },
+  { name: 'Green Peas - Fresh', category: 'vegetables', description: 'Fresh green peas from Arusha highlands. Great for stews and salads.', price: 45000, quantity: 12, unit: 'bag', location: { region: 'Arusha' }, quality: 'premium', organic: true, images: [{ url: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=500&h=500&fit=crop' }] },
+  { name: 'Sunflower Seeds', category: 'seeds', description: 'High-quality sunflower seeds for oil production and snacking from Dodoma.', price: 75000, quantity: 10, unit: 'bag', location: { region: 'Dodoma' }, quality: 'standard', organic: false, images: [{ url: 'https://images.unsplash.com/photo-1597846843163-7c9c7d0c9d2f?w=500&h=500&fit=crop' }] },
+  { name: 'Cowpeas - Dried', category: 'grains', description: 'Dried cowpeas from Mbeya. Protein-rich legume for stews.', price: 180000, quantity: 8, unit: 'bag', location: { region: 'Mbeya' }, quality: 'standard', organic: true, images: [{ url: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&h=500&fit=crop' }] },
 ];
 
 router.post('/run', async (req, res) => {
@@ -202,7 +209,6 @@ router.post('/run', async (req, res) => {
     const insertedProducts = await Product.insertMany(productDocs);
     results.products = insertedProducts.length;
 
-    await Transaction.deleteMany({ $or: [{ buyer: demoBuyer._id }, { seller: demoFarmer._id }] });
     const txProductA = insertedProducts[0];
     const txProductB = insertedProducts[1];
     const transactionDocs = [
@@ -218,6 +224,7 @@ router.post('/run', async (req, res) => {
         status: 'completed',
         paymentMethod: 'mpesa',
         paymentReference: 'MPESA-DEMO-001',
+        idempotencyKey: 'seed-tx-001',
         deliveryDetails: { address: 'Kariakoo Market, Dar es Salaam', phone: demoBuyer.phone, notes: 'Deliver early morning', estimatedDelivery: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
         ratings: { buyerRating: { score: 5, comment: 'Fresh tomatoes and fast delivery', createdAt: new Date() }, sellerRating: { score: 5, comment: 'Quick payment and clear communication', createdAt: new Date() } },
         timeline: [
@@ -237,11 +244,19 @@ router.post('/run', async (req, res) => {
         sellerAmount: txProductB.price * 0.95,
         status: 'pending',
         paymentMethod: 'cash',
+        idempotencyKey: 'seed-tx-002',
         deliveryDetails: { address: 'Buguruni Warehouse, Dar es Salaam', phone: demoBuyer.phone, notes: 'Buyer will arrange pickup', estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) },
         timeline: [{ status: 'pending', timestamp: new Date(), note: 'Order awaiting confirmation' }],
       },
     ];
-    await Transaction.insertMany(transactionDocs);
+
+    for (const tx of transactionDocs) {
+      await Transaction.findOneAndUpdate(
+        { idempotencyKey: tx.idempotencyKey },
+        tx,
+        { upsert: true, new: true }
+      );
+    }
     results.transactions = transactionDocs.length;
 
     await Promise.all([
@@ -294,8 +309,7 @@ router.post('/run', async (req, res) => {
     ]);
     results.reproductionRecords = 2;
 
-    res.json({
-      message: '✅ Seed complete! Demo accounts now have rich account/profile, marketplace, transaction, livestock, inventory, event, and workspace data.',
+    return success(res, {
       demoAccounts: {
         farmer: 'farmer@demo.com / demo1234',
         buyer: 'buyer@demo.com / demo1234',
@@ -303,11 +317,11 @@ router.post('/run', async (req, res) => {
         kenyaFarmer: 'farmer.ke@demo.com / demo1234',
       },
       results,
-    });
-  } catch (error) {
-    console.error('Seed error:', error);
-    await FailedAction.create({ type: 'seed', ip: req.ip, requestId: req.id, reason: error.message });
-    res.status(500).json({ message: error.message });
+    }, 'Seed complete! Demo accounts now have rich account/profile, marketplace, transaction, livestock, inventory, event, and workspace data.');
+  } catch (err) {
+    logger.error('Seed error:', err);
+    await FailedAction.create({ type: 'seed', ip: req.ip, requestId: req.id, reason: err.message });
+    return error(res, err.message, 500);
   }
 });
 
@@ -325,9 +339,9 @@ router.get('/status', async (req, res) => {
       LivestockEvent.countDocuments(),
       Reproduction.countDocuments(),
     ]);
-    res.json({ products, marketPrices, users, transactions, workspaces, livestock, livestockInventory, livestockEvents, reproductionRecords });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, { products, marketPrices, users, transactions, workspaces, livestock, livestockInventory, livestockEvents, reproductionRecords }, 'Seed status retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
