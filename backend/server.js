@@ -30,13 +30,17 @@ app.use(securityHeaders);
 app.use(cspMiddleware);
 app.use(requestId);
 app.use(compression());
+const envOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+
 const allowedOrigins = [
+  ...envOrigins,
   process.env.FRONTEND_URL,
   'http://localhost:3000',
   'http://localhost:3001',
   'https://mkulimalink.vercel.app',
   'https://mkulima-link.vercel.app',
-  'https://mkulimalink-api-aa384e99a888.herokuapp.com',
   'https://web-production-04667.up.railway.app',
 ].filter(Boolean);
 
