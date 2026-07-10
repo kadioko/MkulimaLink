@@ -70,3 +70,25 @@ self.addEventListener('sync', (event) => {
     console.log('Background sync triggered');
   }
 });
+
+// Push notifications
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() || {};
+  const title = data.title || 'MkulimaLink';
+  const options = {
+    body: data.body || 'You have a new notification',
+    icon: '/logo192.png',
+    badge: '/favicon.ico',
+    data: data.url || '/',
+    requireInteraction: false
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data || '/';
+  event.waitUntil(
+    self.clients.openWindow(url)
+  );
+});

@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const ExchangeRate = require('../models/ExchangeRate');
+const exchangeRateService = require('../services/exchangeRateService');
+const { success, error } = require('../utils/apiResponse');
 
 // Get all exchange rates
 router.get('/', async (req, res) => {
@@ -34,24 +36,20 @@ router.get('/', async (req, res) => {
 router.get('/:from/:to', async (req, res) => {
   try {
     const { from, to } = req.params;
-    
+
     if (from === to) {
-      return res.json({ rate: 1, from, to });
+      return success(res, { rate: 1, from, to }, 'Exchange rate retrieved');
     }
-    
-    const rate = await ExchangeRate.getRate(from, to);
-    
+
+    const rate = await exchangeRateService.getRate(from, to);
+
     if (!rate) {
-      return res.status(404).json({ 
-        error: 'Exchange rate not found',
-        from,
-        to
-      });
+      return error(res, 'Exchange rate not found', 404);
     }
-    
-    res.json({ rate, from, to });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    return success(res, { rate, from, to }, 'Exchange rate retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -59,44 +57,33 @@ router.get('/:from/:to', async (req, res) => {
 router.post('/convert', async (req, res) => {
   try {
     const { amount, from, to } = req.body;
-    
+
     if (amount === undefined || !from || !to) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: amount, from, to' 
-      });
+      return error(res, 'Missing required fields: amount, from, to', 400);
     }
-    
+
     if (from === to) {
-      return res.json({
+      return success(res, {
         originalAmount: amount,
         convertedAmount: amount,
         from,
         to,
         rate: 1
-      });
+      }, 'Amount converted');
     }
-    
-    const rate = await ExchangeRate.getRate(from, to);
-    
-    if (!rate) {
-      return res.status(404).json({ 
-        error: 'Exchange rate not found',
-        from,
-        to
-      });
-    }
-    
-    const convertedAmount = amount * rate;
-    
-    res.json({
+
+    const convertedAmount = await exchangeRateService.convert(amount, from, to);
+    const rate = await exchangeRateService.getRate(from, to);
+
+    return success(res, {
       originalAmount: amount,
       convertedAmount: Math.round(convertedAmount * 100) / 100,
       from,
       to,
       rate
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    }, 'Amount converted');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 

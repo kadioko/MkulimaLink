@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
+const PushSubscription = require('../models/PushSubscription');
 const { protect } = require('../middleware/auth');
+const { success, error } = require('../utils/apiResponse');
+const logger = require('../utils/logger');
 
 router.get('/', protect, async (req, res) => {
   try {
@@ -94,4 +97,72 @@ router.get('/unread-count', protect, async (req, res) => {
   }
 });
 
+// Push notification subscription
+router.post('/subscribe', protect, async (req, res) => {
+  try {
+    const { endpoint, keys } = req.body;
+    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+      return error(res, 'Invalid push subscription payload', 400);
+    }
+
+    await PushSubscription.findOneAndUpdate(
+      { endpoint },
+      { user: req.user._id, endpoint, keys, isActive: true },
+      { upsert: true, new: true }
+    );
+
+    return success(res, null, 'Push subscription saved');
+  } catch (err) {
+    logger.error('Push subscription error:', err);
+    return error(res, err.message, 500);
+  }
+});
+
+router.post('/unsubscribe', protect, async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    await PushSubscription.findOneAndUpdate(
+      { endpoint, user: req.user._id },
+      { isActive: false }
+    );
+    return success(res, null, 'Push subscription deactivated');
+  } catch (err) {
+    logger.error('Push unsubscribe error:', err);
+    return error(res, err.message, 500);
+  }
+});
+
+// Send push to a user (internal helper)
+async function sendPushNotification(userId, payload) {
+  try {
+    const subscriptions = await PushSubscription.find({ user: userId, isActive: true });
+    if (subscriptions.length === 0) return;
+
+    let webpush;
+    try {
+      webpush = require('web-push');
+    } catch {
+      logger.warn('web-push not installed; cannot send push notifications');
+      return;
+    }
+
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || 'mailto:push@mkulimalink.com',
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+
+    await Promise.all(
+      subscriptions.map((sub) =>
+        webpush
+          .sendNotification(sub.toObject(), JSON.stringify(payload))
+          .catch((err) => logger.error('Push send error:', err.message))
+      )
+    );
+  } catch (err) {
+    logger.error('sendPushNotification error:', err);
+  }
+}
+
 module.exports = router;
+module.exports.sendPushNotification = sendPushNotification;

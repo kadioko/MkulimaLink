@@ -53,6 +53,7 @@ const TrainingPlatform = lazy(() => import('./pages/Community/TrainingPlatform.j
 const GroupBuying = lazy(() => import('./pages/GroupBuying'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const Chats = lazy(() => import('./pages/Chats'));
+const Auctions = lazy(() => import('./pages/Auctions'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -300,7 +301,7 @@ function App() {
                 <Route path="notifications" element={<Navigate to="/dashboard" />} />
                 <Route path="auctions" element={
                   <PageSuspense>
-                    <Products />
+                    <Auctions />
                   </PageSuspense>
                 } />
                 <Route path="suppliers" element={
