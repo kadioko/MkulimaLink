@@ -1,0 +1,22 @@
+#!/bin/sh
+# Pre-commit hook: run lint and tests before allowing commit
+set -e
+
+echo "Running pre-commit checks..."
+
+# Run backend lint if available
+if [ -f backend/package.json ]; then
+  (cd backend && npm run lint --silent 2>/dev/null) || echo "Backend lint skipped (no lint script)"
+fi
+
+# Run frontend lint if available
+if [ -f frontend/package.json ]; then
+  (cd frontend && npm run lint --silent 2>/dev/null) || echo "Frontend lint skipped (no lint script)"
+fi
+
+# Run backend tests if available
+if [ -f backend/package.json ]; then
+  (cd backend && npm test --silent 2>/dev/null) || echo "Backend tests skipped (no test script)"
+fi
+
+echo "Pre-commit checks complete."

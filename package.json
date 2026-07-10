@@ -17,6 +17,7 @@
     "test:frontend": "npm test --prefix frontend",
     "test:mobile": "npm test --prefix mobile/MkulimaLink",
     "lint": "npm run lint --prefix mobile/MkulimaLink",
+    "prepare": "git config core.hooksPath .githooks",
     "audit:all": "npm audit --audit-level=moderate && npm audit --audit-level=moderate --prefix frontend && npm audit --audit-level=moderate --prefix mobile/MkulimaLink",
     "install-all": "npm install && npm install --prefix frontend && npm install --prefix mobile/MkulimaLink",
     "seed": "node seedData.js"
