@@ -182,7 +182,7 @@ router.put('/users/:id/ban', adminOnly, async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isBanned: true, isActive: false, bannedReason: reason || 'Banned by admin', bannedAt: new Date() },
-      { new: true }
+      { returnDocument: 'after' }
     ).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, data: user, message: 'User banned' });
@@ -197,7 +197,7 @@ router.put('/users/:id/unban', adminOnly, async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isBanned: false, isActive: true, bannedReason: undefined, bannedAt: undefined },
-      { new: true }
+      { returnDocument: 'after' }
     ).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, data: user, message: 'User unbanned' });
@@ -216,7 +216,7 @@ router.put('/users/:id/role', adminOnly, async (req, res) => {
     if (req.params.id === req.user._id.toString()) {
       return res.status(400).json({ success: false, message: 'Cannot change your own role' });
     }
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true }).select('-password');
+    const user = await User.findByIdAndUpdate(req.params.id, { role }, { returnDocument: 'after' }).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, data: user, message: `Role changed to ${role}` });
   } catch (err) {
@@ -231,7 +231,7 @@ router.put('/users/:id/premium', adminOnly, async (req, res) => {
     const update = grant
       ? { isPremium: true, premiumExpiresAt: new Date(Date.now() + days * 24 * 60 * 60 * 1000) }
       : { isPremium: false, premiumExpiresAt: undefined };
-    const user = await User.findByIdAndUpdate(req.params.id, update, { new: true }).select('-password');
+    const user = await User.findByIdAndUpdate(req.params.id, update, { returnDocument: 'after' }).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, data: user, message: grant ? `Premium granted for ${days} days` : 'Premium revoked' });
   } catch (err) {
@@ -257,7 +257,7 @@ router.put('/users/:id/verify', adminOnly, async (req, res) => {
         reviewedBy: req.user._id,
         reviewedAt: new Date()
       }
-    }, { new: true }).select('-password');
+    }, { returnDocument: 'after' }).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, data: user, message: `User verification set to ${state}` });
   } catch (err) {
@@ -318,7 +318,7 @@ router.put('/products/:id/status', adminOnly, async (req, res) => {
     if (!allowed.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
-    const product = await Product.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const product = await Product.findByIdAndUpdate(req.params.id, { status }, { returnDocument: 'after' });
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     res.json({ success: true, data: product, message: `Product set to ${status}` });
   } catch (err) {
@@ -548,3 +548,6 @@ router.get('/failed-actions', adminOnly, async (req, res) => {
 });
 
 module.exports = router;
+
+
+

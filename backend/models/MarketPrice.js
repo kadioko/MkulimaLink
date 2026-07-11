@@ -51,3 +51,6 @@ marketPriceSchema.index({ product: 1, region: 1, date: -1 });
 marketPriceSchema.index({ category: 1, date: -1 });
 
 module.exports = mongoose.model('MarketPrice', marketPriceSchema);
+
+
+

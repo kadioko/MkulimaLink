@@ -95,3 +95,6 @@ const generateRecommendations = (data) => {
 };
 
 module.exports = { predictYield, generateRecommendations };
+
+
+

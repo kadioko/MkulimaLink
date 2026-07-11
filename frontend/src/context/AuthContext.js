@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-import { LOCAL_API_URL } from '../config/env';
+import api from '../api/axios';
 
 const AuthContext = createContext();
 
@@ -18,15 +17,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = LOCAL_API_URL;
 
   useEffect(() => {
     const initAuth = async () => {
       if (token) {
         try {
-          const response = await axios.get(`${API_URL}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const response = await api.get('/api/auth/me');
           setUser(response.data);
         } catch (err) {
           console.error('Auth init error:', err);
@@ -38,21 +34,21 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, [token, API_URL]);
+  }, [token]);
 
   const register = async (userData) => {
     try {
       setError(null);
-      const response = await axios.post(`${API_URL}/api/auth/register`, userData);
-      const { token: newToken, user: responseUser, ...userData_ } = response.data;
-      
+      const response = await api.post('/api/auth/register', userData);
+      const { token: newToken, user: responseUser } = response.data;
+
       localStorage.setItem('token', newToken);
       setToken(newToken);
-      setUser(responseUser || userData_);
-      
+      setUser(responseUser);
+
       return response.data;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Registration failed';
+      const errorMsg = err.response?.data?.error?.message || err.response?.data?.message || 'Registration failed';
       setError(errorMsg);
       throw err;
     }
@@ -61,16 +57,16 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null);
-      const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-      const { token: newToken, user: responseUser, ...userData_ } = response.data;
-      
+      const response = await api.post('/api/auth/login', { email, password });
+      const { token: newToken, user: responseUser } = response.data;
+
       localStorage.setItem('token', newToken);
       setToken(newToken);
-      setUser(responseUser || userData_);
-      
+      setUser(responseUser);
+
       return response.data;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Login failed';
+      const errorMsg = err.response?.data?.error?.message || err.response?.data?.message || 'Login failed';
       setError(errorMsg);
       throw err;
     }
@@ -79,9 +75,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       if (token) {
-        await axios.post(`${API_URL}/api/auth/logout`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.post('/api/auth/logout');
       }
     } catch (err) {
       console.error('Logout error:', err);
@@ -96,13 +90,11 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (profileData) => {
     try {
       setError(null);
-      const response = await axios.put(`${API_URL}/api/auth/profile`, profileData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.put('/api/auth/profile', profileData);
       setUser(response.data);
       return response.data;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Profile update failed';
+      const errorMsg = err.response?.data?.error?.message || err.response?.data?.message || 'Profile update failed';
       setError(errorMsg);
       throw err;
     }
@@ -110,7 +102,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshToken = async () => {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/refresh-token`, { token });
+      const response = await api.post('/api/auth/refresh-token', { token });
       const newToken = response.data.token;
       localStorage.setItem('token', newToken);
       setToken(newToken);

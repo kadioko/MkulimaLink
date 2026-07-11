@@ -23,7 +23,7 @@ function ProductDetail() {
 
   const buyMutation = useMutation(
     async (orderData) => {
-      const response = await api.post('/transactions', orderData);
+      const response = await api.post('/api/transactions', orderData);
       return response.data;
     },
     {
@@ -32,7 +32,8 @@ function ProductDetail() {
         navigate('/transactions');
       },
       onError: (error) => {
-        toast.error(error.response?.data?.message || 'Failed to place order');
+        const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to place order';
+        toast.error(message);
       }
     }
   );

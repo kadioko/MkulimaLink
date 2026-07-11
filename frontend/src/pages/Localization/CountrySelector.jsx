@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Globe, Check, MapPin, DollarSign, CreditCard } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const CountrySelector = ({ onCountrySelect }) => {
   const [countries, setCountries] = useState([]);
@@ -14,8 +14,8 @@ const CountrySelector = ({ onCountrySelect }) => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get('/api/localization/countries');
-      setCountries(response.data.data);
+      const response = await api.get('/api/localization/countries');
+      setCountries(response.data);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch countries:', error);

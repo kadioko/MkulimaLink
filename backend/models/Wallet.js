@@ -296,3 +296,6 @@ const WalletTransaction = mongoose.model('WalletTransaction', walletTransactionS
 const Wallet = mongoose.model('Wallet', walletSchema);
 
 module.exports = { Wallet, WalletTransaction };
+
+
+

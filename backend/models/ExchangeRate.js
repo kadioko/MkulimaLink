@@ -57,3 +57,6 @@ exchangeRateSchema.statics.convert = async function(amount, from, to) {
 };
 
 module.exports = mongoose.model('ExchangeRate', exchangeRateSchema);
+
+
+

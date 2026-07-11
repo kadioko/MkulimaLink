@@ -108,7 +108,7 @@ router.post('/subscribe', protect, async (req, res) => {
     await PushSubscription.findOneAndUpdate(
       { endpoint },
       { user: req.user._id, endpoint, keys, isActive: true },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     return success(res, null, 'Push subscription saved');
@@ -166,3 +166,6 @@ async function sendPushNotification(userId, payload) {
 
 module.exports = router;
 module.exports.sendPushNotification = sendPushNotification;
+
+
+

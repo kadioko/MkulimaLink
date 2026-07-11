@@ -51,3 +51,6 @@ disputeSchema.index({ transaction: 1 }, { unique: true });
 disputeSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Dispute', disputeSchema);
+
+
+

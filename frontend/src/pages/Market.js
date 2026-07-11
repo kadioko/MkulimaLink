@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import api from '../api/axios';
+import api, { extractData } from '../api/axios';
 import { useCountryStore } from '../store/countryStore';
 import { demoMarketPrices } from '../utils/demoData';
 
@@ -37,7 +37,8 @@ function Market() {
   const { data: regions } = useQuery(['regions', country], async () => {
     try {
       const response = await api.get(`/api/products?country=${country}`);
-      const uniqueRegions = [...new Set(response.data.products?.map(p => p.region).filter(Boolean))];
+      const products = extractData(response) || [];
+      const uniqueRegions = [...new Set(products.map(p => p.location?.region || p.region).filter(Boolean))];
       return { regions: uniqueRegions };
     } catch (error) {
       console.error('Error fetching regions:', error);
@@ -48,7 +49,8 @@ function Market() {
   const { data: categories } = useQuery(['categories', country], async () => {
     try {
       const response = await api.get(`/api/products?country=${country}`);
-      const uniqueCategories = [...new Set(response.data.products?.map(p => p.category).filter(Boolean))];
+      const products = extractData(response) || [];
+      const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
       return { categories: uniqueCategories };
     } catch (error) {
       console.error('Error fetching categories:', error);

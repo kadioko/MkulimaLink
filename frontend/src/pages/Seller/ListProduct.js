@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, AlertCircle, Loader, Plus, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { API_URL } from '../../config/env';
-import axios from 'axios';
+import api from '../../api/axios';
 import './ProductManagement.css';
 
 export default function ListProduct() {
@@ -113,20 +112,16 @@ export default function ListProduct() {
         formDataToSend.append('images', img.file);
       });
 
-      const response = await axios.post(
-        `${API_URL}/api/products`,
-        formDataToSend,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+      const response = await api.post('/api/products', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
         }
-      );
+      });
 
       navigate(`/product/${response.data._id}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to list product');
+      const message = err.response?.data?.error?.message || err.response?.data?.message || 'Failed to list product';
+      setError(message);
     } finally {
       setLoading(false);
     }

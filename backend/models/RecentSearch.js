@@ -28,3 +28,6 @@ recentSearchSchema.index({ user: 1, lastSearchedAt: -1 });
 recentSearchSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 }); // 90 days TTL
 
 module.exports = mongoose.model('RecentSearch', recentSearchSchema);
+
+
+

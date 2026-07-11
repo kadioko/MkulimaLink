@@ -74,7 +74,7 @@ async function getRate(from, to) {
     await ExchangeRate.findOneAndUpdate(
       { baseCurrency: from, targetCurrency: to },
       { rate: fallback, source: 'manual', lastUpdated: new Date() },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     return fallback;
   }
@@ -104,3 +104,6 @@ module.exports = {
   convert,
   FALLBACK_RATES
 };
+
+
+

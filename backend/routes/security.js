@@ -378,7 +378,7 @@ router.post('/admin/fraud-alerts/:alertId/review', async (req, res) => {
         reviewed_by: req.user._id,
         reviewed_at: new Date()
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     res.json({
@@ -487,3 +487,6 @@ router.get('/admin/compliance-records', async (req, res) => {
 });
 
 module.exports = router;
+
+
+

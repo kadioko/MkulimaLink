@@ -33,3 +33,6 @@ pushSubscriptionSchema.index({ endpoint: 1 }, { unique: true });
 pushSubscriptionSchema.index({ user: 1, isActive: 1 });
 
 module.exports = mongoose.model('PushSubscription', pushSubscriptionSchema);
+
+
+

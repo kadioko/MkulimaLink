@@ -26,3 +26,6 @@ failedActionSchema.index({ ip: 1, createdAt: -1 });
 failedActionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 }); // 30 days TTL
 
 module.exports = mongoose.model('FailedAction', failedActionSchema);
+
+
+

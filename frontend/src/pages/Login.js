@@ -27,7 +27,8 @@ function Login() {
       toast.success('Login successful!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Login failed';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

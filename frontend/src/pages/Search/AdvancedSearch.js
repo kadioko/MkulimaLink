@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Star, Loader } from 'lucide-react';
-import axios from 'axios';
-import { API_URL } from '../../config/env';
+import api, { extractData, extractMeta } from '../../api/axios';
 import './AdvancedSearch.css';
 
 export default function AdvancedSearch() {
@@ -62,16 +61,15 @@ export default function AdvancedSearch() {
         limit: pagination.limit
       };
 
-      const response = await axios.get(
-        `${API_URL}/api/products`,
-        { params }
-      );
+      const response = await api.get('/api/products', { params });
+      const products = extractData(response) || [];
+      const meta = extractMeta(response);
 
-      setProducts(response.data.products);
+      setProducts(products);
       setPagination(prev => ({
         ...prev,
-        total: response.data.total,
-        totalPages: response.data.totalPages
+        total: meta?.pagination?.total || products.length,
+        totalPages: meta?.pagination?.totalPages || 1
       }));
     } catch (error) {
       console.error('Search error:', error);
@@ -85,10 +83,9 @@ export default function AdvancedSearch() {
     if (searchQuery.length >= 2) {
       const timer = setTimeout(async () => {
         try {
-          const response = await axios.get(
-            `${API_URL}/api/search/autocomplete`,
-            { params: { q: searchQuery, limit: 10 } }
-          );
+          const response = await api.get('/search/autocomplete', {
+            params: { q: searchQuery, limit: 10 }
+          });
           setSuggestions(response.data.suggestions || []);
           setShowSuggestions(true);
         } catch (error) {

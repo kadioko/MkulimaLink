@@ -79,3 +79,6 @@ const scrapeMarketPrices = async () => {
 };
 
 module.exports = { scrapeMarketPrices };
+
+
+

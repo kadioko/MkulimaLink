@@ -77,3 +77,6 @@ const detectPests = async (imagePath) => {
 };
 
 module.exports = { compressImage, detectPests };
+
+
+

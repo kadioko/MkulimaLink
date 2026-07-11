@@ -135,3 +135,6 @@ livestockInventorySchema.index({ currentQuantity: 1, reorderPoint: 1 });
 livestockInventorySchema.index({ expiryDate: 1 });
 
 module.exports = mongoose.model('LivestockInventory', livestockInventorySchema);
+
+
+

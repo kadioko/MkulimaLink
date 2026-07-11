@@ -7,6 +7,7 @@ const Dispute = require('../models/Dispute');
 const { protect } = require('../middleware/auth');
 const { sendSMS } = require('../utils/sms');
 const { calculateTransactionRisk } = require('../services/marketplaceIntelligence');
+const { success, error } = require('../utils/apiResponse');
 
 const STATUS_FLOW = {
   pending: ['confirmed', 'cancelled'],
@@ -124,9 +125,9 @@ router.post('/', protect, async (req, res) => {
       `Order confirmed for ${product.name}. Quantity: ${quantity}. Total: TZS ${totalAmount.toLocaleString()}. Seller: ${product.seller.name}`
     );
 
-    res.status(201).json(transaction);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, transaction, 'Transaction created successfully', 201);
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -136,9 +137,9 @@ router.get('/my/purchases', protect, async (req, res) => {
       .populate('product')
       .populate('seller', 'name phone rating')
       .sort('-createdAt');
-    res.json(transactions);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, transactions, 'My purchases retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -148,9 +149,9 @@ router.get('/my/sales', protect, async (req, res) => {
       .populate('product')
       .populate('buyer', 'name phone rating')
       .sort('-createdAt');
-    res.json(transactions);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, transactions, 'My sales retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -161,7 +162,7 @@ router.get('/stats/dashboard', protect, async (req, res) => {
 
     const totalTransactions = await Transaction.countDocuments(query);
     const completedTransactions = await Transaction.countDocuments({ ...query, status: 'completed' });
-    
+
     const revenueData = await Transaction.aggregate([
       { $match: { ...query, status: 'completed' } },
       {
@@ -175,14 +176,14 @@ router.get('/stats/dashboard', protect, async (req, res) => {
 
     const revenue = revenueData.length > 0 ? revenueData[0] : { totalRevenue: 0, totalCommission: 0 };
 
-    res.json({
+    return success(res, {
       totalTransactions,
       completedTransactions,
       totalRevenue: revenue.totalRevenue,
       totalCommission: revenue.totalCommission
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    }, 'Dashboard stats retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -317,7 +318,7 @@ router.post('/:id/dispute', protect, async (req, res) => {
           timeline: [{ status: 'opened', note: reason, actor: req.user._id }]
         }
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     transaction.status = 'disputed';
@@ -427,3 +428,6 @@ router.post('/:id/rate', protect, async (req, res) => {
 });
 
 module.exports = router;
+
+
+

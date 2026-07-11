@@ -356,3 +356,6 @@ const Equipment = mongoose.model('Equipment', equipmentSchema);
 const EquipmentBooking = mongoose.model('EquipmentBooking', bookingSchema);
 
 module.exports = { Equipment, EquipmentBooking };
+
+
+

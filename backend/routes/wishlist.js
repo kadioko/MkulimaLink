@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Wishlist = require('../models/Wishlist');
 const { protect: auth } = require('../middleware/auth');
+const { success, error } = require('../utils/apiResponse');
 
 // Get user's wishlist
 router.get('/', auth, async (req, res) => {
@@ -17,9 +18,9 @@ router.get('/', auth, async (req, res) => {
       }
     });
     
-    res.json(wishlist);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return success(res, wishlist, 'Wishlist retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -168,3 +169,6 @@ router.post('/collections/:collectionId/items', auth, async (req, res) => {
 });
 
 module.exports = router;
+
+
+

@@ -234,3 +234,6 @@ groupBuySchema.methods.calculateSavings = function() {
 };
 
 module.exports = mongoose.model('GroupBuy', groupBuySchema);
+
+
+

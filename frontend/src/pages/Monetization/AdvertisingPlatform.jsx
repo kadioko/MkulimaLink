@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Eye, MousePointer, ShoppingCart, BarChart3, Plus } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const AdvertisingPlatform = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -14,8 +14,8 @@ const AdvertisingPlatform = () => {
   const fetchCampaigns = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/monetization/campaigns');
-      setCampaigns(response.data.data.campaigns || []);
+      const response = await api.get('/api/monetization/campaigns');
+      setCampaigns(response.data.campaigns || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch campaigns:', error);

@@ -25,11 +25,13 @@ function Register() {
         role,
         country
       });
-      setAuth(response.data, response.data.token);
+      const { user, token } = response.data;
+      setAuth(user, token);
       toast.success('Registration successful!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Registration failed';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

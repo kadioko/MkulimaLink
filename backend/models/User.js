@@ -196,3 +196,6 @@ userSchema.pre('save', function syncVerificationState() {
 });
 
 module.exports = mongoose.model('User', userSchema);
+
+
+

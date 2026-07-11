@@ -163,3 +163,6 @@ module.exports = {
   calculateTransactionRisk,
   buildFarmerInsights
 };
+
+
+

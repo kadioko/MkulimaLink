@@ -98,3 +98,6 @@ reproductionSchema.index({ 'pregnancy.expectedDueDate': 1, 'pregnancy.status': 1
 reproductionSchema.index({ predictedNextHeat: 1 });
 
 module.exports = mongoose.model('Reproduction', reproductionSchema);
+
+
+

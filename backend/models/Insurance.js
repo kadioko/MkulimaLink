@@ -577,3 +577,6 @@ const InsurancePolicy = mongoose.model('InsurancePolicy', insurancePolicySchema)
 const InsuranceClaim = mongoose.model('InsuranceClaim', insuranceClaimSchema);
 
 module.exports = { Insurance, InsurancePolicy, InsuranceClaim };
+
+
+

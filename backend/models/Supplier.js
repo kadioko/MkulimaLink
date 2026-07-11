@@ -99,3 +99,6 @@ supplierSchema.index({ businessName: 'text', description: 'text' });
 supplierSchema.index({ 'ratings.average': -1 });
 
 module.exports = mongoose.model('Supplier', supplierSchema);
+
+
+

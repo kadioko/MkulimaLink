@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, MapPin, Clock, DollarSign, MessageSquare, Calendar } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const ExpertNetwork = () => {
   const [experts, setExperts] = useState([]);
@@ -29,14 +29,14 @@ const ExpertNetwork = () => {
     try {
       setLoading(true);
       const [searchRes, topRes] = await Promise.all([
-        axios.get('/api/community/experts/search', {
+        api.get('/api/community/experts/search', {
           params: { expertise: selectedExpertise }
         }),
-        axios.get('/api/community/experts/top')
+        api.get('/api/community/experts/top')
       ]);
 
-      setExperts(searchRes.data.data.experts || []);
-      setTopExperts(topRes.data.data || []);
+      setExperts(searchRes.data.experts || []);
+      setTopExperts(topRes.data || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch experts:', error);

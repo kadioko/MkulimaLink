@@ -228,3 +228,6 @@ deliverySchema.statics.calculatePrice = function(distance, weight, options = {})
 };
 
 module.exports = mongoose.model('Delivery', deliverySchema);
+
+
+

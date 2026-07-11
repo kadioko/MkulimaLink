@@ -9,6 +9,6 @@ try {
 export const API_BASE_URL =
   extra.apiBaseUrl ||
   process.env.API_BASE_URL ||
-  'https://mkulimalink-api-production.up.railway.app/api';
+  'https://web-production-04667.up.railway.app/api';
 
 export const IS_DEV = typeof __DEV__ !== 'undefined' ? __DEV__ : false;

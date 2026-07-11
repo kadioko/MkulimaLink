@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const MarketPrice = require('../models/MarketPrice');
 const { scrapeMarketPrices } = require('../utils/marketScraper');
+const { success, error } = require('../utils/apiResponse');
 const NodeCache = require('node-cache');
 
 const cache = new NodeCache({ stdTTL: 3600 });
@@ -40,9 +41,9 @@ router.get('/', async (req, res) => {
 
     const result = { prices };
     cache.set(cacheKey, result);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, result, 'Market prices retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -72,9 +73,9 @@ router.get('/prices', async (req, res) => {
       .lean();
 
     cache.set(cacheKey, prices);
-    res.json(prices);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, prices, 'Market prices retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -102,9 +103,9 @@ router.get('/prices/latest', async (req, res) => {
     }
 
     const latestPrices = await MarketPrice.aggregate(pipeline);
-    res.json(latestPrices);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, latestPrices, 'Latest market prices retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -136,9 +137,9 @@ router.get('/prices/trends/:product', async (req, res) => {
       trends
     };
 
-    res.json(analysis);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, analysis, 'Price trend analysis retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -146,28 +147,31 @@ router.post('/prices/refresh', async (req, res) => {
   try {
     await scrapeMarketPrices();
     cache.flushAll();
-    res.json({ message: 'Market prices refreshed successfully' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, null, 'Market prices refreshed successfully');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
 router.get('/regions', async (req, res) => {
   try {
     const regions = await MarketPrice.distinct('region');
-    res.json(regions);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, regions, 'Regions retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
 router.get('/categories', async (req, res) => {
   try {
     const categories = await MarketPrice.distinct('category');
-    res.json(categories);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, categories, 'Categories retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
 module.exports = router;
+
+
+

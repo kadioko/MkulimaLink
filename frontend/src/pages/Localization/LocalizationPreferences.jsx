@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Globe, Clock, Ruler, Thermometer, Save } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const LocalizationPreferences = () => {
   const [preferences, setPreferences] = useState(null);
@@ -17,14 +17,14 @@ const LocalizationPreferences = () => {
   const fetchData = async () => {
     try {
       const [prefsRes, countriesRes, langsRes] = await Promise.all([
-        axios.get('/api/localization/preferences'),
-        axios.get('/api/localization/countries'),
-        axios.get('/api/localization/languages')
+        api.get('/api/localization/preferences'),
+        api.get('/api/localization/countries'),
+        api.get('/api/localization/languages')
       ]);
 
-      setPreferences(prefsRes.data.data);
-      setCountries(countriesRes.data.data);
-      setLanguages(langsRes.data.data);
+      setPreferences(prefsRes.data);
+      setCountries(countriesRes.data);
+      setLanguages(langsRes.data);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -42,7 +42,7 @@ const LocalizationPreferences = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await axios.post('/api/localization/preferences', preferences);
+      await api.post('/api/localization/preferences', preferences);
       setMessage({ type: 'success', text: 'Preferences saved successfully!' });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {

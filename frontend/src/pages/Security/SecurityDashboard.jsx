@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, AlertTriangle, Lock, Eye, Smartphone, CheckCircle } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const SecurityDashboard = () => {
   const [report, setReport] = useState(null);
@@ -17,14 +17,14 @@ const SecurityDashboard = () => {
     try {
       setLoading(true);
       const [reportRes, auditRes, devicesRes] = await Promise.all([
-        axios.get('/api/security/security-report'),
-        axios.get('/api/security/audit-trail'),
-        axios.get('/api/security/devices')
+        api.get('/api/security/security-report'),
+        api.get('/api/security/audit-trail'),
+        api.get('/api/security/devices')
       ]);
 
-      setReport(reportRes.data.data);
-      setAuditTrail(auditRes.data.data.events || []);
-      setDevices(devicesRes.data.data || []);
+      setReport(reportRes.data);
+      setAuditTrail(auditRes.data.events || []);
+      setDevices(devicesRes.data || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch security data:', error);
@@ -34,7 +34,7 @@ const SecurityDashboard = () => {
 
   const handleEnable2FA = async () => {
     try {
-      await axios.post('/api/security/2fa/enable', { method: 'sms' });
+      await api.post('/api/security/2fa/enable', { method: 'sms' });
       setTwoFAEnabled(true);
       alert('2FA enabled successfully');
     } catch (error) {
@@ -45,7 +45,7 @@ const SecurityDashboard = () => {
 
   const handleDisable2FA = async () => {
     try {
-      await axios.post('/api/security/2fa/disable');
+      await api.post('/api/security/2fa/disable');
       setTwoFAEnabled(false);
       alert('2FA disabled');
     } catch (error) {

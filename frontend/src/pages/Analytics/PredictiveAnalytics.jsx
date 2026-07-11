@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
 import { TrendingUp, AlertTriangle, Lightbulb, Target } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const PredictiveAnalytics = ({ farmId, region, crop }) => {
   const [yieldPredictions, setYieldPredictions] = useState(null);
@@ -21,19 +21,19 @@ const PredictiveAnalytics = ({ farmId, region, crop }) => {
       setLoading(true);
       
       // Fetch yield predictions
-      const yieldRes = await axios.get(`/api/analytics/farm/${farmId}/predictions/yield`);
-      setYieldPredictions(yieldRes.data.data);
+      const yieldRes = await api.get(`/api/analytics/farm/${farmId}/predictions/yield`);
+      setYieldPredictions(yieldRes.data);
 
       // Fetch price forecast
-      const priceRes = await axios.get(`/api/analytics/market/forecast/${selectedRegion}/${selectedCrop}`);
-      setPriceForecast(priceRes.data.data);
+      const priceRes = await api.get(`/api/analytics/market/forecast/${selectedRegion}/${selectedCrop}`);
+      setPriceForecast(priceRes.data);
 
       // Fetch market trends
-      const trendsRes = await axios.get(`/api/analytics/market/trends/${selectedRegion}/${selectedCrop}?days=90`);
-      setMarketTrends(trendsRes.data.data);
+      const trendsRes = await api.get(`/api/analytics/market/trends/${selectedRegion}/${selectedCrop}?days=90`);
+      setMarketTrends(trendsRes.data);
 
       // Detect anomalies
-      detectAnomalies(trendsRes.data.data);
+      detectAnomalies(trendsRes.data);
 
       setLoading(false);
     } catch (error) {

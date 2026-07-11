@@ -23,8 +23,19 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  if (mongod) {
-    await mongod.stop();
+  // Force close mongoose connection pool
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close(true);
   }
+
+  // Stop in-memory MongoDB instance
+  if (mongod) {
+    await mongod.stop({ doCleanup: true });
+  }
+
+  // Allow any remaining handles to settle
+  await new Promise(resolve => setTimeout(resolve, 500));
 });
+
+
+

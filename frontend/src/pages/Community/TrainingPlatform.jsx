@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Play, Award, Users, Star, Search } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const TrainingPlatform = () => {
   const [courses, setCourses] = useState([]);
@@ -32,16 +32,16 @@ const TrainingPlatform = () => {
     try {
       setLoading(true);
       const [searchRes, popularRes, myRes] = await Promise.all([
-        axios.get('/api/community/courses/search', {
+        api.get('/api/community/courses/search', {
           params: { query: searchQuery, category: selectedCategory, level: selectedLevel }
         }),
-        axios.get('/api/community/courses/popular'),
-        axios.get('/api/community/my-courses')
+        api.get('/api/community/courses/popular'),
+        api.get('/api/community/my-courses')
       ]);
 
-      setCourses(searchRes.data.data.courses || []);
-      setPopularCourses(popularRes.data.data || []);
-      setMyCourses(myRes.data.data.enrollments || []);
+      setCourses(searchRes.data.courses || []);
+      setPopularCourses(popularRes.data || []);
+      setMyCourses(myRes.data.enrollments || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch courses:', error);

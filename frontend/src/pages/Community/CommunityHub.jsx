@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, MessageSquare, TrendingUp, Search, Plus } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const CommunityHub = () => {
   const [communities, setCommunities] = useState([]);
@@ -18,12 +18,12 @@ const CommunityHub = () => {
     try {
       setLoading(true);
       const [userRes, trendingRes] = await Promise.all([
-        axios.get('/api/community/communities'),
-        axios.get('/api/community/communities/trending')
+        api.get('/api/community/communities'),
+        api.get('/api/community/communities/trending')
       ]);
 
-      setCommunities(userRes.data.data.communities || []);
-      setTrendingCommunities(trendingRes.data.data || []);
+      setCommunities(userRes.data.communities || []);
+      setTrendingCommunities(trendingRes.data || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch communities:', error);
@@ -34,11 +34,11 @@ const CommunityHub = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get('/api/community/communities/search', {
+      const response = await api.get('/api/community/communities/search', {
         params: { query: searchQuery, type: selectedType }
       });
 
-      setCommunities(response.data.data.communities || []);
+      setCommunities(response.data.communities || []);
     } catch (error) {
       console.error('Search failed:', error);
     }

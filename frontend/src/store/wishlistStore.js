@@ -15,12 +15,19 @@ export const useWishlistStore = create(
         set({ isLoading: true, error: null });
         try {
           const response = await api.get('/api/wishlist');
-          const items = response.data?.items?.map(item => ({
-            ...item.product,
-            addedAt: item.addedAt,
-            notes: item.notes,
-            priority: item.priority,
-          })) || [];
+          const wishlist = response.data || {};
+          const items = (wishlist.items || []).map(item => {
+            const product = item.product && typeof item.product === 'object' && item.product._id
+              ? item.product
+              : { _id: item.product?.toString?.() || item.product };
+            return {
+              ...product,
+              wishlistItemId: item._id?.toString?.() || item._id,
+              addedAt: item.addedAt,
+              notes: item.notes,
+              priority: item.priority,
+            };
+          });
           set({ items, isLoading: false });
           return items;
         } catch (error) {
@@ -85,7 +92,8 @@ export const useWishlistStore = create(
       clearWishlist: () => set({ items: [] }),
       
       isInWishlist: (productId) => {
-        return get().items.some(item => item._id === productId);
+        const id = productId?.toString?.() || productId;
+        return get().items.some(item => (item._id?.toString?.() || item._id) === id);
       },
       
       getWishlistCount: () => get().items.length,

@@ -78,3 +78,6 @@ featuredListingSchema.virtual('conversionRate').get(function() {
 });
 
 module.exports = mongoose.model('FeaturedListing', featuredListingSchema);
+
+
+

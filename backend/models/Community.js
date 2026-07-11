@@ -95,3 +95,6 @@ communitySchema.pre('save', function(next) {
 });
 
 module.exports = mongoose.model('Community', communitySchema);
+
+
+

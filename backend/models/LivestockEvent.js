@@ -78,3 +78,6 @@ livestockEventSchema.index({ owner: 1, workspace: 1, date: -1 });
 livestockEventSchema.index({ 'reminder.dueDate': 1, 'reminder.notified': 1 });
 
 module.exports = mongoose.model('LivestockEvent', livestockEventSchema);
+
+
+

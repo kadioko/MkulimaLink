@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useQuery } from 'react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart3, Grid3X3, List, MapPin, Search, ShieldCheck, SlidersHorizontal, Sprout, X } from 'lucide-react';
-import api from '../api/axios';
+import api, { extractData, extractMeta } from '../api/axios';
 import { demoProducts } from '../utils/demoData';
 import { useCountryStore, COUNTRIES } from '../store/countryStore';
 import { useUrlFilters } from '../hooks/useUrlFilters';
@@ -45,16 +45,24 @@ function Products() {
         });
         params.append('limit', '12');
         params.append('country', country);
-        
+
         const response = await api.get(`/api/products?${params}`);
-        return response.data;
+        const products = extractData(response) || [];
+        const meta = extractMeta(response);
+        return {
+          products: Array.isArray(products) ? products : [],
+          totalPages: meta?.pagination?.totalPages || 1,
+          total: meta?.pagination?.total || products.length,
+          isDemo: false,
+          meta
+        };
       } catch (err) {
         console.error('Error fetching products:', err);
-        return { products: demoProducts, totalPages: 1 };
+        return { products: demoProducts, totalPages: 1, total: demoProducts.length, isDemo: true };
       }
     },
     {
-      initialData: { products: demoProducts, totalPages: 1, isDemo: true },
+      initialData: { products: demoProducts, totalPages: 1, total: demoProducts.length, isDemo: true },
       keepPreviousData: true,
       staleTime: 2 * 60 * 1000,
     }

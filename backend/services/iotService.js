@@ -309,7 +309,7 @@ class IoTService {
       const alert = await DeviceAlert.findByIdAndUpdate(
         alertId,
         { status: 'acknowledged', acknowledged_at: new Date() },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       return alert;
@@ -327,7 +327,7 @@ class IoTService {
       const alert = await DeviceAlert.findByIdAndUpdate(
         alertId,
         { status: 'resolved', resolved_at: new Date() },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       return alert;
@@ -359,3 +359,6 @@ class IoTService {
 }
 
 module.exports = new IoTService();
+
+
+

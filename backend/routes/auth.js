@@ -7,6 +7,8 @@ const { registerValidation, loginValidation } = require('../middleware/validate'
 const FailedAction = require('../models/FailedAction');
 const { success, error } = require('../utils/apiResponse');
 
+const getClientIp = (req) => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '30d'
@@ -84,24 +86,24 @@ router.post('/login', loginValidation, async (req, res) => {
     }
 
     if (!user) {
-      await FailedAction.create({ type: 'login', email, ip: req.ip, requestId: req.id, reason: 'user_not_found' });
+      await FailedAction.create({ type: 'login', email, ip: getClientIp(req), requestId: req.id, reason: 'user_not_found' });
       return error(res, 'Invalid credentials', 401);
     }
 
     if (user.isLocked) {
-      await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'account_locked' });
+      await FailedAction.create({ type: 'login', user: user._id, email, ip: getClientIp(req), requestId: req.id, reason: 'account_locked' });
       return error(res, 'Account temporarily locked due to too many failed login attempts. Please try again later.', 423);
     }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       await user.incrementLoginAttempts();
-      await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'wrong_password' });
+      await FailedAction.create({ type: 'login', user: user._id, email, ip: getClientIp(req), requestId: req.id, reason: 'wrong_password' });
       return error(res, 'Invalid credentials', 401);
     }
 
     if (user.isBanned) {
-      await FailedAction.create({ type: 'login', user: user._id, email, ip: req.ip, requestId: req.id, reason: 'user_banned' });
+      await FailedAction.create({ type: 'login', user: user._id, email, ip: getClientIp(req), requestId: req.id, reason: 'user_banned' });
       return error(res, `Account suspended${user.bannedReason ? ': ' + user.bannedReason : ''}. Contact support@mkulimalink.com`, 403);
     }
 
@@ -120,16 +122,19 @@ router.post('/login', loginValidation, async (req, res) => {
 router.get('/me', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (!user) {
+      return error(res, 'User not found', 404);
+    }
+    return success(res, user, 'User profile retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
 router.put('/profile', protect, async (req, res) => {
   try {
     const { name, phone, location, farmDetails, businessDetails, notificationPreferences } = req.body;
-    
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -140,20 +145,23 @@ router.put('/profile', protect, async (req, res) => {
         businessDetails: req.user.role === 'buyer' ? businessDetails : undefined,
         notificationPreferences
       },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).select('-password');
-    
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    if (!user) {
+      return error(res, 'User not found', 404);
+    }
+    return success(res, user, 'Profile updated successfully');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
 router.post('/logout', protect, async (req, res) => {
   try {
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, null, 'Logged out successfully');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -161,20 +169,20 @@ router.post('/refresh-token', async (req, res) => {
   try {
     const { token } = req.body;
     if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
+      return error(res, 'No token provided', 401);
     }
-    
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
-    
+
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return error(res, 'User not found', 401);
     }
-    
+
     const newToken = generateToken(user._id);
-    res.json(buildAuthResponse(user, newToken));
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+    return success(res, buildAuthResponse(user, newToken), 'Token refreshed');
+  } catch (err) {
+    return error(res, 'Invalid token', 401);
   }
 });
 
@@ -183,12 +191,15 @@ router.post('/verify-email', protect, async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { verified: true },
-      { new: true }
+      { returnDocument: 'after' }
     ).select('-password');
-    
-    res.json({ message: 'Email verified successfully', user });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    if (!user) {
+      return error(res, 'User not found', 404);
+    }
+    return success(res, user, 'Email verified successfully');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
@@ -196,12 +207,15 @@ router.get('/users/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return error(res, 'User not found', 404);
     }
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, user, 'User retrieved');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
 module.exports = router;
+
+
+

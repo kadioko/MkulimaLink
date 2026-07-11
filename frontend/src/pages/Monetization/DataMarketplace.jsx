@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Star, TrendingUp, BarChart3, Users } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const DataMarketplace = () => {
   const [products, setProducts] = useState([]);
@@ -25,14 +25,14 @@ const DataMarketplace = () => {
     try {
       setLoading(true);
       const [searchRes, popularRes] = await Promise.all([
-        axios.get('/api/monetization/data-products/search', {
+        api.get('/api/monetization/data-products/search', {
           params: { query: searchQuery, category: selectedCategory }
         }),
-        axios.get('/api/monetization/data-products/popular')
+        api.get('/api/monetization/data-products/popular')
       ]);
 
-      setProducts(searchRes.data.data.products || []);
-      setPopularProducts(popularRes.data.data || []);
+      setProducts(searchRes.data.products || []);
+      setPopularProducts(popularRes.data || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch products:', error);
@@ -47,7 +47,7 @@ const DataMarketplace = () => {
 
   const handlePurchase = async (productId) => {
     try {
-      await axios.post(`/api/monetization/data-products/${productId}/purchase`);
+      await api.post(`/api/monetization/data-products/${productId}/purchase`);
       alert('Product purchased successfully!');
       fetchProducts();
     } catch (error) {

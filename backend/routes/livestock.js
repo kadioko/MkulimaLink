@@ -66,7 +66,7 @@ router.put('/animals/:id', protect, async (req, res) => {
     const animal = await Livestock.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!animal) return res.status(404).json({ success: false, message: 'Animal not found' });
     res.json({ success: true, data: animal });
@@ -81,7 +81,7 @@ router.delete('/animals/:id', protect, async (req, res) => {
     const animal = await Livestock.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       { isActive: false },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!animal) return res.status(404).json({ success: false, message: 'Animal not found' });
     res.json({ success: true, message: 'Animal removed' });
@@ -189,7 +189,7 @@ router.put('/events/:id', protect, async (req, res) => {
     const event = await LivestockEvent.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
     res.json({ success: true, data: event });
@@ -268,7 +268,7 @@ router.put('/inventory/:id', protect, async (req, res) => {
     const item = await LivestockInventory.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
     res.json({ success: true, data: item });
@@ -300,7 +300,7 @@ router.delete('/inventory/:id', protect, async (req, res) => {
     const item = await LivestockInventory.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       { isActive: false },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
     res.json({ success: true, message: 'Item removed' });
@@ -364,7 +364,7 @@ router.put('/reproduction/:id', protect, async (req, res) => {
     const record = await Reproduction.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!record) return res.status(404).json({ success: false, message: 'Record not found' });
     res.json({ success: true, data: record });
@@ -466,7 +466,7 @@ router.put('/workspaces/:id', protect, async (req, res) => {
     const workspace = await FarmWorkspace.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!workspace) return res.status(404).json({ success: false, message: 'Workspace not found' });
     res.json({ success: true, data: workspace });
@@ -524,3 +524,6 @@ router.delete('/workspaces/:id/members/:userId', protect, async (req, res) => {
 });
 
 module.exports = router;
+
+
+

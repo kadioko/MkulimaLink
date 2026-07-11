@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -14,8 +14,10 @@ import {
   Truck,
   Wheat,
 } from 'lucide-react';
+import api, { extractData } from '../api/axios';
+import { useAuthStore } from '../store/authStore';
 
-const products = [
+const FALLBACK_PRODUCTS = [
   {
     name: 'White maize',
     region: 'Dodoma',
@@ -71,6 +73,36 @@ const workflows = [
 ];
 
 function Home() {
+  const { user } = useAuthStore();
+  const [featuredProducts, setFeaturedProducts] = useState(FALLBACK_PRODUCTS);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.get('/api/products?limit=3&status=active')
+      .then((response) => {
+        const products = extractData(response) || [];
+        if (!cancelled && products.length > 0) {
+          setFeaturedProducts(
+            products.slice(0, 3).map((p) => ({
+              name: p.name,
+              region: p.location?.region || p.region || 'Tanzania',
+              price: `${p.price?.toLocaleString?.() || p.price} ${p.currency || 'TZS'}`,
+              unit: `per ${p.unit}`,
+              trend: p.trend || '+2.1%',
+              demand: p.demand || 'Available now',
+              image: p.images?.[0]?.url || p.image || FALLBACK_PRODUCTS[0].image,
+            }))
+          );
+        }
+      })
+      .catch(() => {
+        // Keep fallback sample listings on error
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="space-y-16">
       <section className="relative overflow-hidden border border-emerald-100 bg-white">
@@ -100,12 +132,21 @@ function Home() {
                   Browse Products
                   <ArrowRight size={18} />
                 </Link>
-                <Link
-                  to="/add-product"
-                  className="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition hover:border-emerald-500 hover:text-emerald-700"
-                >
-                  List Produce
-                </Link>
+                {user ? (
+                  <Link
+                    to="/add-product"
+                    className="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition hover:border-emerald-500 hover:text-emerald-700"
+                  >
+                    List Produce
+                  </Link>
+                ) : (
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition hover:border-emerald-500 hover:text-emerald-700"
+                  >
+                    Get Started
+                  </Link>
+                )}
               </div>
             </motion.div>
 
@@ -144,7 +185,7 @@ function Home() {
               </div>
 
               <div className="mt-5 space-y-3">
-                {products.map((product, index) => (
+                {featuredProducts.map((product, index) => (
                   <motion.div
                     key={product.name}
                     initial={{ opacity: 0, x: 20 }}

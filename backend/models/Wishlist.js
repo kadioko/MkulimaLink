@@ -97,3 +97,6 @@ wishlistSchema.statics.getOrCreate = async function(userId) {
 };
 
 module.exports = mongoose.model('Wishlist', wishlistSchema);
+
+
+

@@ -94,3 +94,6 @@ orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);
+
+
+

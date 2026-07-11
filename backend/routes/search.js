@@ -5,6 +5,7 @@ const User = require('../models/User');
 const SavedSearch = require('../models/SavedSearch');
 const RecentSearch = require('../models/RecentSearch');
 const { protect } = require('../middleware/auth');
+const { success, error } = require('../utils/apiResponse');
 const { getPriceRecommendation, isSellerAvailableToday } = require('../services/marketplaceIntelligence');
 
 /**
@@ -32,7 +33,7 @@ router.get('/autocomplete', async (req, res) => {
     const { q: query, limit = 10 } = req.query;
     
     if (!query || query.length < 2) {
-      return res.json({ suggestions: [] });
+      return success(res, { suggestions: [] }, 'Autocomplete suggestions retrieved');
     }
 
     const regex = new RegExp(query, 'i');
@@ -95,19 +96,19 @@ router.get('/autocomplete', async (req, res) => {
       return a.text.localeCompare(b.text);
     });
 
-    res.json({ suggestions: suggestions.slice(0, limit) });
-  } catch (error) {
-    console.error('Autocomplete error:', error);
-    res.status(500).json({ error: 'Search failed' });
+    return success(res, { suggestions: suggestions.slice(0, limit) }, 'Autocomplete suggestions retrieved');
+  } catch (err) {
+    console.error('Autocomplete error:', err);
+    return error(res, 'Search failed', 500);
   }
 });
 
 router.get('/saved', protect, async (req, res) => {
   try {
     const searches = await SavedSearch.find({ user: req.user._id }).sort({ createdAt: -1 });
-    res.json({ success: true, data: searches });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch saved searches' });
+    return success(res, searches, 'Saved searches retrieved');
+  } catch (err) {
+    return error(res, 'Failed to fetch saved searches', 500);
   }
 });
 
@@ -115,27 +116,27 @@ router.post('/saved', protect, async (req, res) => {
   try {
     const { name, query, notify = true } = req.body;
     const savedSearch = await SavedSearch.create({ user: req.user._id, name, query, notify });
-    res.status(201).json({ success: true, data: savedSearch });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to save search' });
+    return success(res, savedSearch, 'Saved search created', 201);
+  } catch (err) {
+    return error(res, 'Failed to save search', 500);
   }
 });
 
 router.delete('/saved/:id', protect, async (req, res) => {
   try {
     await SavedSearch.deleteOne({ _id: req.params.id, user: req.user._id });
-    res.json({ success: true, message: 'Saved search deleted' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete saved search' });
+    return success(res, null, 'Saved search deleted');
+  } catch (err) {
+    return error(res, 'Failed to delete saved search', 500);
   }
 });
 
 router.get('/recent', protect, async (req, res) => {
   try {
     const searches = await RecentSearch.find({ user: req.user._id }).sort({ lastSearchedAt: -1 }).limit(20);
-    res.json({ success: true, data: searches });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch recent searches' });
+    return success(res, searches, 'Recent searches retrieved');
+  } catch (err) {
+    return error(res, 'Failed to fetch recent searches', 500);
   }
 });
 
@@ -145,11 +146,11 @@ router.post('/recent', protect, async (req, res) => {
     const search = await RecentSearch.findOneAndUpdate(
       { user: req.user._id, query: query || '' },
       { $set: { filters, lastSearchedAt: new Date() }, $inc: { count: 1 } },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
-    res.json({ success: true, data: search });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to store recent search' });
+    return success(res, search, 'Recent search stored');
+  } catch (err) {
+    return error(res, 'Failed to store recent search', 500);
   }
 });
 
@@ -255,7 +256,7 @@ router.get('/', async (req, res) => {
       filteredResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
     }
 
-    res.json({
+    return success(res, {
       products: filteredResults,
       pagination: {
         page: parseInt(page),
@@ -278,10 +279,10 @@ router.get('/', async (req, res) => {
         sortBy,
         sortOrder
       }
-    });
-  } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ error: 'Search failed' });
+    }, 'Search results retrieved');
+  } catch (err) {
+    console.error('Search error:', err);
+    return error(res, 'Search failed', 500);
   }
 });
 
@@ -292,7 +293,7 @@ router.get('/similar/:productId', async (req, res) => {
     const product = await Product.findById(req.params.productId).lean();
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return error(res, 'Product not found', 404);
     }
 
     const products = await Product.find({
@@ -321,10 +322,10 @@ router.get('/similar/:productId', async (req, res) => {
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, Number(limit));
 
-    res.json({ products: results });
-  } catch (error) {
-    console.error('Similar products error:', error);
-    res.status(500).json({ error: 'Failed to fetch similar products' });
+    return success(res, { products: results }, 'Similar products retrieved');
+  } catch (err) {
+    console.error('Similar products error:', err);
+    return error(res, 'Failed to fetch similar products', 500);
   }
 });
 
@@ -366,10 +367,10 @@ router.get('/admin/suggestions', protect, async (req, res) => {
         results = [];
     }
     
-    res.json({ results });
-  } catch (error) {
-    console.error('Admin search error:', error);
-    res.status(500).json({ error: 'Search failed' });
+    return success(res, results, 'Admin suggestions retrieved');
+  } catch (err) {
+    console.error('Admin search error:', err);
+    return error(res, 'Search failed', 500);
   }
 });
 
@@ -389,10 +390,10 @@ router.get('/popular', async (req, res) => {
       { query: 'livestock', count: 432, type: 'category' }
     ];
 
-    res.json({ popularSearches });
-  } catch (error) {
-    console.error('Popular searches error:', error);
-    res.status(500).json({ error: 'Failed to fetch popular searches' });
+    return success(res, popularSearches, 'Popular searches retrieved');
+  } catch (err) {
+    console.error('Popular searches error:', err);
+    return error(res, 'Failed to fetch popular searches', 500);
   }
 });
 
@@ -423,10 +424,10 @@ router.get('/analytics', protect, async (req, res) => {
       ]
     };
 
-    res.json(analytics);
-  } catch (error) {
-    console.error('Search analytics error:', error);
-    res.status(500).json({ error: 'Failed to fetch search analytics' });
+    return success(res, analytics, 'Search analytics retrieved');
+  } catch (err) {
+    console.error('Search analytics error:', err);
+    return error(res, 'Failed to fetch search analytics', 500);
   }
 });
 
@@ -505,3 +506,6 @@ function calculateRelevanceScore(product, query, context = {}) {
 }
 
 module.exports = router;
+
+
+

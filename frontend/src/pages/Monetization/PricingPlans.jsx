@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Zap, Award, Building2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const PricingPlans = () => {
   const [tiers, setTiers] = useState([]);
@@ -17,12 +17,12 @@ const PricingPlans = () => {
     try {
       setLoading(true);
       const [tiersRes, subRes] = await Promise.all([
-        axios.get('/api/monetization/tiers'),
-        axios.get('/api/monetization/subscription/current')
+        api.get('/api/monetization/tiers'),
+        api.get('/api/monetization/subscription/current')
       ]);
 
-      setTiers(tiersRes.data.data);
-      setCurrentSubscription(subRes.data.data);
+      setTiers(tiersRes.data);
+      setCurrentSubscription(subRes.data);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch data:', error);

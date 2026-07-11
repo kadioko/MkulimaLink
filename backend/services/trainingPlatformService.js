@@ -549,3 +549,6 @@ class TrainingPlatformService {
 }
 
 module.exports = new TrainingPlatformService();
+
+
+

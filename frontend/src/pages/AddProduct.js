@@ -29,17 +29,35 @@ function AddProduct() {
         navigate('/dashboard');
       },
       onError: (error) => {
-        toast.error(error.response?.data?.message || 'Failed to create product');
+        const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to create product';
+        toast.error(message);
       }
     }
   );
 
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
+
     if (files.length + images.length > 5) {
       toast.error('Maximum 5 images allowed');
       return;
     }
+
+    const invalidFiles = files.filter(file => !ALLOWED_IMAGE_TYPES.includes(file.type));
+    if (invalidFiles.length > 0) {
+      toast.error('Only JPEG, PNG and WebP images are allowed');
+      return;
+    }
+
+    const oversizedFiles = files.filter(file => file.size > MAX_IMAGE_SIZE);
+    if (oversizedFiles.length > 0) {
+      toast.error('Each image must be smaller than 5MB');
+      return;
+    }
+
     setImages([...images, ...files]);
   };
 
@@ -121,7 +139,10 @@ function AddProduct() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
               <textarea
-                {...register('description', { required: 'Description is required' })}
+                {...register('description', {
+                  required: 'Description is required',
+                  minLength: { value: 10, message: 'Description must be at least 10 characters' }
+                })}
                 className="input-field"
                 rows="4"
                 placeholder="Describe your product..."
@@ -134,7 +155,12 @@ function AddProduct() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Price ({currency}) *</label>
                 <input
                   type="number"
-                  {...register('price', { required: 'Price is required', min: 0 })}
+                  step="0.01"
+                  {...register('price', {
+                    required: 'Price is required',
+                    min: { value: 0.01, message: 'Price must be greater than 0' },
+                    validate: value => !isNaN(value) && Number(value) > 0 || 'Price must be a valid number'
+                  })}
                   className="input-field"
                   placeholder="1000"
                 />
@@ -145,7 +171,11 @@ function AddProduct() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Quantity *</label>
                 <input
                   type="number"
-                  {...register('quantity', { required: 'Quantity is required', min: 1 })}
+                  {...register('quantity', {
+                    required: 'Quantity is required',
+                    min: { value: 1, message: 'Quantity must be at least 1' },
+                    validate: value => Number.isInteger(Number(value)) || 'Quantity must be a whole number'
+                  })}
                   className="input-field"
                   placeholder="100"
                 />

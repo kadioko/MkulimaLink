@@ -364,3 +364,6 @@ module.exports = {
   MarketTrends,
   PerformanceReport
 };
+
+
+

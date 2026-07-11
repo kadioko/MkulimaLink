@@ -11,6 +11,7 @@ const LivestockEvent = require('../models/LivestockEvent');
 const LivestockInventory = require('../models/LivestockInventory');
 const Reproduction = require('../models/Reproduction');
 const { success, error } = require('../utils/apiResponse');
+const { protect } = require('../middleware/auth');
 const FailedAction = require('../models/FailedAction');
 
 const getSeedSecret = () => {
@@ -64,17 +65,19 @@ const productsData = [
   { name: 'Cowpeas - Dried', category: 'grains', description: 'Dried cowpeas from Mbeya. Protein-rich legume for stews.', price: 180000, quantity: 8, unit: 'bag', location: { region: 'Mbeya' }, quality: 'standard', organic: true, images: [{ url: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&h=500&fit=crop' }] },
 ];
 
-router.post('/run', async (req, res) => {
+const getClientIp = (req) => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
+
+router.post('/run', protect, async (req, res) => {
   try {
     const { secret } = req.body;
     const seedSecret = getSeedSecret();
     if (!seedSecret) {
-      return res.status(503).json({ message: 'Seed route is not configured' });
+      return error(res, 'Seed route is not configured', 503);
     }
 
     if (secret !== seedSecret) {
-      await FailedAction.create({ type: 'seed', ip: req.ip, requestId: req.id, reason: 'invalid_seed_secret' });
-      return res.status(403).json({ message: 'Invalid seed secret' });
+      await FailedAction.create({ type: 'seed', ip: getClientIp(req), user: req.user._id, requestId: req.id, reason: 'invalid_seed_secret' });
+      return error(res, 'Invalid seed secret', 403);
     }
 
     const results = {
@@ -254,7 +257,7 @@ router.post('/run', async (req, res) => {
       await Transaction.findOneAndUpdate(
         { idempotencyKey: tx.idempotencyKey },
         tx,
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
     }
     results.transactions = transactionDocs.length;
@@ -320,7 +323,7 @@ router.post('/run', async (req, res) => {
     }, 'Seed complete! Demo accounts now have rich account/profile, marketplace, transaction, livestock, inventory, event, and workspace data.');
   } catch (err) {
     logger.error('Seed error:', err);
-    await FailedAction.create({ type: 'seed', ip: req.ip, requestId: req.id, reason: err.message });
+    await FailedAction.create({ type: 'seed', ip: getClientIp(req), user: req.user?._id, requestId: req.id, reason: err.message });
     return error(res, err.message, 500);
   }
 });
@@ -346,3 +349,6 @@ router.get('/status', async (req, res) => {
 });
 
 module.exports = router;
+
+
+

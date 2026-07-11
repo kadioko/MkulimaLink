@@ -64,3 +64,6 @@ const generateAIInsights = async (product) => {
 };
 
 module.exports = { generateAIInsights };
+
+
+

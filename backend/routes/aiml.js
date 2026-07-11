@@ -318,7 +318,7 @@ router.post('/recommendations/:recommendationId/status', async (req, res) => {
     const recommendation = await AIRecommendation.findByIdAndUpdate(
       req.params.recommendationId,
       { status },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!recommendation) {
@@ -363,3 +363,6 @@ router.get('/models/:modelName/metrics', async (req, res) => {
 });
 
 module.exports = router;
+
+
+

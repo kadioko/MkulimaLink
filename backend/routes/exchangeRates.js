@@ -92,14 +92,14 @@ router.post('/', async (req, res) => {
     const exchangeRate = await ExchangeRate.findOneAndUpdate(
       { baseCurrency, targetCurrency },
       { rate, source, lastUpdated: new Date() },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     
     // Also create inverse rate
     await ExchangeRate.findOneAndUpdate(
       { baseCurrency: targetCurrency, targetCurrency: baseCurrency },
       { rate: 1 / rate, source: 'calculated', lastUpdated: new Date() },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     
     res.json({ success: true, rate: exchangeRate });
@@ -139,3 +139,6 @@ router.post('/convert/batch', async (req, res) => {
 });
 
 module.exports = router;
+
+
+

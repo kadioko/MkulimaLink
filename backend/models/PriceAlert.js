@@ -147,3 +147,6 @@ const PriceAlert = mongoose.model('PriceAlert', priceAlertSchema);
 const Watchlist = mongoose.model('Watchlist', watchlistSchema);
 
 module.exports = { PriceAlert, Watchlist };
+
+
+

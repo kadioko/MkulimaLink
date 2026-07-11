@@ -120,3 +120,6 @@ livestockSchema.index({ 'parentage.father': 1 });
 livestockSchema.index({ name: 'text', tagId: 'text', breed: 'text' });
 
 module.exports = mongoose.model('Livestock', livestockSchema);
+
+
+

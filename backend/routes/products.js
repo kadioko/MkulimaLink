@@ -327,10 +327,13 @@ router.post('/:id/favorite', protect, async (req, res) => {
     }
 
     await product.save();
-    res.json({ favorites: product.favorites.length });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return success(res, { favorites: product.favorites.length }, 'Product favorited');
+  } catch (err) {
+    return error(res, err.message, 500);
   }
 });
 
 module.exports = router;
+
+
+

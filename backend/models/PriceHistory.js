@@ -147,3 +147,6 @@ priceHistorySchema.statics.getMarketTrends = async function(category, region, da
 };
 
 module.exports = mongoose.model('PriceHistory', priceHistorySchema);
+
+
+

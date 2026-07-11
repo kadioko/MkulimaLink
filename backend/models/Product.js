@@ -153,3 +153,6 @@ productSchema.statics.expireOldListings = function expireOldListings(now = new D
 };
 
 module.exports = mongoose.model('Product', productSchema);
+
+
+

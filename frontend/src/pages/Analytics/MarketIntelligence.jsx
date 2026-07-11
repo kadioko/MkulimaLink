@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { TrendingUp, Users, Award, Zap } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const MarketIntelligence = ({ farmId, region }) => {
   const [marketTrends, setMarketTrends] = useState(null);
@@ -20,16 +20,16 @@ const MarketIntelligence = ({ farmId, region }) => {
       setLoading(true);
 
       // Fetch market trends
-      const trendsRes = await axios.get(`/api/analytics/market/trends/${selectedRegion}/${selectedCrop}?days=180`);
-      setMarketTrends(trendsRes.data.data);
+      const trendsRes = await api.get(`/api/analytics/market/trends/${selectedRegion}/${selectedCrop}?days=180`);
+      setMarketTrends(trendsRes.data);
 
       // Fetch benchmarking
-      const benchRes = await axios.get(`/api/analytics/farm/${farmId}/benchmarking`);
-      setBenchmarking(benchRes.data.data);
+      const benchRes = await api.get(`/api/analytics/farm/${farmId}/benchmarking`);
+      setBenchmarking(benchRes.data);
 
       // Aggregate regional data
-      const regionalRes = await axios.get(`/api/analytics/market/trends/${selectedRegion}/${selectedCrop}?days=365`);
-      setRegionalData(regionalRes.data.data);
+      const regionalRes = await api.get(`/api/analytics/market/trends/${selectedRegion}/${selectedCrop}?days=365`);
+      setRegionalData(regionalRes.data);
 
       setLoading(false);
     } catch (error) {

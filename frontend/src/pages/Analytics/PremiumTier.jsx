@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Lock, Unlock, Zap, TrendingUp, BarChart3, MapPin } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const PremiumTier = () => {
   const [subscription, setSubscription] = useState(null);
@@ -14,8 +14,8 @@ const PremiumTier = () => {
 
   const fetchSubscription = async () => {
     try {
-      const response = await axios.get('/api/subscriptions/current');
-      setSubscription(response.data.data);
+      const response = await api.get('/api/subscriptions/current');
+      setSubscription(response.data);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch subscription:', error);

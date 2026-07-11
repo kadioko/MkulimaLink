@@ -2,6 +2,9 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { API_URL } from '../config/env';
 
+// Ensure any component using raw axios with relative paths still hits the backend
+axios.defaults.baseURL = API_URL;
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -17,7 +20,7 @@ const retryableMethods = ['get', 'head', 'options', 'put'];
 
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().token;
+    const token = useAuthStore.getState().token || localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,13 +32,27 @@ api.interceptors.request.use(
   }
 );
 
+function normalizeResponse(response) {
+  // Unwrap standardized API responses: { success, data, message, meta }
+  if (response.data && typeof response.data === 'object' && 'success' in response.data && 'data' in response.data) {
+    response.data = response.data.data;
+  }
+  return response;
+}
+
+// Apply normalization globally for components still importing raw axios
+axios.interceptors.response.use(
+  (response) => normalizeResponse(response),
+  (error) => Promise.reject(error)
+);
+
 api.interceptors.response.use(
   (response) => {
     const duration = Date.now() - response.config.metadata.startTime;
     if (duration > 5000) {
       console.warn(`Slow API response: ${response.config.url} took ${duration}ms`);
     }
-    return response;
+    return normalizeResponse(response);
   },
   async (error) => {
     const config = error.config;

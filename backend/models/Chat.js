@@ -140,3 +140,6 @@ chatSchema.methods.markAsRead = async function(userId) {
 };
 
 module.exports = mongoose.model('Chat', chatSchema);
+
+
+

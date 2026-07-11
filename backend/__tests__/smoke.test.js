@@ -60,9 +60,7 @@ describe('Smoke Tests', () => {
   });
 
   describe('Products flow', () => {
-    let token;
-
-    beforeAll(async () => {
+    it('creates and lists products', async () => {
       const user = await User.create({
         name: 'Product Farmer',
         email: 'product@example.com',
@@ -70,10 +68,8 @@ describe('Smoke Tests', () => {
         phone: '+255700000002',
         role: 'farmer'
       });
-      token = user.getSignedJwtToken();
-    });
+      const token = user.getSignedJwtToken();
 
-    it('creates and lists products', async () => {
       const createRes = await request(app)
         .post('/api/products')
         .set('Authorization', `Bearer ${token}`)
@@ -119,3 +115,6 @@ describe('Smoke Tests', () => {
     });
   });
 });
+
+
+
