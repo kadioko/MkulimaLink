@@ -92,6 +92,51 @@ jobs:
           path: frontend/dist
           retention-days: 7
 
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: node
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
+
+      - name: Serve frontend & run E2E
+        run: |
+          npx serve -s frontend/build -l 3000 &
+          sleep 5
+          npm run test:e2e
+        env:
+          E2E_BASE_URL: http://localhost:3000
+          CI: true
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   python-deps:
     name: Python Dependency Resolution
     runs-on: ubuntu-latest

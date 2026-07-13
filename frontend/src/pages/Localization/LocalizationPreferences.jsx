@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Globe, Clock, Ruler, Thermometer, Save } from 'lucide-react';
 import api from '../../api/axios';
+import { changeLanguage } from '../../i18n';
 
 const LocalizationPreferences = () => {
   const [preferences, setPreferences] = useState(null);
@@ -43,6 +44,12 @@ const LocalizationPreferences = () => {
     try {
       setSaving(true);
       await api.post('/api/localization/preferences', preferences);
+
+      // Apply language change immediately to the app UI
+      if (preferences.language) {
+        changeLanguage(preferences.language);
+      }
+
       setMessage({ type: 'success', text: 'Preferences saved successfully!' });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {

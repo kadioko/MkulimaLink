@@ -147,7 +147,9 @@
     "farmingTips": "Farming Tips"
   },
   "loans": {
-    "title": "Loans",
+    "title": "Agricultural Loans",
+    "subtitle": "Fast credit for farmers — apply in minutes",
+    "apply": "Apply for Loan",
     "applyForLoan": "Apply for Loan",
     "myLoans": "My Loans",
     "loanAmount": "Loan Amount",
@@ -157,6 +159,15 @@
     "monthlyPayment": "Monthly Payment",
     "totalPayment": "Total Payment",
     "creditScore": "Credit Score",
+    "status": {
+      "pending": "Under Review",
+      "approved": "Approved",
+      "disbursed": "Disbursed",
+      "active": "Active",
+      "repaying": "Repaying",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
     "statuses": {
       "pending": "Pending",
       "approved": "Approved",
@@ -166,13 +177,25 @@
     }
   },
   "insurance": {
-    "title": "Insurance",
+    "title": "Farm Insurance",
+    "subtitle": "Protect your crops, livestock and equipment",
+    "plans": "Insurance Plans",
+    "myPolicies": "My Policies",
+    "getQuote": "Get Quote & Enroll",
+    "enrollNow": "Enroll Now",
     "cropInsurance": "Crop Insurance",
     "equipmentInsurance": "Equipment Insurance",
-    "getQuote": "Get Quote",
     "coverage": "Coverage",
     "premium": "Premium",
     "purchasePolicy": "Purchase Policy"
+  },
+  "suppliers": {
+    "title": "Verified Suppliers",
+    "subtitle": "Find trusted agri-input suppliers",
+    "verified": "Verified",
+    "featured": "Featured Supplier",
+    "callSupplier": "Call Supplier",
+    "allTypes": "All Types"
   },
   "groupBuy": {
     "title": "Group Buying",

@@ -1,7 +1,32 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/env';
+
+const KEYCHAIN_SERVICE = 'mkulimalink_auth';
+
+async function secureStore(token: string, user: object): Promise<void> {
+  await Keychain.setGenericPassword('user', token, { service: KEYCHAIN_SERVICE });
+  await AsyncStorage.setItem('user', JSON.stringify(user));
+}
+
+async function secureLoad(): Promise<{ token: string | null; user: object | null }> {
+  try {
+    const credentials = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
+    const token = credentials ? credentials.password : null;
+    const userString = await AsyncStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
+    return { token, user };
+  } catch {
+    return { token: null, user: null };
+  }
+}
+
+async function secureClear(): Promise<void> {
+  await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
+  await AsyncStorage.removeItem('user');
+}
 
 interface User {
   id: string;
@@ -61,8 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const payload = response.data?.data || response.data;
       const { token, user } = payload;
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await secureStore(token, user);
 
       set({
         user,
@@ -83,8 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const payload = response.data?.data || response.data;
       const { token, user } = payload;
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await secureStore(token, user);
 
       set({
         user,
@@ -100,8 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
+      await secureClear();
 
       set({
         user: null,
@@ -116,13 +138,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loadUser: async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      const userString = await AsyncStorage.getItem('user');
+      const { token, user } = await secureLoad();
 
-      if (token && userString) {
-        const user = JSON.parse(userString);
+      if (token && user) {
         set({
-          user,
+          user: user as User,
           token,
           isAuthenticated: true,
           isLoading: false,
@@ -158,7 +178,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       );
 
       const updatedUser = response.data?.data?.user || response.data?.user || response.data;
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser)); // non-sensitive profile data
 
       set({ user: updatedUser });
     } catch (error) {

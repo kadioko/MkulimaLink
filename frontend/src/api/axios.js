@@ -46,6 +46,17 @@ axios.interceptors.response.use(
   (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let refreshQueue = [];
+
+function processQueue(error, token = null) {
+  refreshQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error);
+    else resolve(token);
+  });
+  refreshQueue = [];
+}
+
 api.interceptors.response.use(
   (response) => {
     const duration = Date.now() - response.config.metadata.startTime;
@@ -61,7 +72,9 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const method = config.method?.toLowerCase();
 
+    // Retryable network errors (not auth)
     if (
+      status !== 401 &&
       retryableStatuses.includes(status) &&
       retryableMethods.includes(method) &&
       config.metadata.retryCount < MAX_RETRIES
@@ -72,10 +85,58 @@ api.interceptors.response.use(
       return api(config);
     }
 
-    if (status === 401) {
-      useAuthStore.getState().logout();
-      window.location.href = '/login';
+    // 401 — attempt token refresh once
+    if (status === 401 && !config._retried) {
+      const storedToken = useAuthStore.getState().token || localStorage.getItem('token');
+
+      // No token at all — go to login immediately
+      if (!storedToken) {
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
+      // Already refreshing — queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({ resolve, reject });
+        }).then((token) => {
+          config._retried = true;
+          config.headers.Authorization = `Bearer ${token}`;
+          return api(config);
+        }).catch((err) => Promise.reject(err));
+      }
+
+      config._retried = true;
+      isRefreshing = true;
+
+      try {
+        const refreshResponse = await axios.post(
+          `${API_URL}/api/auth/refresh-token`,
+          { token: storedToken }
+        );
+        const raw = refreshResponse.data;
+        const payload = raw?.data || raw;
+        const newToken = payload?.token;
+
+        if (!newToken) throw new Error('No token in refresh response');
+
+        useAuthStore.getState().setAuth(payload.user || useAuthStore.getState().user, newToken);
+        localStorage.setItem('token', newToken);
+
+        processQueue(null, newToken);
+        config.headers.Authorization = `Bearer ${newToken}`;
+        return api(config);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
+
     return Promise.reject(error);
   }
 );

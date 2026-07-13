@@ -533,7 +533,7 @@ router.get('/admin/all', async (req, res) => {
 });
 
 // Review loan application (admin)
-router.post('/:id/review', async (req, res) => {
+router.post('/:id/review', protect, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -586,7 +586,7 @@ router.post('/:id/review', async (req, res) => {
 });
 
 // Process loan disbursement (admin)
-router.post('/:id/disburse', async (req, res) => {
+router.post('/:id/disburse', protect, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({

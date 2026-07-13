@@ -53,6 +53,11 @@ const TrainingPlatform = lazy(() => import('./pages/Community/TrainingPlatform.j
 const AdvancedSearch = lazy(() => import('./pages/Search/AdvancedSearch'));
 const PremiumTier = lazy(() => import('./pages/Analytics/PremiumTier.jsx'));
 
+// Feature pages
+const Loans = lazy(() => import('./pages/Loans'));
+const InsurancePage = lazy(() => import('./pages/Insurance'));
+const Suppliers = lazy(() => import('./pages/Suppliers'));
+
 // Marketplace extras
 const GroupBuying = lazy(() => import('./pages/GroupBuying'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -324,19 +329,19 @@ function App() {
                     <Auctions />
                   </PageSuspense>
                 } />
-                <Route path="suppliers" element={
-                  <PageSuspense>
-                    <Products />
-                  </PageSuspense>
-                } />
                 <Route path="loans" element={
                   <PageSuspense>
-                    <Premium />
+                    <Loans />
                   </PageSuspense>
                 } />
                 <Route path="insurance" element={
                   <PageSuspense>
-                    <Premium />
+                    <InsurancePage />
+                  </PageSuspense>
+                } />
+                <Route path="suppliers" element={
+                  <PageSuspense>
+                    <Suppliers />
                   </PageSuspense>
                 } />
 

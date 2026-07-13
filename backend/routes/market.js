@@ -3,6 +3,7 @@ const router = express.Router();
 const MarketPrice = require('../models/MarketPrice');
 const { scrapeMarketPrices } = require('../utils/marketScraper');
 const { success, error } = require('../utils/apiResponse');
+const { protect } = require('../middleware/auth');
 const NodeCache = require('node-cache');
 
 const cache = new NodeCache({ stdTTL: 3600 });
@@ -143,7 +144,7 @@ router.get('/prices/trends/:product', async (req, res) => {
   }
 });
 
-router.post('/prices/refresh', async (req, res) => {
+router.post('/prices/refresh', protect, async (req, res) => {
   try {
     await scrapeMarketPrices();
     cache.flushAll();

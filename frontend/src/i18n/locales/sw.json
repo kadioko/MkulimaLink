@@ -147,7 +147,9 @@
     "farmingTips": "Vidokezo vya Kilimo"
   },
   "loans": {
-    "title": "Mikopo",
+    "title": "Mikopo ya Kilimo",
+    "subtitle": "Mkopo wa haraka kwa wakulima — omba kwa dakika chache",
+    "apply": "Omba Mkopo",
     "applyForLoan": "Omba Mkopo",
     "myLoans": "Mikopo Yangu",
     "loanAmount": "Kiasi cha Mkopo",
@@ -157,6 +159,15 @@
     "monthlyPayment": "Malipo ya Kila Mwezi",
     "totalPayment": "Malipo Yote",
     "creditScore": "Alama ya Mikopo",
+    "status": {
+      "pending": "Inakaguliwa",
+      "approved": "Imeidhinishwa",
+      "disbursed": "Imetolewa",
+      "active": "Inafanya kazi",
+      "repaying": "Inalipwa",
+      "completed": "Imekamilika",
+      "rejected": "Imekataliwa"
+    },
     "statuses": {
       "pending": "Inasubiri",
       "approved": "Imekubaliwa",
@@ -166,10 +177,14 @@
     }
   },
   "insurance": {
-    "title": "Bima",
+    "title": "Bima ya Shamba",
+    "subtitle": "Linda mazao, mifugo na vifaa vyako",
+    "plans": "Mipango ya Bima",
+    "myPolicies": "Bima Zangu",
+    "getQuote": "Pata Bei & Jiandikishe",
+    "enrollNow": "Jiandikishe Sasa",
     "cropInsurance": "Bima ya Mazao",
     "equipmentInsurance": "Bima ya Vifaa",
-    "getQuote": "Pata Bei",
     "coverage": "Ulinzi",
     "premium": "Malipo ya Bima",
     "purchasePolicy": "Nunua Bima"
@@ -249,5 +264,13 @@
     "deleted": "Imefutwa kwa mafanikio",
     "updated": "Imesasishwa kwa mafanikio",
     "created": "Imeundwa kwa mafanikio"
+  },
+  "suppliers": {
+    "title": "Wasambazaji Walioidhinishwa",
+    "subtitle": "Pata wasambazaji wa pembejeo za kilimo",
+    "verified": "Imethibitishwa",
+    "featured": "Msambazaji Maarufu",
+    "callSupplier": "Piga Simu",
+    "allTypes": "Aina Zote"
   }
 }
