@@ -13,15 +13,7 @@ jobs:
   node:
     name: Node Checks
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:7
-        ports:
-          - 27017:27017
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
+    # No external MongoDB/Redis needed — backend tests use MongoMemoryServer
 
     steps:
       - name: Checkout
@@ -34,11 +26,16 @@ jobs:
           cache: npm
           cache-dependency-path: |
             package-lock.json
+            backend/package-lock.json
             frontend/package-lock.json
             mobile/MkulimaLink/package-lock.json
 
       - name: Install root dependencies
         run: npm ci
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
 
       - name: Install frontend dependencies
         run: npm ci
@@ -51,6 +48,10 @@ jobs:
       - name: Audit root dependencies
         run: npm audit --audit-level=moderate
 
+      - name: Audit backend dependencies
+        run: npm audit --audit-level=moderate
+        working-directory: backend
+
       - name: Audit frontend dependencies
         run: npm audit --audit-level=moderate
         working-directory: frontend
@@ -61,14 +62,15 @@ jobs:
 
       - name: Run backend tests
         run: npm test
+        working-directory: backend
         env:
           NODE_ENV: test
-          MONGODB_URI: mongodb://localhost:27017/mkulimalink_test
-          REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret-key-for-ci
+          JWT_EXPIRE: 30d
+          WEBHOOK_SECRET: test-webhook-secret
 
       - name: Run frontend tests
-        run: npm test
+        run: npm test -- --watchAll=false --ci
         working-directory: frontend
 
       - name: Run mobile lint

@@ -24,6 +24,7 @@ const NAV_GROUPS = [
     color: 'text-emerald-600',
     items: [
       { name: 'Browse Products', path: '/products', icon: ShoppingBag, desc: 'Find verified farm produce' },
+      { name: 'Advanced Search', path: '/search', icon: null, desc: 'Filter by region, price & quality' },
       { name: 'Market Prices', path: '/market', icon: TrendingUp, desc: 'Live commodity prices' },
       { name: 'Live Auctions', path: '/auctions', icon: Gavel, desc: 'Bid on bulk lots in real time' },
       { name: 'Group Buying', path: '/group-buying', icon: Users, desc: 'Pool orders for lower prices' },
@@ -89,6 +90,7 @@ const NAV_GROUPS = [
     highlight: true,
     items: [
       { name: 'Premium Plans', path: '/premium', icon: Crown, desc: 'Unlock advanced features' },
+      { name: 'Premium Analytics', path: '/premium-tier', icon: BarChart3, desc: 'Satellite, GPS & yield predictions', premium: true },
       { name: 'Loans & Finance', path: '/loans', icon: ShieldCheck, desc: 'Agricultural credit products', premium: true },
       { name: 'Insurance', path: '/insurance', icon: ShieldCheck, desc: 'Crop & livestock coverage', premium: true },
     ],

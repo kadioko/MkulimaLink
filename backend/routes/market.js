@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
     const { country, category, region } = req.query;
     const cacheKey = `market_root_${country}_${category}_${region}`;
     const cachedData = cache.get(cacheKey);
-    if (cachedData) return res.json(cachedData);
+    if (cachedData) return success(res, cachedData, 'Market prices retrieved');
 
     const pipeline = [
       { $sort: { date: -1 } },
@@ -55,7 +55,7 @@ router.get('/prices', async (req, res) => {
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) {
-      return res.json(cachedData);
+      return success(res, cachedData, 'Market prices retrieved');
     }
 
     const query = {};

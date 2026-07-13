@@ -49,6 +49,10 @@ const CommunityHub = lazy(() => import('./pages/Community/CommunityHub.jsx'));
 const ExpertNetwork = lazy(() => import('./pages/Community/ExpertNetwork.jsx'));
 const TrainingPlatform = lazy(() => import('./pages/Community/TrainingPlatform.jsx'));
 
+// Search & Premium
+const AdvancedSearch = lazy(() => import('./pages/Search/AdvancedSearch'));
+const PremiumTier = lazy(() => import('./pages/Analytics/PremiumTier.jsx'));
+
 // Marketplace extras
 const GroupBuying = lazy(() => import('./pages/GroupBuying'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -279,6 +283,22 @@ function App() {
                   <PageSuspense>
                     <TrainingPlatform />
                   </PageSuspense>
+                } />
+
+                {/* Search */}
+                <Route path="search" element={
+                  <PageSuspense>
+                    <AdvancedSearch />
+                  </PageSuspense>
+                } />
+
+                {/* Premium Tier */}
+                <Route path="premium-tier" element={
+                  <PrivateRoute>
+                    <PageSuspense>
+                      <PremiumTier />
+                    </PageSuspense>
+                  </PrivateRoute>
                 } />
 
                 {/* Marketplace extras */}
