@@ -4,16 +4,11 @@ const MarketPrice = require('../models/MarketPrice');
 const { scrapeMarketPrices } = require('../utils/marketScraper');
 const { success, error } = require('../utils/apiResponse');
 const { protect } = require('../middleware/auth');
-const NodeCache = require('node-cache');
+const { cacheConfig, invalidate } = require('../middleware/cache');
 
-const cache = new NodeCache({ stdTTL: 3600 });
-
-router.get('/', async (req, res) => {
+router.get('/', cacheConfig.marketPrices, async (req, res) => {
   try {
     const { country, category, region } = req.query;
-    const cacheKey = `market_root_${country}_${category}_${region}`;
-    const cachedData = cache.get(cacheKey);
-    if (cachedData) return success(res, cachedData, 'Market prices retrieved');
 
     const pipeline = [
       { $sort: { date: -1 } },
@@ -40,15 +35,13 @@ router.get('/', async (req, res) => {
       date: p.date
     }));
 
-    const result = { prices };
-    cache.set(cacheKey, result);
-    return success(res, result, 'Market prices retrieved');
+    return success(res, { prices }, 'Market prices retrieved');
   } catch (err) {
     return error(res, err.message, 500);
   }
 });
 
-router.get('/prices', async (req, res) => {
+router.get('/prices', cacheConfig.marketPrices, async (req, res) => {
   try {
     const { product, category, region, days = 30 } = req.query;
     

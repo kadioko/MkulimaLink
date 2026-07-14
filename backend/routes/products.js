@@ -5,6 +5,7 @@ const path = require('path');
 const Product = require('../models/Product');
 const MarketPrice = require('../models/MarketPrice');
 const { protect, authorize } = require('../middleware/auth');
+const { cacheConfig, invalidate } = require('../middleware/cache');
 const { detectPests, compressImage } = require('../utils/imageProcessing');
 const { generateAIInsights } = require('../utils/aiInsights');
 const {
@@ -159,6 +160,9 @@ router.post('/', protect, authorize('farmer'), upload.array('images', 5), produc
 
     await product.save();
 
+    // Invalidate products cache
+    await invalidate('products:*');
+
     const productResponse = product.toObject();
     return success(res, { ...productResponse, priceInsight }, 'Product created successfully', 201);
   } catch (err) {
@@ -166,7 +170,7 @@ router.post('/', protect, authorize('farmer'), upload.array('images', 5), produc
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', cacheConfig.products, async (req, res) => {
   try {
     await Product.expireOldListings();
     const { 
@@ -286,6 +290,10 @@ router.put('/:id', protect, async (req, res) => {
     if (fulfillment) product.fulfillment = fulfillment;
 
     const updatedProduct = await product.save();
+
+    // Invalidate products cache
+    await invalidate('products:*');
+
     return success(res, updatedProduct, 'Product updated successfully');
   } catch (err) {
     return error(res, err.message, 500);
@@ -305,6 +313,10 @@ router.delete('/:id', protect, async (req, res) => {
     }
 
     await product.deleteOne();
+
+    // Invalidate products cache
+    await invalidate('products:*');
+
     return success(res, null, 'Product removed');
   } catch (err) {
     return error(res, err.message, 500);

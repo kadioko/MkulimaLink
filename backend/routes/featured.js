@@ -12,9 +12,9 @@ const PACKAGES = {
 
 router.post('/create', protect, async (req, res) => {
   try {
-    const { productId, package } = req.body;
+    const { productId, package: packageType } = req.body;
 
-    if (!PACKAGES[package]) {
+    if (!PACKAGES[packageType]) {
       return res.status(400).json({ message: 'Invalid package selected' });
     }
 
@@ -37,7 +37,7 @@ router.post('/create', protect, async (req, res) => {
       return res.status(400).json({ message: 'Product is already featured' });
     }
 
-    const packageDetails = PACKAGES[package];
+    const packageDetails = PACKAGES[packageType];
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + packageDetails.duration);
@@ -45,7 +45,7 @@ router.post('/create', protect, async (req, res) => {
     const featured = await FeaturedListing.create({
       product: productId,
       seller: req.user._id,
-      package,
+      package: packageType,
       price: packageDetails.price,
       duration: packageDetails.duration,
       startDate,

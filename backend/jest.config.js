@@ -7,6 +7,12 @@ module.exports = {
     'routes/**/*.js',
     'utils/**/*.js',
     'services/**/*.js'
+  ],
+  transform: {
+    '^.+\\.js$': 'babel-jest'
+  },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(uuid)/)'
   ]
 };
 

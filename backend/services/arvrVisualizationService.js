@@ -421,25 +421,29 @@ class ARVRVisualizationService {
         };
 
       case 'circular':
-        const radius = Math.max(5, Math.ceil((index + 1) / 8) * 3);
-        const angle = (index * 45) * (Math.PI / 180); // 45 degrees apart
-        return {
-          x: Math.cos(angle) * radius,
-          y: 0,
-          z: Math.sin(angle) * radius
-        };
+        {
+          const radius = Math.max(5, Math.ceil((index + 1) / 8) * 3);
+          const angle = (index * 45) * (Math.PI / 180); // 45 degrees apart
+          return {
+            x: Math.cos(angle) * radius,
+            y: 0,
+            z: Math.sin(angle) * radius
+          };
+        }
 
       case 'scattered':
       default:
-        // Random scattered positions
-        const scatterRadius = 10;
-        const angle = Math.random() * 2 * Math.PI;
-        const distance = Math.random() * scatterRadius;
-        return {
-          x: Math.cos(angle) * distance,
-          y: 0,
-          z: Math.sin(angle) * distance
-        };
+        {
+          // Random scattered positions
+          const scatterRadius = 10;
+          const angle = Math.random() * 2 * Math.PI;
+          const distance = Math.random() * scatterRadius;
+          return {
+            x: Math.cos(angle) * distance,
+            y: 0,
+            z: Math.sin(angle) * distance
+          };
+        }
     }
   }
 
