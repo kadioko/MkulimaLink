@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Grid3X3, List, MapPin, Search, ShieldCheck, SlidersHorizontal, Sprout, X } from 'lucide-react';
+import { BarChart3, Bell, Grid3X3, List, MapPin, Search, ShieldCheck, SlidersHorizontal, Sparkles, Sprout, X } from 'lucide-react';
 import api, { extractData, extractMeta } from '../api/axios';
 import { demoProducts } from '../utils/demoData';
 import { useCountryStore, COUNTRIES } from '../store/countryStore';
+import { useAuthStore } from '../store/authStore';
 import { useUrlFilters } from '../hooks/useUrlFilters';
 import { useDebounce } from '../hooks/useDebounce';
 import { useToastContext } from '../App';
@@ -13,6 +14,8 @@ import ProductComparison from '../components/ProductComparison';
 import { ProductGridSkeleton, EmptyState, ErrorState } from '../components/EnhancedSkeleton';
 
 function Products() {
+  const qc = useQueryClient();
+  const { user } = useAuthStore();
   const { country, getCurrency } = useCountryStore();
   const currency = getCurrency();
   const currentCountry = COUNTRIES[country];
@@ -47,12 +50,13 @@ function Products() {
         params.append('country', country);
 
         const response = await api.get(`/api/products?${params}`);
-        const products = extractData(response) || [];
+        const payload = extractData(response) || response.data;
+        const products = Array.isArray(payload) ? payload : payload?.products || [];
         const meta = extractMeta(response);
         return {
           products: Array.isArray(products) ? products : [],
-          totalPages: meta?.pagination?.totalPages || 1,
-          total: meta?.pagination?.total || products.length,
+          totalPages: payload?.totalPages || meta?.pagination?.totalPages || 1,
+          total: payload?.total || meta?.pagination?.total || products.length,
           isDemo: false,
           meta
         };
@@ -65,6 +69,39 @@ function Products() {
       initialData: { products: demoProducts, totalPages: 1, total: demoProducts.length, isDemo: true },
       keepPreviousData: true,
       staleTime: 2 * 60 * 1000,
+    }
+  );
+
+  const { data: recommendations } = useQuery(
+    ['recommendations', user?._id],
+    () => api.get('/api/recommendations').then(r => r.data?.data || r.data),
+    { enabled: Boolean(user), staleTime: 5 * 60 * 1000 }
+  );
+
+  const { data: savedSearches } = useQuery(
+    ['saved-searches', user?._id],
+    () => api.get('/api/search/saved').then(r => r.data?.data || r.data),
+    { enabled: Boolean(user), staleTime: 60 * 1000 }
+  );
+
+  const saveSearchMutation = useMutation(
+    () => api.post('/api/search/saved', {
+      name: filters.search || `${filters.category || 'Products'} ${filters.region ? `in ${filters.region}` : ''}`.trim(),
+      query: {
+        q: filters.search,
+        category: filters.category,
+        region: filters.region,
+        minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+        maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined
+      },
+      notify: true
+    }),
+    {
+      onSuccess: () => {
+        success('Search saved');
+        qc.invalidateQueries('saved-searches');
+      },
+      onError: () => info('Could not save this search')
     }
   );
 
@@ -112,6 +149,8 @@ function Products() {
     { label: 'Verified sellers', value: '94%', icon: ShieldCheck },
     { label: 'Price signals', value: 'Live', icon: BarChart3 },
   ];
+  const recommendedProducts = Array.isArray(recommendations) ? recommendations : [];
+  const savedSearchCount = Array.isArray(savedSearches) ? savedSearches.length : 0;
 
   return (
     <div className="space-y-6">
@@ -177,6 +216,30 @@ function Products() {
             </div>
           ))}
         </div>
+
+        {user && (
+          <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="border border-emerald-100 bg-emerald-50 p-4">
+              <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-800">
+                <Sparkles size={16} />
+                Live recommendations
+              </div>
+              <p className="mt-1 text-sm text-emerald-900">
+                {recommendedProducts.length > 0
+                  ? `${recommendedProducts.length} products are being ranked for your region, interests, seller trust, and freshness.`
+                  : 'Browse and search to teach MkulimaLink what to surface next.'}
+              </p>
+            </div>
+            <button
+              onClick={() => saveSearchMutation.mutate()}
+              disabled={saveSearchMutation.isLoading || activeFiltersCount === 0}
+              className="inline-flex items-center justify-center gap-2 border border-emerald-300 bg-white px-4 py-3 text-sm font-black text-emerald-800 transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Bell size={16} />
+              Save Search {savedSearchCount > 0 ? `(${savedSearchCount})` : ''}
+            </button>
+          </div>
+        )}
       </motion.div>
 
       <motion.div

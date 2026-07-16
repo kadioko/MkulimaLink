@@ -10,7 +10,7 @@ import {
   Shield, Bell, Activity, Eye, Trash2, Ban, CheckCircle, Crown,
   AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight,
   RefreshCw, Search, Filter, ChevronLeft, ChevronRight,
-  UserCheck, UserX, Star, Globe,
+  UserCheck, UserX, Star, Globe, Database, FileWarning,
 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
@@ -19,6 +19,8 @@ const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
 
 const roleBadge = { admin: 'bg-purple-100 text-purple-800', farmer: 'bg-emerald-100 text-emerald-800', buyer: 'bg-blue-100 text-blue-800' };
 const statusColor = { active: 'bg-green-100 text-green-800', sold: 'bg-blue-100 text-blue-800', reserved: 'bg-yellow-100 text-yellow-800', expired: 'bg-gray-100 text-gray-600' };
+
+const unwrap = (value) => value?.data || value || {};
 
 function StatCard({ title, value, icon: Icon, growth, sub, iconBg }) {
   return (
@@ -561,6 +563,80 @@ function SettingsTab() {
 }
 
 // ── Main Component ────────────────────────────────────────────
+function OperationsTab({ qc }) {
+  const { data: systemRaw, isLoading: systemLoading } = useQuery('admin-system', () => api.get('/api/admin/system').then(r => r.data), { refetchInterval: 30000 });
+  const { data: seedRaw } = useQuery('admin-seed-status', () => api.get('/api/admin/seed-status').then(r => r.data), { refetchInterval: 60000 });
+  const { data: failedRaw } = useQuery('admin-failed-actions', () => api.get('/api/admin/failed-actions?limit=12').then(r => r.data), { refetchInterval: 60000 });
+  const { data: reportsRaw } = useQuery('admin-reports', () => api.get('/api/reports/admin?limit=12').then(r => r.data), { refetchInterval: 60000 });
+
+  const reviewReport = useMutation(({ id, status, resolutionAction }) =>
+    api.put(`/api/reports/admin/${id}`, { status, resolutionAction, adminNotes: `Marked ${status} from operations dashboard` }), {
+      onSuccess: () => qc.invalidateQueries('admin-reports')
+    });
+
+  const system = unwrap(systemRaw);
+  const seed = unwrap(seedRaw);
+  const failedPayload = unwrap(failedRaw);
+  const reportsPayload = unwrap(reportsRaw);
+  const failed = Array.isArray(failedPayload) ? failedPayload : failedPayload?.data || [];
+  const reports = Array.isArray(reportsPayload) ? reportsPayload : reportsPayload?.data || [];
+
+  if (systemLoading) return <Spinner />;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="MongoDB" value={system?.services?.mongodb || 'unknown'} icon={Database} sub={`${system?.counts?.collections || 0} collections`} iconBg="bg-emerald-100 text-emerald-700" />
+        <StatCard title="Runtime" value={system?.app?.environment || 'unknown'} icon={Activity} sub={`${system?.app?.uptimeSeconds || 0}s uptime`} iconBg="bg-blue-100 text-blue-700" />
+        <StatCard title="Seed Data" value={seed?.complete ? 'Complete' : 'Check'} icon={Package} sub={`${seed?.demoUsers || 0} demo users / ${seed?.products || 0} products`} iconBg="bg-amber-100 text-amber-700" />
+        <StatCard title="Failed Actions" value={failedPayload?.total ?? failed.length ?? 0} icon={FileWarning} sub="latest tracked failures" iconBg="bg-red-100 text-red-700" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white border border-slate-200 p-5">
+          <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2"><Shield size={16} /> Abuse Reports</h3>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {reports.map(report => (
+              <div key={report._id} className="border border-slate-100 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{report.targetType} / {report.reason}</p>
+                    <p className="text-xs text-slate-500">{report.reporter?.email || 'Unknown reporter'} - {new Date(report.createdAt).toLocaleString()}</p>
+                    {report.details && <p className="mt-2 text-xs text-slate-600">{report.details}</p>}
+                  </div>
+                  <span className="text-xs font-bold uppercase text-amber-700 bg-amber-50 px-2 py-1">{report.status}</span>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => reviewReport.mutate({ id: report._id, status: 'reviewing', resolutionAction: 'none' })} className="border border-blue-200 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-50">Reviewing</button>
+                  <button onClick={() => reviewReport.mutate({ id: report._id, status: 'resolved', resolutionAction: report.targetType === 'product' ? 'listing_removed' : 'none' })} className="border border-emerald-200 px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-50">Resolve</button>
+                  <button onClick={() => reviewReport.mutate({ id: report._id, status: 'dismissed', resolutionAction: 'dismissed' })} className="border border-slate-200 px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-50">Dismiss</button>
+                </div>
+              </div>
+            ))}
+            {reports.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No reports yet</p>}
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 p-5">
+          <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2"><FileWarning size={16} /> Failed Actions</h3>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {failed.map(action => (
+              <div key={action._id} className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">{action.type}: {action.reason}</p>
+                  <p className="text-xs text-slate-500">{action.email || action.user?.email || action.ip || 'unknown'} - {new Date(action.createdAt).toLocaleString()}</p>
+                  {action.requestId && <p className="mt-1 text-[11px] text-slate-400">Request {action.requestId}</p>}
+                </div>
+              </div>
+            ))}
+            {failed.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No failures recorded</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const AdminDashboard = () => {
   const { user } = useAuthStore();
   const qc = useQueryClient();
@@ -588,6 +664,7 @@ const AdminDashboard = () => {
     { id: 'products', label: 'Products', icon: Package },
     { id: 'transactions', label: 'Transactions', icon: ShoppingBag },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'operations', label: 'Operations', icon: Activity },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -633,6 +710,7 @@ const AdminDashboard = () => {
         {activeTab === 'products' && <ProductsTab qc={qc} />}
         {activeTab === 'transactions' && <TransactionsTab />}
         {activeTab === 'analytics' && <AnalyticsTab />}
+        {activeTab === 'operations' && <OperationsTab qc={qc} />}
         {activeTab === 'settings' && <SettingsTab />}
       </div>
     </div>

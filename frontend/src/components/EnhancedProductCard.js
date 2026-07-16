@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowUpRight,
@@ -26,6 +27,7 @@ const EnhancedProductCard = ({
   isCompared = false,
   viewMode = 'grid',
 }) => {
+  const navigate = useNavigate();
   const { toggleItem, isInWishlist } = useWishlistStore();
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
@@ -41,6 +43,21 @@ const EnhancedProductCard = ({
   const demandSignal = product.demandSignal || (product.organic ? 'Strong demand' : 'Market demand');
   const responseTime = product.responseTime || `${(1.4 + (index % 5) * 0.7).toFixed(1)} hrs`;
   const demandTone = index % 4 === 0 ? 'text-red-600' : index % 3 === 0 ? 'text-amber-600' : 'text-emerald-700';
+  const isVerifiedSeller = product.sellerBadge === 'verified' || product.seller?.verified || product.seller?.verification?.state === 'verified';
+  const sellerAvailability = product.sellerAvailableToday === false ? 'Unavailable today' : 'Available today';
+  const riskFlag = product.risk?.flag || 'low';
+  const riskTone = riskFlag === 'high' || riskFlag === 'blocked'
+    ? 'border-red-200 bg-red-50 text-red-700'
+    : riskFlag === 'medium'
+      ? 'border-amber-200 bg-amber-50 text-amber-700'
+      : 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  const fairPrice = product.priceRecommendation?.deltaPercent !== undefined
+    ? `${Math.abs(product.priceRecommendation.deltaPercent)}% ${product.priceRecommendation.deltaPercent >= 0 ? 'above' : 'below'} market`
+    : null;
+
+  const openProduct = () => {
+    if (product._id) navigate(`/products/${product._id}`);
+  };
 
   const handleWishlist = (e) => {
     e.stopPropagation();
@@ -86,6 +103,7 @@ const EnhancedProductCard = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.28, delay: index * 0.04 }}
         whileHover={{ backgroundColor: 'rgba(248, 250, 252, 1)' }}
+        onClick={openProduct}
         className="group grid gap-4 border border-slate-200 bg-white p-4 sm:grid-cols-[128px_1fr_auto]"
       >
         <ImageBlock compact />
@@ -99,8 +117,10 @@ const EnhancedProductCard = ({
               <p className="mt-1 text-sm text-slate-500">{product.category} / {region}</p>
               <p className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-slate-700">
                 {sellerName}
-                <ShieldCheck size={14} className="text-emerald-700" />
-                <span className="text-xs font-black uppercase tracking-wide text-emerald-700">Verified</span>
+                {isVerifiedSeller && <ShieldCheck size={14} className="text-emerald-700" />}
+                <span className={`text-xs font-black uppercase tracking-wide ${isVerifiedSeller ? 'text-emerald-700' : 'text-slate-400'}`}>
+                  {isVerifiedSeller ? 'Verified' : 'Unverified'}
+                </span>
               </p>
             </div>
             <div className="flex gap-2 sm:hidden">
@@ -135,10 +155,10 @@ const EnhancedProductCard = ({
             </div>
             <div>
               <p className={`inline-flex items-center gap-1 font-bold ${demandTone}`}>
-                {demandSignal}
+                {product.sellerAvailableToday === false ? sellerAvailability : demandSignal}
                 <ArrowUpRight size={15} />
               </p>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">response {responseTime}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{fairPrice || `response ${responseTime}`}</p>
             </div>
           </div>
         </div>
@@ -175,6 +195,7 @@ const EnhancedProductCard = ({
       whileHover={{ y: -4 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      onClick={openProduct}
       className="group cursor-pointer overflow-hidden border border-slate-200 bg-white transition-all duration-300 hover:border-emerald-300 hover:shadow-xl"
     >
       <div className="relative">
@@ -209,6 +230,12 @@ const EnhancedProductCard = ({
         {product.quality === 'premium' && (
           <div className="absolute bottom-3 left-3 bg-amber-100 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-amber-900 shadow-md">
             Premium Quality
+          </div>
+        )}
+
+        {riskFlag !== 'low' && (
+          <div className={`absolute bottom-3 right-3 border px-3 py-1.5 text-xs font-black uppercase tracking-wide shadow-md ${riskTone}`}>
+            {riskFlag} risk
           </div>
         )}
       </div>
@@ -248,12 +275,14 @@ const EnhancedProductCard = ({
 
         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-sm">
           <div>
-            <p className={`font-black ${demandTone}`}>{demandSignal}</p>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">demand</p>
+            <p className={`font-black ${product.sellerAvailableToday === false ? 'text-amber-700' : demandTone}`}>
+              {product.sellerAvailableToday === false ? sellerAvailability : demandSignal}
+            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">signal</p>
           </div>
           <div>
-            <p className="font-black text-slate-800">{responseTime}</p>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">response</p>
+            <p className="font-black text-slate-800">{fairPrice || responseTime}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{fairPrice ? 'price' : 'response'}</p>
           </div>
         </div>
 
@@ -262,8 +291,10 @@ const EnhancedProductCard = ({
             {sellerName?.[0]?.toUpperCase() || 'S'}
           </div>
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-700">{sellerName}</span>
-          <span className="text-xs font-black uppercase tracking-wide text-emerald-700">Verified</span>
-          <ShieldCheck size={16} className="text-emerald-700" />
+          <span className={`text-xs font-black uppercase tracking-wide ${isVerifiedSeller ? 'text-emerald-700' : 'text-slate-400'}`}>
+            {isVerifiedSeller ? 'Verified' : 'Unverified'}
+          </span>
+          {isVerifiedSeller && <ShieldCheck size={16} className="text-emerald-700" />}
         </div>
       </div>
     </motion.div>
